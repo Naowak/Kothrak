@@ -30,25 +30,40 @@ class Cell :
         self.create_img_cell()
 
     def is_pos_in_cell(self, x, y) :
+        """On vérifie que x et y sont bien dans l'image et non dans le fond transparent."""
+        # up left
         p, q = (Cell.POS_CELL_CORNER_LEFT, Cell.POS_CELL_CORNER_UP)
         coef = (q[1] - p[1])/(q[0] - p[0])
         b = p[1] - coef*p[0]
         if coef*x + b - y > 0 :
             return False
+        # up right 
         p, q = (Cell.POS_CELL_CORNER_UP, Cell.POS_CELL_CORNER_RIGHT)
         coef = (q[1] - p[1])/(q[0] - p[0])
         b = p[1] - coef*p[0]
         if coef*x + b - y > 0 :
             return False
-        p, q = (Cell.POS_CELL_CORNER_DOWN, Cell.POS_CELL_CORNER_RIGHT)
+        # down right
+        m, n = (Cell.POS_CELL_CORNER_DOWN, Cell.POS_CELL_CORNER_RIGHT)
+        p = (m[0], m[1] + MyApp.SIZE_STAGE * self.height)
+        q = (n[0], n[1] + MyApp.SIZE_STAGE * self.height)
         coef = (q[1] - p[1])/(q[0] - p[0])
-        b = p[1] - coef*p[0]
+        b = p[1] - coef*p[0] 
         if coef*x + b - y < 0 :
             return False
+        # down left
         p, q = (Cell.POS_CELL_CORNER_LEFT, Cell.POS_CELL_CORNER_DOWN)
+        p = (m[0], m[1] + MyApp.SIZE_STAGE * self.height)
+        q = (n[0], n[1] + MyApp.SIZE_STAGE * self.height)
         coef = (q[1] - p[1])/(q[0] - p[0])
-        b = p[1] - coef*p[0]
+        b = p[1] - coef*p[0] 
         if coef*x + b - y < 0 :
+            return False
+        # right
+        if x < 0 :
+            return False
+        # left
+        if x > self.size_x :
             return False
         return True
 
@@ -95,8 +110,9 @@ class Cell :
 
 class MyApp() :
 
-    TRANSLATE_X = (85, -50)
-    TRANSLATE_Y = (85, 50)
+    TRANSLATE_X = (78, -46)
+    TRANSLATE_Y = (78, 46)
+    SIZE_STAGE = 29
     SIZE_CELL_X = 150
     SIZE_CELL_Y = [116 + 29*i for i in range(4)]
     POS_INITIAL_X = 50
