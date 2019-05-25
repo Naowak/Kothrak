@@ -23,62 +23,89 @@ class Cell :
         self.y = y
         self.app = app
         self.height = 0
+        self.pos_x = None
+        self.pos_y = None
+        self.size_x = None
+        self.size_y = None
         self.create_img_cell()
 
-    def is_click_in_corner_img(self, click_x, click_y) :
+    def is_pos_in_cell(self, x, y) :
         p, q = (Cell.POS_CELL_CORNER_LEFT, Cell.POS_CELL_CORNER_UP)
         coef = (q[1] - p[1])/(q[0] - p[0])
         b = p[1] - coef*p[0]
-        if coef*click_x + b - click_y > 0 :
-            return "upleft"
+        if coef*x + b - y > 0 :
+            return False
         p, q = (Cell.POS_CELL_CORNER_UP, Cell.POS_CELL_CORNER_RIGHT)
         coef = (q[1] - p[1])/(q[0] - p[0])
         b = p[1] - coef*p[0]
-        if coef*click_x + b - click_y > 0 :
-            return "upright"
+        if coef*x + b - y > 0 :
+            return False
         p, q = (Cell.POS_CELL_CORNER_DOWN, Cell.POS_CELL_CORNER_RIGHT)
         coef = (q[1] - p[1])/(q[0] - p[0])
         b = p[1] - coef*p[0]
-        if coef*click_x + b - click_y < 0 :
-            return "downright"
-        p, q = (Cell.POS_CELL_CORNER_DOWN, Cell.POS_CELL_CORNER_RIGHT)
+        if coef*x + b - y < 0 :
+            return False
+        p, q = (Cell.POS_CELL_CORNER_LEFT, Cell.POS_CELL_CORNER_DOWN)
         coef = (q[1] - p[1])/(q[0] - p[0])
         b = p[1] - coef*p[0]
-        if coef*click_x + b - click_y < 0 :
-            return "downleft"
-        return False
+        if coef*x + b - y < 0 :
+            return False
+        return True
 
-    def click_cell(self, event) :
-        click_x, click_y = (event.pos().x(), event.pos().y())
-        corner = self.is_click_in_corner_img(click_x, click_y)
-        if corner :
-            correct_cell = self.correct_click_cell(corner)
-            if correct_cell != None :
-                correct_cell.grew()
-        else :
-            self.grew()
+    # def is_click_in_corner_img(self, click_x, click_y) :
+    #     p, q = (Cell.POS_CELL_CORNER_LEFT, Cell.POS_CELL_CORNER_UP)
+    #     coef = (q[1] - p[1])/(q[0] - p[0])
+    #     b = p[1] - coef*p[0]
+    #     if coef*click_x + b - click_y > 0 :
+    #         return "upleft"
+    #     p, q = (Cell.POS_CELL_CORNER_UP, Cell.POS_CELL_CORNER_RIGHT)
+    #     coef = (q[1] - p[1])/(q[0] - p[0])
+    #     b = p[1] - coef*p[0]
+    #     if coef*click_x + b - click_y > 0 :
+    #         return "upright"
+    #     p, q = (Cell.POS_CELL_CORNER_DOWN, Cell.POS_CELL_CORNER_RIGHT)
+    #     coef = (q[1] - p[1])/(q[0] - p[0])
+    #     b = p[1] - coef*p[0]
+    #     if coef*click_x + b - click_y < 0 :
+    #         return "downright"
+    #     p, q = (Cell.POS_CELL_CORNER_DOWN, Cell.POS_CELL_CORNER_RIGHT)
+    #     coef = (q[1] - p[1])/(q[0] - p[0])
+    #     b = p[1] - coef*p[0]
+    #     if coef*click_x + b - click_y < 0 :
+    #         return "downleft"
+    #     return False
+
+    # def click_cell(self, event) :
+    #     click_x, click_y = (event.pos().x(), event.pos().y())
+    #     corner = self.is_click_in_corner_img(click_x, click_y)
+    #     if corner :
+    #         correct_cell = self.correct_click_cell(corner)
+    #         if correct_cell != None :
+    #             correct_cell.grew()
+    #     else :
+    #         self.grew()
     
-    def correct_click_cell(self, corner) :
-        if corner == "upleft" :
-            x = self.x
-            y = self.y - 1
-        elif corner == "upright" :
-            x = self.x + 1
-            y = self.y
-        elif corner == "downright" :
-            x = self.x 
-            y = self.y + 1
-        elif corner == "downleft" :
-            x = self.x - 1
-            y = self.y
-        else :
-            raise Exception("Incorrect corner.")
-        # PEUT ETRE AMELIORER
-        cell = None
-        for c in self.app.cells :
-            if c.x == x and c.y == y :
-                cell = c
-        return cell
+    # def correct_click_cell(self, corner) :
+    #     if corner == "upleft" :
+    #         x = self.x
+    #         y = self.y - 1
+    #     elif corner == "upright" :
+    #         x = self.x + 1
+    #         y = self.y
+    #     elif corner == "downright" :
+    #         x = self.x 
+    #         y = self.y + 1
+    #     elif corner == "downleft" :
+    #         x = self.x - 1
+    #         y = self.y
+    #     else :
+    #         raise Exception("Incorrect corner.")
+    #     # PEUT ETRE AMELIORER
+    #     cell = None
+    #     for c in self.app.cells :
+    #         if c.x == x and c.y == y :
+    #             cell = c
+    #     return cell
 
     def grew(self) :
         if self.height >= 3 :
@@ -99,25 +126,27 @@ class Cell :
     def change_img(self) :
         abs = self.x
         ord = self.y
-        self.img.setGeometry(QtCore.QRect(MyApp.POS_INITIAL_X + abs * MyApp.TRANSLATE_X[0] + ord * MyApp.TRANSLATE_X[0],
-                                MyApp.POS_INITIAL_Y[self.height] + abs * MyApp.TRANSLATE_X[1] + ord * MyApp.TRANSLATE_Y[1], 
-                                MyApp.SIZE_CELL_X,
-                                MyApp.SIZE_CELL_Y[self.height]))
+        self.pos_x = MyApp.POS_INITIAL_X + abs * MyApp.TRANSLATE_X[0] + ord * MyApp.TRANSLATE_X[0]
+        self.pos_y = MyApp.POS_INITIAL_Y[self.height] + abs * MyApp.TRANSLATE_X[1] + ord * MyApp.TRANSLATE_Y[1]
+        self.size_x = MyApp.SIZE_CELL_X
+        self.size_y = MyApp.SIZE_CELL_Y[self.height]
+        self.img.setGeometry(QtCore.QRect(self.pos_x, self.pos_y, self.size_x, self.size_y))
         self.img.setPixmap(QtGui.QPixmap("cell{}_resized.png".format(self.height)))
 
     def create_img_cell(self) :
         abs = self.x
         ord = self.y
+        self.pos_x = MyApp.POS_INITIAL_X + abs * MyApp.TRANSLATE_X[0] + ord * MyApp.TRANSLATE_X[0]
+        self.pos_y = MyApp.POS_INITIAL_Y[self.height] + abs * MyApp.TRANSLATE_X[1] + ord * MyApp.TRANSLATE_Y[1]
+        self.size_x = MyApp.SIZE_CELL_X
+        self.size_y = MyApp.SIZE_CELL_Y[self.height]
         self.img = QLabel(self.app.window)
-        self.img.setGeometry(QtCore.QRect(MyApp.POS_INITIAL_X + abs * MyApp.TRANSLATE_X[0] + ord * MyApp.TRANSLATE_X[0],
-                                MyApp.POS_INITIAL_Y[self.height] + abs * MyApp.TRANSLATE_X[1] + ord * MyApp.TRANSLATE_Y[1], 
-                                MyApp.SIZE_CELL_X,
-                                MyApp.SIZE_CELL_Y[self.height]))
+        self.img.setGeometry(QtCore.QRect(self.pos_x, self.pos_y, self.size_x, self.size_y))
         self.img.setText("")
         self.img.setPixmap(QtGui.QPixmap("cell{}_resized.png".format(self.height)))
         self.img.setScaledContents(True)
         self.img.setObjectName("cell_{}_{}".format(abs, ord))
-        self.img.mouseReleaseEvent=lambda event:self.click_cell(event)
+        # self.img.mouseReleaseEvent=lambda event:self.click_cell(event)
 
 
 class MyApp() :
@@ -135,11 +164,28 @@ class MyApp() :
         self.window = QWidget()
         self.window.resize(1000, 600)
         self.window.setWindowTitle('MyApp')
+        self.window.mouseReleaseEvent=lambda event:self.click(event)
 
         self.cells = list()
         for i in reversed(list(range(MyApp.NB_CELLS))) :
             for j in range(MyApp.NB_CELLS) :
                 self.add_cell(i, j)
+
+    def click(self, event) :
+        click_x, click_y = (event.pos().x(), event.pos().y())
+        for i in range(MyApp.NB_CELLS) :
+            for j in reversed(list(range(MyApp.NB_CELLS))) :
+                cell = self.get_cell(i, j)
+                relative_x = click_x - cell.pos_x
+                relative_y = click_y - cell.pos_y
+                if cell.is_pos_in_cell(relative_x, relative_y) :
+                    cell.grew()
+                    return
+                    
+    def get_cell(self, abs, ord) :
+        for c in self.cells :
+            if c.x == abs and c.y == ord :
+                return c
 
     def add_cell(self, abs, ord) :
         cell = Cell(abs, ord, self)
