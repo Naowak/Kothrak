@@ -18,11 +18,12 @@ class Cell :
     POS_CELL_CORNER_UP = (75,0)
     POS_CELL_CORNER_DOWN = (75,88)
     
-    def __init__(self, x, y, img, app) :
-        self.img = img
+    def __init__(self, x, y, app) :
         self.x = x
         self.y = y
         self.app = app
+        self.height = 0
+        self.create_img_cell()
 
     def is_click_in_corner_img(self, click_x, click_y) :
         p, q = (Cell.POS_CELL_CORNER_LEFT, Cell.POS_CELL_CORNER_UP)
@@ -47,16 +48,15 @@ class Cell :
             return "downleft"
         return False
 
-    
     def click_cell(self, event) :
         click_x, click_y = (event.pos().x(), event.pos().y())
         corner = self.is_click_in_corner_img(click_x, click_y)
         if corner :
             correct_cell = self.correct_click_cell(corner)
             if correct_cell != None :
-                correct_cell.delete()
+                correct_cell.grew()
         else :
-            self.delete()
+            self.grew()
     
     def correct_click_cell(self, corner) :
         if corner == "upleft" :
@@ -80,21 +80,54 @@ class Cell :
                 cell = c
         return cell
 
-    def delete(self) :
-        self.app.cells.remove(self)
+    def grew(self) :
+        if self.height >= 3 :
+            print("Cannot grow anymore.")
+            return
+        self.height += 1
+        self.change_img()
+
+    def delete_img(self) :
         self.img.setParent(None)
         del(self.img)
-        del(self)    
+
+    def delete(self) :
+        self.app.cells.remove(self)
+        self.delete_img()
+        del(self)  
+
+    def change_img(self) :
+        abs = self.x
+        ord = self.y
+        self.img.setGeometry(QtCore.QRect(MyApp.POS_INITIAL_X + abs * MyApp.TRANSLATE_X[0] + ord * MyApp.TRANSLATE_X[0],
+                                MyApp.POS_INITIAL_Y[self.height] + abs * MyApp.TRANSLATE_X[1] + ord * MyApp.TRANSLATE_Y[1], 
+                                MyApp.SIZE_CELL_X,
+                                MyApp.SIZE_CELL_Y[self.height]))
+        self.img.setPixmap(QtGui.QPixmap("cell{}_resized.png".format(self.height)))
+
+    def create_img_cell(self) :
+        abs = self.x
+        ord = self.y
+        self.img = QLabel(self.app.window)
+        self.img.setGeometry(QtCore.QRect(MyApp.POS_INITIAL_X + abs * MyApp.TRANSLATE_X[0] + ord * MyApp.TRANSLATE_X[0],
+                                MyApp.POS_INITIAL_Y[self.height] + abs * MyApp.TRANSLATE_X[1] + ord * MyApp.TRANSLATE_Y[1], 
+                                MyApp.SIZE_CELL_X,
+                                MyApp.SIZE_CELL_Y[self.height]))
+        self.img.setText("")
+        self.img.setPixmap(QtGui.QPixmap("cell{}_resized.png".format(self.height)))
+        self.img.setScaledContents(True)
+        self.img.setObjectName("cell_{}_{}".format(abs, ord))
+        self.img.mouseReleaseEvent=lambda event:self.click_cell(event)
 
 
 class MyApp() :
 
-    TRANSLATE_X = (78, -46)
-    TRANSLATE_Y = (78, 46)
+    TRANSLATE_X = (85, -50)
+    TRANSLATE_Y = (85, 50)
     SIZE_CELL_X = 150
-    SIZE_CELL_Y = 116
+    SIZE_CELL_Y = [116 + 29*i for i in range(4)]
     POS_INITIAL_X = 50
-    POS_INITIAL_Y = 242
+    POS_INITIAL_Y = [242 - 29*i for i in range(4)]
 
     NB_CELLS = 5
 
@@ -108,24 +141,15 @@ class MyApp() :
             for j in range(MyApp.NB_CELLS) :
                 self.add_cell(i, j)
 
-
     def add_cell(self, abs, ord) :
-        img = QLabel(self.window)
-        cell = Cell(abs, ord, img, self)
-        img.setGeometry(QtCore.QRect(MyApp.POS_INITIAL_X + abs * MyApp.TRANSLATE_X[0] + ord * MyApp.TRANSLATE_X[0],
-                                MyApp.POS_INITIAL_Y + abs * MyApp.TRANSLATE_X[1] + ord * MyApp.TRANSLATE_Y[1], 
-                                MyApp.SIZE_CELL_X,
-                                MyApp.SIZE_CELL_Y))
-        img.setMaximumSize(QtCore.QSize(323, 16777215))
-        img.setText("")
-        img.setPixmap(QtGui.QPixmap("cell.png"))
-        img.setScaledContents(True)
-        img.setObjectName("cell_{}_{}".format(abs, ord))
-        img.mouseReleaseEvent=lambda event:cell.click_cell(event)
+        cell = Cell(abs, ord, self)
         self.cells += [cell]
 
     def show(self) :
         self.window.show()
+    
+    
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
