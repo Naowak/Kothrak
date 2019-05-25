@@ -10,6 +10,7 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel
 import sys
+import random
 
 COEF_RESIZE = 0.4
 
@@ -23,6 +24,12 @@ class MyApp() :
     SIZE_CELL_Y = [240 * COEF_RESIZE + 60 * COEF_RESIZE * i for i in range(4)]
     POS_INITIAL_X = 100 * COEF_RESIZE
     POS_INITIAL_Y = [500 * COEF_RESIZE - 60 * COEF_RESIZE * i for i in range(4)]
+    SIZE_PLAYER_X = 180 * COEF_RESIZE
+    SIZE_PLAYER_Y = 250 * COEF_RESIZE
+    VEC_TRANSLATION_PLAYER_ON_CELL = (-SIZE_PLAYER_X/2, -SIZE_PLAYER_Y)
+
+    NB_PLAYERS_COLORS = 6
+    NB_PLAYERS = 2
 
     NB_CELLS = 5
 
@@ -36,6 +43,9 @@ class MyApp() :
         for i in reversed(list(range(MyApp.NB_CELLS))) :
             for j in range(MyApp.NB_CELLS) :
                 self.add_cell(i, j)
+        self.players = list()
+        for i in range(MyApp.NB_PLAYERS) :
+            self.add_player()
 
     def click(self, event) :
         click_x, click_y = (event.pos().x(), event.pos().y())
@@ -46,7 +56,15 @@ class MyApp() :
                 relative_y = click_y - cell.pos_y
                 if cell.is_pos_in_cell(relative_x, relative_y) :
                     cell.grew()
+                    player = self.get_player_on_cell(cell)
+                    if player != None :
+                        player.move(i, j)
                     return
+
+    def get_player_on_cell(self, cell) :
+        for p in self.players :
+            if p.x == cell.x and p.y == cell.y :
+                return p
 
     def get_cell(self, abs, ord) :
         for c in self.cells :
@@ -57,8 +75,51 @@ class MyApp() :
         cell = Cell(abs, ord, self)
         self.cells += [cell]
 
+    def add_player(self) :
+        color = random.choice(list(range(MyApp.NB_PLAYERS_COLORS)))
+        player = Player(color, self)
+        self.players += [player]
+
     def show(self) :
         self.window.show()
+
+
+class Player :
+
+    ID_CMP = 0
+
+    def __init__(self, color, app) :
+        self.id = id
+        self.app = app
+        self.x = random.randrange(5)
+        self.y = random.randrange(5)
+        self.pos_x = 0
+        self.pos_y = 0
+        self.size_x = MyApp.SIZE_PLAYER_X
+        self.size_y = MyApp.SIZE_PLAYER_Y
+        self.create_img_player(color)
+        self.move(self.x, self.y)
+
+    def move(self, x, y) :
+        self.x = x
+        self.y = y
+        cell = self.app.get_cell(x, y)
+        self.pos_x = cell.pos_x + MyApp.SIZE_CELL_X / 2 + self.app.VEC_TRANSLATION_PLAYER_ON_CELL[0]
+        self.pos_y = cell.pos_y + MyApp.SIZE_CELL_Y[0]/8*3 + self.app.VEC_TRANSLATION_PLAYER_ON_CELL[1]
+        self.img.setGeometry(QtCore.QRect(self.pos_x, self.pos_y, self.size_x, self.size_y))
+
+    def create_img_player(self, color) :
+        self.img = QLabel(self.app.window)
+        self.img.setGeometry(QtCore.QRect(self.pos_x, self.pos_y, self.size_x, self.size_y))
+        self.img.setText("")
+        self.img.setPixmap(QtGui.QPixmap("player_img{}.png".format(color)))
+        self.img.setScaledContents(True)
+        self.img.setObjectName("player_{}".format(self.id))
+
+    def find_id() :
+        tmp = Player.ID_CMP
+        Player.ID_CMP += 1
+        return tmp
 
 
 class Cell :
