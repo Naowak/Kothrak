@@ -11,13 +11,13 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel
 import sys
 
-COEF_RESIZE = 0.5
+COEF_RESIZE = 0.4
 
 class MyApp() :
 
 
-    TRANSLATE_X = (162 * COEF_RESIZE, -96 * COEF_RESIZE)
-    TRANSLATE_Y = (162 * COEF_RESIZE, 96 * COEF_RESIZE)
+    TRANSLATE_X = (166 * COEF_RESIZE, -100 * COEF_RESIZE) # 156, 90 pour tout collé
+    TRANSLATE_Y = (166 * COEF_RESIZE, 100 * COEF_RESIZE)
     SIZE_STAGE = 60 * COEF_RESIZE
     SIZE_CELL_X = 312 * COEF_RESIZE
     SIZE_CELL_Y = [240 * COEF_RESIZE + 60 * COEF_RESIZE * i for i in range(4)]
