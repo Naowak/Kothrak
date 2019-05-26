@@ -9,12 +9,13 @@
 # from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel
+from Kothrak import *
 import sys
 import random
 
 COEF_RESIZE = 0.4
 
-class MyApp() :
+class MyApp(Kothrak) :
 
 
     TRANSLATE_X = (166 * COEF_RESIZE, -100 * COEF_RESIZE) # 156, 90 pour tout collé
@@ -34,6 +35,7 @@ class MyApp() :
     NB_CELLS = 5
 
     def __init__(self) :
+        super().__init__()
         self.window = QWidget()
         self.window.resize(2000 * COEF_RESIZE, 1200 * COEF_RESIZE)
         self.window.setWindowTitle('MyApp')
@@ -47,6 +49,39 @@ class MyApp() :
         for i in range(MyApp.NB_PLAYERS) :
             self.add_player()
 
+        self.on_player = None
+        self.on_waiting = False
+        self.click_abs = None
+        self.click_ord = None
+
+    def ask_build(self, player) :
+        test = True
+        self.on_waiting = True
+        self.on_player = player
+        while test :
+            if not self.on_waiting :
+                if self.is_correct_build(self, player, self.click_abs, self.click_ord) :
+                    cell = self.get_cell(self.click_abs, self.click_ord)
+                    cell.grew()
+                    test = False
+                else :
+                    self.on_waiting = True
+        return self.click_abs, self.click_ord
+
+    def ask_movement(self, player) :
+        test = True
+        self.on_waiting = True
+        self.on_player = player
+        while test :
+            if not self.on_waiting :
+                if self.is_correct_movement(self, player, self.click_abs, self.click_ord) :
+                    player = self.players[player].move(self.click_abs, self.click_ord)
+                    test = False
+                else :
+                    self.on_waiting = True
+        return self.click_abs, self.click_ord
+
+
     def click(self, event) :
         click_x, click_y = (event.pos().x(), event.pos().y())
         for i in range(MyApp.NB_CELLS) :
@@ -55,11 +90,15 @@ class MyApp() :
                 relative_x = click_x - cell.pos_x
                 relative_y = click_y - cell.pos_y
                 if cell.is_pos_in_cell(relative_x, relative_y) :
-                    cell.grew()
-                    player = self.get_player_on_cell(cell)
-                    if player != None :
-                        player.move(i, j)
-                    return
+                    # player = self.get_player_on_cell(cell)
+                    # if player != None :
+                    self.click_abs = cell.x
+                    self.click_ord = cell.y
+                    self.on_waiting = False
+                    # cell.grew()
+                    
+                    #     player.move(i, j)
+                    # return
 
     def get_player_on_cell(self, cell) :
         for p in self.players :

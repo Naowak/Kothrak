@@ -9,6 +9,25 @@ class Kothrak() :
         self.map = [[0 for j in range(SIZE_MAP)] for i in range(SIZE_MAP)]
         self.players = [[-1, -1] for _ in range(NB_PLAYERS)]
         self.turn = -1
+
+    def is_correct_build(self, player, x, y) :
+        if not self.is_in_map(x, y) :
+            print('Cell not in map.')
+            return False
+        if not self.is_cell_free(x, y) :
+            print("Cell not free.")
+            return False
+        if self.get_cell_height(x, y) >= MAX_CELL_HEIGHT :
+            print("Cannot build on this cell")
+            return False
+        player_y, player_x = self.players[player-1]
+        if not self.is_player_on_map(player) :
+            print("Player {} not in map.".format(player))
+            return False
+        if not self.is_cell_in_range(player_x, player_y, x, y, 1) :
+            print('Location too far.')
+            return False            
+        return True
         
     def ask_build(self, player) :
         correct_play = False
@@ -19,24 +38,25 @@ class Kothrak() :
             except ValueError :
                 print("Invalid Value.")
                 continue
-            if not self.is_in_map(x, y) :
-                print('Cell not in map.')
-                continue
-            if not self.is_cell_free(x, y) :
-                print("Cell not free.")
-                continue
-            if self.get_cell_height(x, y) >= MAX_CELL_HEIGHT :
-                print("Cannot build on this cell")
-                continue
-            player_y, player_x = self.players[player-1]
-            if self.is_player_on_map(player) :
-                if not self.is_cell_in_range(player_x, player_y, x, y, 1) :
-                    print('Location too far.')
-                    continue            
-            else :
-                print("Player {} not in map.".format(player))
-            correct_play = True
+            correct_play = self.is_correct_build(player, x, y)
         return x, y
+
+    def is_correct_movement(self, player, x, y) :
+        if not self.is_in_map(x, y) :
+            print('Cell not in map.')
+            return False
+        if not self.is_cell_free(x, y) :
+            print("Cell already taken.")
+            return False
+        old_y, old_x = self.players[player-1]
+        if self.is_player_on_map(player) :
+            if not self.is_cell_in_range(old_x, old_y, x, y, 1) :
+                print('Location too far.')
+                return False
+            if self.is_cell_too_high(old_x, old_y, x, y) :
+                print("Can not climb that high.")
+                return False
+        return True
     
     def ask_movement(self, player) :
         correct_play = False
@@ -47,21 +67,7 @@ class Kothrak() :
             except ValueError :
                 print("Invalid Value.")
                 continue
-            if not self.is_in_map(x, y) :
-                print('Cell not in map.')
-                continue
-            if not self.is_cell_free(x, y) :
-                print("Cell already taken.")
-                continue
-            old_y, old_x = self.players[player-1]
-            if self.is_player_on_map(player) :
-                if not self.is_cell_in_range(old_x, old_y, x, y, 1) :
-                    print('Location too far.')
-                    continue
-                if self.is_cell_too_high(old_x, old_y, x, y) :
-                    print("Can not climb that high.")
-                    continue
-            correct_play = True
+            correct_play = self.is_correct_movement(player, x, y)
         return x, y
 
     def is_in_map(self, x, y) :
