@@ -8,7 +8,7 @@
 
 # from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5 import QtWidgets, QtCore, QtGui
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton
 from Kothrak import *
 import sys
 import random
@@ -54,6 +54,14 @@ class MyApp(Kothrak) :
         self.click_abs = None
         self.click_ord = None
 
+        self.button = QPushButton('Button', self.window)
+        self.button.move(100,70)
+        self.button.clicked.connect(self.start)
+
+    def start(self) :
+        print("Start !")
+        
+
     def ask_build(self, player) :
         test = True
         self.on_waiting = True
@@ -90,15 +98,9 @@ class MyApp(Kothrak) :
                 relative_x = click_x - cell.pos_x
                 relative_y = click_y - cell.pos_y
                 if cell.is_pos_in_cell(relative_x, relative_y) :
-                    # player = self.get_player_on_cell(cell)
-                    # if player != None :
                     self.click_abs = cell.x
                     self.click_ord = cell.y
                     self.on_waiting = False
-                    # cell.grew()
-                    
-                    #     player.move(i, j)
-                    # return
 
     def get_player_on_cell(self, cell) :
         for p in self.players :

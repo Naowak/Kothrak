@@ -8,7 +8,41 @@ class Kothrak() :
     def __init__(self) :
         self.map = [[0 for j in range(SIZE_MAP)] for i in range(SIZE_MAP)]
         self.players = [[-1, -1] for _ in range(NB_PLAYERS)]
-        self.turn = -1
+        self.game_over = False
+        self.on_turn = {"index" : -1, "player" : 0, "action" : "move"}
+
+    def run(self) :
+        # ATTENTION A LA BOUCLE INFINI
+        while not self.game_over :
+            self.step()
+        self.step()
+
+    def step(self) :
+        if not self.game_over :
+
+            if self.on_turn["action"] == "move" :
+                self.on_turn["player"] = self.on_turn["player"]%2 + 1
+                self.on_turn["index"] += 1
+                print("\nJoueur {}".format(self.on_turn["player"]))
+                print(self)
+                move_x, move_y = self.ask_movement(self.on_turn["player"])
+                self.players[self.on_turn["player"] - 1] = [move_y, move_x]
+                self.game_over = self.is_game_over()
+                if (not self.game_over) and self.on_turn["index"] >= NB_PLAYERS:
+                    self.on_turn["action"] = "build"
+
+            elif self.on_turn["action"] == "build" :
+                print(self)
+                print("\nJoueur {}".format(self.on_turn["player"]))
+                build_x, build_y = self.ask_build(self.on_turn["player"])
+                self.map[build_y][build_x] += 1
+                self.on_turn["action"] = "move"
+
+
+        if self.game_over :
+            print(self)
+            print("Game Over !")
+            print("Le joueur {} a gagné la partie !".format(self.game_over))
 
     def is_correct_build(self, player, x, y) :
         if not self.is_in_map(x, y) :
@@ -100,30 +134,6 @@ class Kothrak() :
                 if self.map[j][i] == 3 and [j, i] in self.players :
                     return self.players.index([j, i]) + 1
         return False
-    
-    def run(self) :
-        player = 0
-        game_over = False
-        while(not game_over) :
-            self.turn += 1
-            player = player%2 + 1
-            print("\nJoueur {}".format(player))
-            print(self)
-            move_x, move_y = self.ask_movement(player)
-            self.players[player - 1] = [move_y, move_x]
-            game_over = self.is_game_over()
-            if game_over :
-                continue
-                
-            if self.turn >= NB_PLAYERS :
-                print(self)
-                print("\nJoueur {}".format(player))
-                build_x, build_y = self.ask_build(player)
-                self.map[build_y][build_x] += 1
-
-        print(self)
-        print("Game Over !")
-        print("Le joueur {} a gagné la partie !".format(game_over))
     
     def __str__(self) :
         string = PLAYERS_COLOR[0]
