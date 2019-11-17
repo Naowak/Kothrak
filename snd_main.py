@@ -6,13 +6,16 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel
 
 APP_PIXDIM = (800, 600)
-IMGCELL_PIXDIM = (586, 454)
+IMGCELL_PIXDIM = (456, 342)
 
-POS_CENTER = (APP_PIXDIM[0]/2, APP_PIXDIM[1]/2)
-MV_R = [117, 0]
-MV_DR = [57, 51]
 COEF = 0.2
 GRID_RAY = 2
+
+POS_CENTER = (APP_PIXDIM[0]/2, APP_PIXDIM[1]/2)
+MV_R = [454 * COEF, 0]
+MV_DR = [228 * COEF, 190 * COEF]
+PIXSIZE_STAGE_CELL = 82 * COEF
+
 
 
 class MyApp :
@@ -22,21 +25,30 @@ class MyApp :
 		self.window = QWidget()
 		self.window.resize(APP_PIXDIM[0], APP_PIXDIM[1])
 		self.window.setWindowTitle('MyApp')
-		self.window.mouseReleaseEvent=lambda event:self.click(event)
-		self.window.keyReleaseEvent=lambda event:self.keyboard(event)
+		self.window.mouseReleaseEvent=lambda event:self.on_click(event)
+		self.window.keyReleaseEvent=lambda event:self.on_keyboard(event)
 
 		# Initialisation des cells
 		self.grid = Grid(self)
-		# self.a=Cell(200, 200, self)
-		# self.b=Cell(500, 500, self)
 
-	def click(self, event) :
+	def on_click(self, event) :
 		x, y = event.pos().x(), event.pos().y()
-		print(x, y)
+		self.grid.get_cell_from_pos(x, y)
 
-	def keyboard(self, event) :
+	def on_keyboard(self, event) :
 		key = event.key()
-		print(key)
+		msg = ''
+		if key == QtCore.Qt.Key_Up :
+			msg = 'up'
+		elif key == QtCore.Qt.Key_Down :
+			msg = 'down'
+		elif key == QtCore.Qt.Key_Right :
+			msg = 'right'
+		elif key == QtCore.Qt.Key_Left :
+			msg = 'left'
+		else :
+			print(key)
+		# self.b.move(msg)
 
 	def show(self) :
 		self.window.show()
@@ -80,24 +92,48 @@ class Grid :
 			q = -self.ray
 			nb_cell -= 1
 
+	def get_cell_from_pos(self, x, y) :
+		cells = []
+		for line in self.grid :
+			cells += line
+		for c in cells :
+			if c.is_pos_in_cell(x, y) :
+				print(c.x, c.y)
+				break
+
 
 class Cell :
 
 	PATH_IMG = '/home/naowak/Images/cell_basic.png'
 	# PATH_IMG = 'cell1_resized.png'
+	X_MIN_LIM = 10 * COEF
+	X_MAX_LIM = 450 * COEF
+	Y_MIN_LIM = 0 * COEF
+	Y_MAX_LIM = 260 * COEF
+	CORNER_LEFTUP_PIXPOS = [X_MIN_LIM, 70 * COEF]
+	CORNER_LEFTDOWN_PIXPOS = [X_MIN_LIM, 190 * COEF]
+	CORNER_UP_PIXPOS = [230 * COEF, Y_MIN_LIM]
+	CORNER_DOWN_PIXPOS = [230 * COEF, Y_MAX_LIM]
+	CORNER_RIGHTUP_PIXPOS = [X_MAX_LIM, 70 * COEF]
+	CORNER_RIGHTDOWN_PIXPOS = [X_MAX_LIM, 190 * COEF]
 
 	def __init__(self, x, y, app) :
 		self.app = app
 		self.x = x
 		self.y = y
-		self.size_x = IMGCELL_PIXDIM[0]*COEF
-		self.size_y = IMGCELL_PIXDIM[1]*COEF
+		self.size_x = IMGCELL_PIXDIM[0] * COEF
+		self.size_y = IMGCELL_PIXDIM[1] * COEF
+		self.stage = 1
+
 		self.img = QLabel(self.app.window)
 		self.img.setGeometry(QtCore.QRect(x, y, self.size_x, self.size_y))
 		self.img.setPixmap(QtGui.QPixmap(self.PATH_IMG))
 		self.img.setText("")
 		self.img.setScaledContents(True)
 		self.img.setObjectName("cell_{}_{}".format(x, y))
+
+	def absolute_to_relative_position(self, x, y) :
+		return (x - self.x, y - self.y)
 
 	def move(self, direction) :
 		if direction == 'up' :
@@ -110,8 +146,38 @@ class Cell :
 			self.x -= 1
 		else :
 			raise Exception('That direction doesn\'t mean anything : {}'.format(direction))
-		print(self.x, self.y)
 		self.img.setGeometry(self.x, self.y, self.size_x, self.size_y)
+
+	def is_pos_in_cell(self, x, y) :
+		"""On vérifie que x et y sont bien dans l'image et non dans le fond transparent."""
+
+		x, y = self.absolute_to_relative_position(x, y)
+		
+		# Up
+		segments_up = [(self.CORNER_LEFTUP_PIXPOS, self.CORNER_UP_PIXPOS),
+	 				(self.CORNER_UP_PIXPOS, self.CORNER_RIGHTUP_PIXPOS)]
+		for p, q in segments_up :
+	 		coef_dir = (q[1] - p[1])/(q[0] - p[0])
+	 		b = p[1] - coef_dir * p[0]
+	 		if coef_dir * x + b - y > 0 :
+	 			return False
+
+		# Down
+		segments_down = [(self.CORNER_DOWN_PIXPOS, self.CORNER_RIGHTDOWN_PIXPOS),
+		 				(self.CORNER_LEFTDOWN_PIXPOS, self.CORNER_DOWN_PIXPOS)]
+		for m, n in segments_down :
+			p = (m[0], m[1] + PIXSIZE_STAGE_CELL * self.stage)
+			q = (n[0], n[1] + PIXSIZE_STAGE_CELL * self.stage)
+			coef_dir = (q[1] - p[1])/(q[0] - p[0])
+			b = p[1] - coef_dir*p[0] 
+			if coef_dir*x + b - y < 0 :
+				return False
+
+		# Sides
+		if x < self.X_MIN_LIM or x > self.X_MAX_LIM :
+			return False
+
+		return True
 
 qapp = QApplication(sys.argv)
 main_window = MyApp()
