@@ -1,20 +1,23 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import numpy as np
 
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel
 
-APP_PIXDIM = (800, 600)
-IMGCELL_PIXDIM = (456, 342)
 
 COEF = 0.2
 GRID_RAY = 2
 
+APP_PIXDIM = (800, 600)
 POS_CENTER = (APP_PIXDIM[0]/2, APP_PIXDIM[1]/2)
+
+IMGCELL_PIXDIM = (456*COEF, 342*COEF)
+PIXSIZE_STAGE_CELL = [0, 80 * COEF]
+
 MV_R = [454 * COEF, 0]
 MV_DR = [228 * COEF, 190 * COEF]
-PIXSIZE_STAGE_CELL = 82 * COEF
 
 
 
@@ -33,7 +36,9 @@ class MyApp :
 
 	def on_click(self, event) :
 		x, y = event.pos().x(), event.pos().y()
-		self.grid.get_cell_from_pos(x, y)
+		cell = self.grid.get_cell_from_pos(x, y)
+		cell.grew()
+		print(cell.q, cell.r)
 
 	def on_keyboard(self, event) :
 		key = event.key()
@@ -67,7 +72,7 @@ class Grid :
 		def create_one_cell(self, q, r) :
 			pos_x = POS_CENTER[0] + MV_R[0]*q + MV_DR[0]*r
 			pos_y = POS_CENTER[1] + MV_DR[1]*r
-			return Cell(pos_x, pos_y, self.app) 
+			return Cell(pos_x, pos_y, q, r, self.app) 
 
 		def create_one_line(self, nb_cell, q, r) :
 			for i in range(nb_cell) :
@@ -94,17 +99,20 @@ class Grid :
 
 	def get_cell_from_pos(self, x, y) :
 		cells = []
-		for line in self.grid :
-			cells += line
+		for r in range(-self.ray, self.ray+1) :
+			for line in self.grid :
+				for c in line :
+					if c.r == r :
+						cells += [c]
+
 		for c in cells :
 			if c.is_pos_in_cell(x, y) :
-				print(c.x, c.y)
-				break
+				return c
 
 
 class Cell :
 
-	PATH_IMG = '/home/naowak/Images/cell_basic.png'
+	PATH_IMG = "/home/naowak/Documents/Kothrak/cell_{}.png"
 	# PATH_IMG = 'cell1_resized.png'
 	X_MIN_LIM = 10 * COEF
 	X_MAX_LIM = 450 * COEF
@@ -117,20 +125,39 @@ class Cell :
 	CORNER_RIGHTUP_PIXPOS = [X_MAX_LIM, 70 * COEF]
 	CORNER_RIGHTDOWN_PIXPOS = [X_MAX_LIM, 190 * COEF]
 
-	def __init__(self, x, y, app) :
+	MAX_STAGE = 4
+
+	def __init__(self, x, y, q, r, app) :
 		self.app = app
+		self.q = q
+		self.r = r
 		self.x = x
 		self.y = y
-		self.size_x = IMGCELL_PIXDIM[0] * COEF
-		self.size_y = IMGCELL_PIXDIM[1] * COEF
+		self.size_x = IMGCELL_PIXDIM[0]
+		self.size_y = IMGCELL_PIXDIM[1]
 		self.stage = 1
 
 		self.img = QLabel(self.app.window)
 		self.img.setGeometry(QtCore.QRect(x, y, self.size_x, self.size_y))
-		self.img.setPixmap(QtGui.QPixmap(self.PATH_IMG))
+		self.img.setPixmap(QtGui.QPixmap(self.PATH_IMG.format(self.stage)))
 		self.img.setText("")
 		self.img.setScaledContents(True)
 		self.img.setObjectName("cell_{}_{}".format(x, y))
+
+	def grew(self) :
+		if self.stage >= Cell.MAX_STAGE :
+			print("Cannot grow anymore.")
+			return
+		self.stage += 1
+		self.change_img()
+
+	def change_img(self) :
+		self.y -= PIXSIZE_STAGE_CELL[1]
+		self.size_x += PIXSIZE_STAGE_CELL[0]
+		self.size_y += PIXSIZE_STAGE_CELL[1]
+		self.img.setGeometry(QtCore.QRect(self.x, self.y, self.size_x, self.size_y))
+		self.img.setPixmap(QtGui.QPixmap(self.PATH_IMG.format(self.stage)))
+		print(self.x, self.y, self.size_x, self.size_y)
 
 	def absolute_to_relative_position(self, x, y) :
 		return (x - self.x, y - self.y)
@@ -166,8 +193,8 @@ class Cell :
 		segments_down = [(self.CORNER_DOWN_PIXPOS, self.CORNER_RIGHTDOWN_PIXPOS),
 		 				(self.CORNER_LEFTDOWN_PIXPOS, self.CORNER_DOWN_PIXPOS)]
 		for m, n in segments_down :
-			p = (m[0], m[1] + PIXSIZE_STAGE_CELL * self.stage)
-			q = (n[0], n[1] + PIXSIZE_STAGE_CELL * self.stage)
+			p = (m[0], m[1] + PIXSIZE_STAGE_CELL[1] * self.stage)
+			q = (n[0], n[1] + PIXSIZE_STAGE_CELL[1] * self.stage)
 			coef_dir = (q[1] - p[1])/(q[0] - p[0])
 			b = p[1] - coef_dir*p[0] 
 			if coef_dir*x + b - y < 0 :
