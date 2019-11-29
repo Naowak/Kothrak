@@ -31,12 +31,19 @@ class MyApp :
 	def __init__(self) :
 		
 		def create_players(self, nb_players=2) :
+			
 			cells = self.grid.get_all_cells()
+			cells_selected = []
+			
 			for player_id in range(nb_players) :
-				cell = random.choice(cells)
-				cells.remove(cell)
+				c = random.choice(cells)
+				cells.remove(c)
+				cells_selected += [(player_id, c)]
+
+			cells_selected = sorted(cells_selected, key=lambda x : x[1].r)
+
+			for player_id, cell in cells_selected :
 				self.players += [Player(player_id, cell, self)]
-				print(cell.q, cell.r)
 		
 		# Initialisation de la fenetre
 		self.window = QWidget()
@@ -57,6 +64,11 @@ class MyApp :
 		cell.grew()
 		print(cell.q, cell.r)
 
+	def get_player_on_cell(self, cell) :
+		for p in self.players :
+			if p.cell == cell :
+				return p
+
 	def on_keyboard(self, event) :
 		key = event.key()
 		msg = ''
@@ -74,6 +86,8 @@ class MyApp :
 
 	def show(self) :
 		self.window.show()
+
+
 
 class Grid :
 
@@ -200,6 +214,10 @@ class Cell :
 			return
 		self.stage += 1
 		self.change_img()
+
+		player = self.app.get_player_on_cell(self)
+		if player != None :
+			player.move(self)
 
 	def change_img(self) :
 		self.y -= PIXSIZE_STAGE_CELL[1]
