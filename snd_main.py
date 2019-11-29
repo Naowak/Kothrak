@@ -7,16 +7,17 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel
 
 
-COEF = 0.2
+COEF = 0.3
 GRID_RAY = 2
 
-APP_PIXDIM = (800, 600)
-POS_CENTER = (APP_PIXDIM[0]/2, APP_PIXDIM[1]/2)
+APP_PIXDIM = (2800 * COEF, 2100 * COEF)
 
 IMGCELL_PIXDIM = (456*COEF, 342*COEF)
 PIXSIZE_STAGE_CELL = [0, 80 * COEF]
 
-MV_R = [454 * COEF, 0]
+POS_CENTER = [(APP_PIXDIM[0] - IMGCELL_PIXDIM[0])/2, (APP_PIXDIM[1] - IMGCELL_PIXDIM[1])/2]
+
+MV_R = [450 * COEF, 0]
 MV_DR = [228 * COEF, 190 * COEF]
 
 
@@ -99,7 +100,7 @@ class Grid :
 
 	def get_cell_from_pos(self, x, y) :
 		cells = []
-		for r in range(-self.ray, self.ray+1) :
+		for r in reversed(range(-self.ray, self.ray+1)) :
 			for line in self.grid :
 				for c in line :
 					if c.r == r :
@@ -153,11 +154,9 @@ class Cell :
 
 	def change_img(self) :
 		self.y -= PIXSIZE_STAGE_CELL[1]
-		self.size_x += PIXSIZE_STAGE_CELL[0]
 		self.size_y += PIXSIZE_STAGE_CELL[1]
 		self.img.setGeometry(QtCore.QRect(self.x, self.y, self.size_x, self.size_y))
 		self.img.setPixmap(QtGui.QPixmap(self.PATH_IMG.format(self.stage)))
-		print(self.x, self.y, self.size_x, self.size_y)
 
 	def absolute_to_relative_position(self, x, y) :
 		return (x - self.x, y - self.y)
@@ -206,7 +205,19 @@ class Cell :
 
 		return True
 
-qapp = QApplication(sys.argv)
-main_window = MyApp()
-main_window.show()
-sys.exit(qapp.exec_())
+
+style = '''
+QWidget {
+    background-color: rgb(40, 41, 35);
+} 
+QLabel {
+	background-color: rgba(255, 255, 255, 0)
+}
+'''
+
+if __name__ == '__main__' :
+	qapp = QApplication(sys.argv)
+	qapp.setStyleSheet(style)
+	main_window = MyApp()
+	main_window.show()
+	sys.exit(qapp.exec_())
