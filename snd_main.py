@@ -2,6 +2,7 @@
 
 import sys
 import numpy as np
+import random
 
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel
@@ -13,8 +14,11 @@ GRID_RAY = 2
 APP_PIXDIM = (2800 * COEF, 2100 * COEF)
 
 IMGCELL_PIXDIM = (456*COEF, 342*COEF)
+IMGPLAYER_PIXDIM = (590 * COEF * 0.8, 632 * COEF * 0.8)
 PIXSIZE_STAGE_CELL = [0, 80 * COEF]
+PIXSIZE_SHADOW_PLAYER = [90 * COEF, 0]
 
+PIXSIZE_VECTOR_PLAYER_CELL = [IMGCELL_PIXDIM[0]/2 - IMGPLAYER_PIXDIM[0]/2 - PIXSIZE_SHADOW_PLAYER[0]/2, IMGCELL_PIXDIM[1]/2 - IMGPLAYER_PIXDIM[1]]
 POS_CENTER = [(APP_PIXDIM[0] - IMGCELL_PIXDIM[0])/2, (APP_PIXDIM[1] - IMGCELL_PIXDIM[1])/2]
 
 MV_R = [450 * COEF, 0]
@@ -25,6 +29,15 @@ MV_DR = [228 * COEF, 190 * COEF]
 class MyApp :
 	
 	def __init__(self) :
+		
+		def create_players(self, nb_players=2) :
+			cells = self.grid.get_all_cells()
+			for player_id in range(nb_players) :
+				cell = random.choice(cells)
+				cells.remove(cell)
+				self.players += [Player(player_id, cell, self)]
+				print(cell.q, cell.r)
+		
 		# Initialisation de la fenetre
 		self.window = QWidget()
 		self.window.resize(APP_PIXDIM[0], APP_PIXDIM[1])
@@ -34,6 +47,9 @@ class MyApp :
 
 		# Initialisation des cells
 		self.grid = Grid(self)
+		self.players = []
+		create_players(self)
+
 
 	def on_click(self, event) :
 		x, y = event.pos().x(), event.pos().y()
@@ -110,6 +126,40 @@ class Grid :
 			if c.is_pos_in_cell(x, y) :
 				return c
 
+	def get_all_cells(self) :
+		cells = []
+		for line in self.grid :
+			for cell in line :
+				 cells += [cell]
+		return cells
+
+class Player :
+
+	PATH_IMG = "/home/naowak/Documents/Kothrak/player_img{}.png"
+
+	def __init__(self, player_id, cell, app) :
+		self.app = app
+		self.player_id = player_id
+		self.cell = None
+		self.x = 0
+		self.y = 0
+		self.size_x = IMGPLAYER_PIXDIM[0]
+		self.size_y = IMGPLAYER_PIXDIM[1]
+
+		self.img = QLabel(self.app.window)
+		# self.img.setGeometry(QtCore.QRect(self.x, self.y, self.size_x, self.size_y))
+		self.img.setPixmap(QtGui.QPixmap(self.PATH_IMG.format(self.player_id)))
+		self.img.setScaledContents(True)
+		self.img.setObjectName("Player_{}".format(self.player_id))
+		self.move(cell)
+
+	def move(self, cell) :
+		self.cell = cell
+		self.x = cell.x + PIXSIZE_VECTOR_PLAYER_CELL[0]
+		self.y = cell.y + PIXSIZE_VECTOR_PLAYER_CELL[1]
+		self.img.setGeometry(QtCore.QRect(self.x, self.y, self.size_x, self.size_y))
+		
+
 
 class Cell :
 
@@ -139,11 +189,10 @@ class Cell :
 		self.stage = 1
 
 		self.img = QLabel(self.app.window)
-		self.img.setGeometry(QtCore.QRect(x, y, self.size_x, self.size_y))
+		self.img.setGeometry(QtCore.QRect(self.x, self.y, self.size_x, self.size_y))
 		self.img.setPixmap(QtGui.QPixmap(self.PATH_IMG.format(self.stage)))
-		self.img.setText("")
 		self.img.setScaledContents(True)
-		self.img.setObjectName("cell_{}_{}".format(x, y))
+		self.img.setObjectName("cell_{}_{}".format(q, r))
 
 	def grew(self) :
 		if self.stage >= Cell.MAX_STAGE :
