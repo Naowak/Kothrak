@@ -32,7 +32,7 @@ class MyApp :
 	
 	def __init__(self) :
 		
-		def create_players(self, nb_players=3) :
+		def create_players(self, nb_players=2) :
 			
 			cells = self.grid.get_all_cells()
 			cells_selected = []
