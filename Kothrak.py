@@ -205,7 +205,7 @@ class Grid :
 
 class Player :
 
-	PATH_IMG = "/home/naowak/Documents/Kothrak/img/player_img{}.png"
+	PATH_IMG = "img/player_img{}.png"
 
 	def __init__(self, player_id, cell, app) :
 		self.app = app
@@ -233,7 +233,7 @@ class Player :
 
 class Cell :
 
-	PATH_IMG = "/home/naowak/Documents/Kothrak/img/cell_{}.png"
+	PATH_IMG = "img/cell_{}.png"
 	# PATH_IMG = 'cell1_resized.png'
 	X_MIN_LIM = 10 * COEF
 	X_MAX_LIM = 450 * COEF
