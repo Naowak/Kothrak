@@ -134,21 +134,6 @@ class MyApp :
 			if p.cell == cell :
 				return p
 
-	def on_keyboard(self, event) :
-		key = event.key()
-		msg = ''
-		if key == QtCore.Qt.Key_Up :
-			msg = 'up'
-		elif key == QtCore.Qt.Key_Down :
-			msg = 'down'
-		elif key == QtCore.Qt.Key_Right :
-			msg = 'right'
-		elif key == QtCore.Qt.Key_Left :
-			msg = 'left'
-		else :
-			print(key)
-		# self.b.move(msg)
-
 	def show(self) :
 		self.window.show()
 
@@ -298,19 +283,6 @@ class Cell :
 
 	def absolute_to_relative_position(self, x, y) :
 		return (x - self.x, y - self.y)
-
-	def move(self, direction) :
-		if direction == 'up' :
-			self.y -= 1
-		elif direction == 'down' :
-			self.y += 1
-		elif direction == 'right' :
-			self.x += 1
-		elif direction == 'left' :
-			self.x -= 1
-		else :
-			raise Exception('That direction doesn\'t mean anything : {}'.format(direction))
-		self.img.setGeometry(self.x, self.y, self.size_x, self.size_y)
 
 	def is_pos_in_cell(self, x, y) :
 		"""On vérifie que x et y sont bien dans l'image et non dans le fond transparent."""
