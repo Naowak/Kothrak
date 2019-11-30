@@ -44,6 +44,13 @@ class MyApp :
 
 			for player_id, cell in cells_selected :
 				self.players += [Player(player_id, cell, self)]
+
+		def init_game(self) :
+			self.next_player_id = random.choice(range(len(self.players)))
+			self.next_player()
+
+			self.current_step = 'move'
+			self.game_over = False
 		
 		# Initialisation de la fenetre
 		self.window = QWidget()
@@ -52,17 +59,55 @@ class MyApp :
 		self.window.mouseReleaseEvent=lambda event:self.on_click(event)
 		self.window.keyReleaseEvent=lambda event:self.on_keyboard(event)
 
-		# Initialisation des cells
+		# Initialisation des Cells
 		self.grid = Grid(self)
+
+		# Initialisation de la partie
 		self.players = []
+		self.next_player_id = -1
+		self.current_step = ''
+		self.game_over = None 
 		create_players(self)
+		init_game(self)
+
+	def is_game_over(self) :
+		return self.current_player.cell.stage == Cell.MAX_STAGE
+
+	def get_neighbors(self, cell) :
+		dir_coords = [(0, -1), (-1, 0), (-1, 1), (0, 1), (1, 0), (1, -1)]
+		neighbors_coord = [(cell.q + c[0], cell.r + c[1]) for c in dir_coords]
+		neighbors = [self.grid.get_cell_from_coord(q, r) for q, r in neighbors_coord]
+		neighbors = [c for c in neighbors if c is not None]
+		return neighbors
+
+	def next_player(self) :
+		self.current_player = self.players[self.next_player_id]
+		self.next_player_id = (self.next_player_id + 1) % 2
+
+	def play(self, cell) :
+
+		if self.current_step == 'move' :
+			if cell in self.get_neighbors(self.current_player.cell) :
+				self.current_player.move(cell)
+				self.current_step = 'build'
+				self.game_over = self.is_game_over()
+				if self.game_over :
+					print('Game over !')
+					print('Player {} won the game.'.format(self.current_player.player_id))
+
+		elif self.current_step == 'build' :
+			if cell in self.get_neighbors(self.current_player.cell) :
+				if cell.stage < cell.MAX_STAGE :
+					cell.grew()
+					self.next_player()
+					self.current_step = 'move'
 
 
 	def on_click(self, event) :
 		x, y = event.pos().x(), event.pos().y()
 		cell = self.grid.get_cell_from_pos(x, y)
-		cell.grew()
-		print(cell.q, cell.r)
+		if cell is not None :
+			self.play(cell)
 
 	def get_player_on_cell(self, cell) :
 		for p in self.players :
@@ -127,6 +172,12 @@ class Grid :
 			r += 1
 			q = -self.ray
 			nb_cell -= 1
+
+	def get_cell_from_coord(self, q, r) :
+		for line in self.grid :
+			for cell in line :
+				if cell.q == q and cell.r == r :
+					return cell
 
 	def get_cell_from_pos(self, x, y) :
 		cells = []
