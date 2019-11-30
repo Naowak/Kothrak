@@ -6,12 +6,14 @@ import random
 
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel
+from PyQt5.QtCore import Qt
 
 
 COEF = 0.3
 GRID_RAY = 2
 
-APP_PIXDIM = (2800 * COEF, 2100 * COEF)
+APP_PIXDIM = (2800 * COEF, 2400 * COEF)
+MESSAGE_PIXDIM = (APP_PIXDIM[0], 300 * COEF)
 
 IMGCELL_PIXDIM = (456*COEF, 342*COEF)
 IMGPLAYER_PIXDIM = (590 * COEF * 0.8, 632 * COEF * 0.8)
@@ -19,7 +21,7 @@ PIXSIZE_STAGE_CELL = [0, 80 * COEF]
 PIXSIZE_SHADOW_PLAYER = [90 * COEF, 0]
 
 PIXSIZE_VECTOR_PLAYER_CELL = [IMGCELL_PIXDIM[0]/2 - IMGPLAYER_PIXDIM[0]/2 - PIXSIZE_SHADOW_PLAYER[0]/2, IMGCELL_PIXDIM[1]/2 - IMGPLAYER_PIXDIM[1]]
-POS_CENTER = [(APP_PIXDIM[0] - IMGCELL_PIXDIM[0])/2, (APP_PIXDIM[1] - IMGCELL_PIXDIM[1])/2]
+POS_CENTER = [(APP_PIXDIM[0] - IMGCELL_PIXDIM[0])/2, 400 * COEF + (APP_PIXDIM[1] - IMGCELL_PIXDIM[1])/2]
 
 MV_R = [450 * COEF, 0]
 MV_DR = [228 * COEF, 190 * COEF]
@@ -48,10 +50,9 @@ class MyApp :
 		def init_game(self) :
 			self.next_player_id = random.choice(range(len(self.players)))
 			self.next_player()
-
 			self.current_step = 'move'
-			self.game_over = False
-		
+
+
 		# Initialisation de la fenetre
 		self.window = QWidget()
 		self.window.resize(APP_PIXDIM[0], APP_PIXDIM[1])
@@ -59,16 +60,31 @@ class MyApp :
 		self.window.mouseReleaseEvent=lambda event:self.on_click(event)
 		self.window.keyReleaseEvent=lambda event:self.on_keyboard(event)
 
+		# Initialisation du message
+		self.message = QLabel(self.window)
+		self.message.setGeometry(0, 0, MESSAGE_PIXDIM[0], MESSAGE_PIXDIM[1])
+		self.message.setText("")
+		self.message.setAlignment(Qt.AlignCenter)
+		self.message.setObjectName('Hello')
+
 		# Initialisation des Cells
 		self.grid = Grid(self)
 
 		# Initialisation de la partie
 		self.players = []
 		self.next_player_id = -1
+		self.current_player = None
 		self.current_step = ''
-		self.game_over = None 
 		create_players(self)
 		init_game(self)
+		self.update_message()
+
+	def update_message(self) :
+		if self.current_step != 'game_over' :
+			text = 'Player {} : {}'.format(self.current_player.player_id + 1, self.current_step)
+		else :
+			text = 'Game Over'
+		self.message.setText(text)
 
 	def is_game_over(self) :
 		return self.current_player.cell.stage == Cell.MAX_STAGE
@@ -86,21 +102,25 @@ class MyApp :
 
 	def play(self, cell) :
 
-		if self.current_step == 'move' :
-			if cell in self.get_neighbors(self.current_player.cell) :
-				self.current_player.move(cell)
-				self.current_step = 'build'
-				self.game_over = self.is_game_over()
-				if self.game_over :
-					print('Game over !')
-					print('Player {} won the game.'.format(self.current_player.player_id))
+		if self.current_step != 'game_over' :
 
-		elif self.current_step == 'build' :
-			if cell in self.get_neighbors(self.current_player.cell) :
-				if cell.stage < cell.MAX_STAGE :
-					cell.grew()
-					self.next_player()
-					self.current_step = 'move'
+			if self.current_step == 'move' :
+				if cell in self.get_neighbors(self.current_player.cell)  and self.get_player_on_cell(cell) is None :
+					self.current_player.move(cell)
+					self.current_step = 'build'
+					if self.is_game_over() :
+						self.current_step = 'game_over'
+						print('Game over !')
+						print('Player {} won the game.'.format(self.current_player.player_id))
+
+			elif self.current_step == 'build' and self.get_player_on_cell(cell) is None :
+				if cell in self.get_neighbors(self.current_player.cell) :
+					if cell.stage < cell.MAX_STAGE :
+						cell.grew()
+						self.next_player()
+						self.current_step = 'move'
+
+			self.update_message()
 
 
 	def on_click(self, event) :
@@ -329,7 +349,11 @@ QWidget {
     background-color: rgb(40, 41, 35);
 } 
 QLabel {
-	background-color: rgba(255, 255, 255, 0)
+	background-color: rgba(255, 255, 255, 0);
+}
+QLabel#Hello {
+	color:rgb(210, 90, 20);
+	font:30pt;
 }
 '''
 
