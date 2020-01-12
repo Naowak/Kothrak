@@ -100,12 +100,18 @@ class MyApp :
         self.current_player = self.players[self.next_player_id]
         self.next_player_id = (self.next_player_id + 1) % 2
 
-    def play(self, cell) :
+    def play(self, q, r) :
+
+        q = self.current_player.cell.q + q
+        r = self.current_player.cell.r + r 
+        cell = self.grid.get_cell_from_coord(q, r)
 
         if self.current_step != 'game_over' :
 
             if self.current_step == 'move' :
-                if cell in self.get_neighbors(self.current_player.cell)  and self.get_player_on_cell(cell) is None :
+                if cell in self.get_neighbors(self.current_player.cell) \
+                    and self.get_player_on_cell(cell) is None \
+                    and cell.stage <= self.current_player.cell.stage + 1 :
                     self.current_player.move(cell)
                     self.current_step = 'build'
                     if self.is_game_over() :
@@ -126,8 +132,11 @@ class MyApp :
     def on_click(self, event) :
         x, y = event.pos().x(), event.pos().y()
         cell = self.grid.get_cell_from_pos(x, y)
+        print(cell.q, cell.r)
         if cell is not None :
-            self.play(cell)
+            q_relative = cell.q - self.current_player.cell.q
+            r_relative = cell.r - self.current_player.cell.r
+            self.play(q_relative, r_relative)
 
     def get_player_on_cell(self, cell) :
         for p in self.players :
