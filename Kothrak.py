@@ -31,7 +31,26 @@ MV_DR = [228 * COEF, 190 * COEF]
 class MyApp :
     
     def __init__(self) :
-        
+        # Initialisation de la fenetre
+        self.window = QWidget()
+        self.window.resize(APP_PIXDIM[0], APP_PIXDIM[1])
+        self.window.setWindowTitle('MyApp')
+        self.window.mouseReleaseEvent=lambda event:self.on_click(event)
+        self.window.keyReleaseEvent=lambda event:self.on_keyboard(event)
+
+        # Initialisation du message
+        self.message = QLabel(self.window)
+        self.message.setGeometry(0, 0, MESSAGE_PIXDIM[0], MESSAGE_PIXDIM[1])
+        self.message.setText("")
+        self.message.setAlignment(Qt.AlignCenter)
+        self.message.setObjectName('Hello')
+
+        # Init new game
+        self.new_game()
+
+
+    def new_game(self) :
+
         def create_players(self, nb_players=2) :
             
             cells = self.grid.get_all_cells()
@@ -51,22 +70,7 @@ class MyApp :
             self.next_player_id = random.choice(range(len(self.players)))
             self.next_player()
             self.current_step = 'move'
-
-
-        # Initialisation de la fenetre
-        self.window = QWidget()
-        self.window.resize(APP_PIXDIM[0], APP_PIXDIM[1])
-        self.window.setWindowTitle('MyApp')
-        self.window.mouseReleaseEvent=lambda event:self.on_click(event)
-        self.window.keyReleaseEvent=lambda event:self.on_keyboard(event)
-
-        # Initialisation du message
-        self.message = QLabel(self.window)
-        self.message.setGeometry(0, 0, MESSAGE_PIXDIM[0], MESSAGE_PIXDIM[1])
-        self.message.setText("")
-        self.message.setAlignment(Qt.AlignCenter)
-        self.message.setObjectName('Hello')
-
+        
         # Initialisation des Cells
         self.grid = Grid(self)
 
@@ -78,6 +82,14 @@ class MyApp :
         create_players(self)
         init_game(self)
         self.update_message()
+
+    def state(self) : 
+        # Return the state of the grid
+        state = []
+        for p in self.players :
+            state += [p.cell.q, p.cell.r]
+        state += [c.stage for c in self.grid.grid]
+        return state
 
     def update_message(self) :
         if self.current_step != 'game_over' :
@@ -127,12 +139,15 @@ class MyApp :
                         self.current_step = 'move'
 
             self.update_message()
+            return 0, False
+        
+        else :
+            return 1, True
 
 
     def on_click(self, event) :
         x, y = event.pos().x(), event.pos().y()
         cell = self.grid.get_cell_from_pos(x, y)
-        print(cell.q, cell.r)
         if cell is not None :
             q_relative = cell.q - self.current_player.cell.q
             r_relative = cell.r - self.current_player.cell.r
