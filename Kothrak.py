@@ -88,7 +88,11 @@ class MyApp :
         state = []
         for p in self.players :
             state += [p.cell.q, p.cell.r]
-        state += [c.stage for c in self.grid.grid]
+        cells = []
+        for line in self.grid.grid :    
+            cells += line
+        print(cells)
+        state += [c.stage for c in cells]
         return state
 
     def update_message(self) :

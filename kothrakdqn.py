@@ -1,6 +1,9 @@
 import sys
 import Kothrak as Kk
 import torch
+import threading
+import queue
+from collections import namedtuple
 # if gpu is to be used
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -10,22 +13,10 @@ import torch.nn.functional as F
 import torchvision.transforms as T
 
 from itertools import count
+import time
 
 from PyQt5.QtWidgets import QApplication
 
-"""## Create a game instance"""
-
-qapp = QApplication(sys.argv)
-qapp.setStyleSheet(Kk.style)
-env = Kk.MyApp()
-env.show()
-sys.exit(qapp.exec_())
-
-
-# replay memory
-
-Transition = namedtuple('Transition',
-                        ('state', 'action', 'next_state', 'reward'))
 
 
 class ReplayMemory(object):
@@ -56,75 +47,25 @@ class ReplayMemory(object):
 # Should be improved later
 class DQN(nn.Module):
 
-    def __init__(self, h, w, outputs):
+    def __init__(self):
         super(DQN, self).__init__()
-        self.conv1 = nn.Conv2d(3, 16, kernel_size=5, stride=2)
-        self.bn1 = nn.BatchNorm2d(16)
-        self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2)
-        self.bn2 = nn.BatchNorm2d(32)
-        self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
-        self.bn3 = nn.BatchNorm2d(32)
-
-        # Number of Linear input connections depends on output of conv2d layers
-        # and therefore the input image size, so compute it.
-        def conv2d_size_out(size, kernel_size = 5, stride = 2):
-            return (size - (kernel_size - 1) - 1) // stride  + 1
-        convw = conv2d_size_out(conv2d_size_out(conv2d_size_out(w)))
-        convh = conv2d_size_out(conv2d_size_out(conv2d_size_out(h)))
-        linear_input_size = convw * convh * 32
-        self.head = nn.Linear(linear_input_size, outputs)
+        self.layer1 = nn.Linear(27, 6, bias=True)
 
     # Called with either one element to determine next action, or a batch
     # during optimization. Returns tensor([[left0exp,right0exp]...]).
     def forward(self, x):
-        x = F.relu(self.bn1(self.conv1(x)))
-        x = F.relu(self.bn2(self.conv2(x)))
-        x = F.relu(self.bn3(self.conv3(x)))
-        return self.head(x.view(x.size(0), -1))
+        x = F.relu(self.layer1(x))
+        return x        
 
-"""## Binding with game"""
-
-def select_action(state):
+def select_action(state, player):
     global steps_done
-    sample = random.random()
-    eps_threshold = EPS_END + (EPS_START - EPS_END) * \
-        math.exp(-1. * steps_done / EPS_DECAY)
-    steps_done += 1
-    if sample > eps_threshold:
-        with torch.no_grad():
-            # t.max(1) will return largest column value of each row.
-            # second column on max result is index of where max element was
-            # found, so we pick action with the larger expected reward.
-            return policy_net(state).max(1)[1].view(1, 1)
-    else:
-        return torch.tensor([[random.randrange(n_actions)]], device=DEVICE, dtype=torch.long)
 
-BATCH_SIZE = 128
-GAMMA = 0.999
-EPS_START = 0.9
-EPS_END = 0.05
-EPS_DECAY = 200
-TARGET_UPDATE = 10
+    def get_loc(state, player) :
+        if player == 0 :
+            return state[:2]
+        else :
+            return state[2:4]
 
-# Get number of actions from gym action space
-n_actions = 6
-
-policy_net = DQN(screen_height, screen_width, n_actions).to(DEVICE)
-target_net = DQN(screen_height, screen_width, n_actions).to(DEVICE)
-target_net.load_state_dict(policy_net.state_dict())
-target_net.eval()
-
-optimizer = optim.RMSprop(policy_net.parameters())
-memory = ReplayMemory(10000)
-
-
-steps_done = 0
-
-episode_durations = []
-
-
-def select_action(state):
-    global steps_done
     sample = random.random()
     eps_threshold = EPS_END + (EPS_START - EPS_END) * \
         math.exp(-1. * steps_done / EPS_DECAY)
@@ -191,7 +132,53 @@ def optimize_model():
 def get_game_state(env) :
     return torch.tensor(env.state(), device=DEVICE, dtype=torch.long)
 
-print('hello')
+
+def run_game(queue, qapp) :
+    env = Kk.MyApp()
+    q.put(env)
+    env.show()
+    sys.exit(qapp.exec_())
+
+qapp = QApplication(sys.argv)
+qapp.setStyleSheet(Kk.style)
+
+q = queue.Queue()
+threading.Thread(target=run_game, args=(q, qapp)).start()
+
+env = q.get()
+
+env.new_game()
+print(len(env.state()))
+
+# replay memory
+Transition = namedtuple('Transition',
+                        ('state', 'action', 'next_state', 'reward'))
+
+
+BATCH_SIZE = 128
+GAMMA = 0.999
+EPS_START = 0.9
+EPS_END = 0.05
+EPS_DECAY = 200
+TARGET_UPDATE = 10
+
+# Get number of actions from gym action space
+n_actions = 6
+
+target_net = DQN().to(DEVICE)
+policy_net = DQN().to(DEVICE)
+
+target_net.load_state_dict(policy_net.state_dict())
+target_net.eval()
+
+optimizer = optim.RMSprop(policy_net.parameters())
+memory = ReplayMemory(10000)
+
+
+steps_done = 0
+
+episode_durations = []
+
 
 num_episodes = 50
 for i_episode in range(num_episodes):
