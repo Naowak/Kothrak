@@ -45,6 +45,8 @@ class MyApp :
         self.message.setAlignment(Qt.AlignCenter)
         self.message.setObjectName('Hello')
 
+        self.relative_neighbors_locations = [(0.0, -1.), (-1., 0.0), (-1., 1.), (0.0, 1.), (1., 0.0), (1., -1.)]
+
         # Init new game
         self.new_game()
 
@@ -91,9 +93,11 @@ class MyApp :
         cells = []
         for line in self.grid.grid :    
             cells += line
-        print(cells)
         state += [c.stage for c in cells]
         return state
+
+    def get_current_player_index(self) :
+        return self.players.index(self.current_player)
 
     def update_message(self) :
         if self.current_step != 'game_over' :
@@ -106,8 +110,7 @@ class MyApp :
         return self.current_player.cell.stage == Cell.MAX_STAGE
 
     def get_neighbors(self, cell) :
-        dir_coords = [(0, -1), (-1, 0), (-1, 1), (0, 1), (1, 0), (1, -1)]
-        neighbors_coord = [(cell.q + c[0], cell.r + c[1]) for c in dir_coords]
+        neighbors_coord = [(cell.q + c[0], cell.r + c[1]) for c in self.relative_neighbors_locations]
         neighbors = [self.grid.get_cell_from_coord(q, r) for q, r in neighbors_coord]
         neighbors = [c for c in neighbors if c is not None]
         return neighbors
@@ -115,6 +118,38 @@ class MyApp :
     def next_player(self) :
         self.current_player = self.players[self.next_player_id]
         self.next_player_id = (self.next_player_id + 1) % 2
+
+    def is_move_ok(self, q, r) :
+
+        q = self.current_player.cell.q + q
+        r = self.current_player.cell.r + r 
+        cell = self.grid.get_cell_from_coord(q, r)
+
+        return cell in self.get_neighbors(self.current_player.cell) \
+            and self.get_player_on_cell(cell) is None \
+            and cell.stage <= self.current_player.cell.stage + 1.0
+
+
+    def create_masks(self):
+        self.move_mask = [self.is_move_ok(loc[0], loc[1]) for loc in self.relative_neighbors_locations]
+        self.build_mask = [self.is_build_ok(loc[0], loc[1]) for loc in self.relative_neighbors_locations]
+
+    def apply_mask(self, vector, mask):
+        vector = list(vector)
+        values = [vector[i] if mask[i] else -1.0 for i in range(len(vector))]
+        return values
+
+    def is_build_ok(self, q, r) :
+
+        q = self.current_player.cell.q + q
+        r = self.current_player.cell.r + r 
+        cell = self.grid.get_cell_from_coord(q, r)
+
+        return  cell in self.get_neighbors(self.current_player.cell) \
+            and self.get_player_on_cell(cell) is None \
+            and cell.stage < cell.MAX_STAGE
+
+
 
     def play(self, q, r) :
 
@@ -125,9 +160,7 @@ class MyApp :
         if self.current_step != 'game_over' :
 
             if self.current_step == 'move' :
-                if cell in self.get_neighbors(self.current_player.cell) \
-                    and self.get_player_on_cell(cell) is None \
-                    and cell.stage <= self.current_player.cell.stage + 1 :
+                if self.is_move_ok(q, r) :
                     self.current_player.move(cell)
                     self.current_step = 'build'
                     if self.is_game_over() :
@@ -136,11 +169,10 @@ class MyApp :
                         print('Player {} won the game.'.format(self.current_player.player_id))
 
             elif self.current_step == 'build' and self.get_player_on_cell(cell) is None :
-                if cell in self.get_neighbors(self.current_player.cell) :
-                    if cell.stage < cell.MAX_STAGE :
-                        cell.grew()
-                        self.next_player()
-                        self.current_step = 'move'
+                if self.is_build_ok(q, r) :
+                    cell.grew()
+                    self.next_player()
+                    self.current_step = 'move'
 
             self.update_message()
             return 0, False

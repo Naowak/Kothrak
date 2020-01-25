@@ -3,6 +3,8 @@ import Kothrak as Kk
 import torch
 import threading
 import queue
+import random
+import math
 from collections import namedtuple
 # if gpu is to be used
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -49,23 +51,23 @@ class DQN(nn.Module):
 
     def __init__(self):
         super(DQN, self).__init__()
-        self.layer1 = nn.Linear(27, 6, bias=True)
+        self.layer1 = nn.Linear(23, 6, bias=True)
 
     # Called with either one element to determine next action, or a batch
     # during optimization. Returns tensor([[left0exp,right0exp]...]).
     def forward(self, x):
-        x = F.relu(self.layer1(x))
+        x = x.float()
+        x = self.layer1(x)
+        x = F.relu(x)
         return x        
 
-def select_action(state, player):
+def select_action(env):
     global steps_done
+    env.create_masks()
 
-    def get_loc(state, player) :
-        if player == 0 :
-            return state[:2]
-        else :
-            return state[2:4]
-
+    state = env.state()
+    # current_player = env.get_current_player_index()
+    mask = env.move_mask
     sample = random.random()
     eps_threshold = EPS_END + (EPS_START - EPS_END) * \
         math.exp(-1. * steps_done / EPS_DECAY)
@@ -75,14 +77,25 @@ def select_action(state, player):
             # t.max(1) will return largest column value of each row.
             # second column on max result is index of where max element was
             # found, so we pick action with the larger expected reward.
-            return policy_net(state).max(1)[1].view(1, 1)
+            
+            pn = policy_net(torch.tensor(state, device=DEVICE, dtype=torch.long))
+            pn = torch.tensor(env.apply_mask(pn, mask), device=DEVICE, dtype=torch.long)
+
+
+
+
+
+            # max(1)[1].view(1, 1)
+            # return policy_net(state)
+            return pn.argmax(keepdim=True), torch.tensor(state, device=DEVICE, dtype=torch.long)
     else:
-        return torch.tensor([[random.randrange(n_actions)]], device=DEVICE, dtype=torch.long)
+        pn = torch.tensor([[random.randrange(n_actions)]], device=DEVICE, dtype=torch.long)
+        pn = torch.tensor(env.apply_mask(pn, mask), device=DEVICE, dtype=torch.long)
+        return pn.argmax(), torch.tensor(state, device=DEVICE, dtype=torch.long)
 
 def transform_action(action) :
     coord_actions = [(-1, 0), (-1, 1), (0, 1), (1, 0), (1, -1), (0, -1)]
     return coord_actions[action]
-
 
 
 def optimize_model():
@@ -97,10 +110,15 @@ def optimize_model():
     # Compute a mask of non-final states and concatenate the batch elements
     # (a final state would've been the one after which simulation ended)
     non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
-                                          batch.next_state)), device=DEVICE, dtype=torch.uint8)
+                                          batch.next_state)), device=DEVICE, dtype=torch.long)
+
+    # tmp = torch.tensor([s for s in batch.next_state if s is not None], device=DEVICE, dtype=torch.long)
+    # tmp = tuple(torch.tensor(s, device=DEVICE, dtype=torch.long) for s in batch.next_state if s is not None)
     non_final_next_states = torch.cat([s for s in batch.next_state
                                                 if s is not None])
-    state_batch = torch.cat(batch.state)
+
+    # non_final_next_states = torch.cat(tmp)
+    state_batch = torch.cat(batch.state).view(23, -1)
     action_batch = torch.cat(batch.action)
     reward_batch = torch.cat(batch.reward)
 
@@ -133,22 +151,19 @@ def get_game_state(env) :
     return torch.tensor(env.state(), device=DEVICE, dtype=torch.long)
 
 
-def run_game(queue, qapp) :
+def run_game(queue) :
+    qapp = QApplication(sys.argv)
+    qapp.setStyleSheet(Kk.style)
     env = Kk.MyApp()
     q.put(env)
     env.show()
     sys.exit(qapp.exec_())
 
-qapp = QApplication(sys.argv)
-qapp.setStyleSheet(Kk.style)
 
 q = queue.Queue()
-threading.Thread(target=run_game, args=(q, qapp)).start()
+threading.Thread(target=run_game, args=(q,)).start()
 
 env = q.get()
-
-env.new_game()
-print(len(env.state()))
 
 # replay memory
 Transition = namedtuple('Transition',
@@ -184,19 +199,17 @@ num_episodes = 50
 for i_episode in range(num_episodes):
     # Initialize the environment and state
     env.new_game()
-    state = env.state()
     for t in count():
         # Select and perform an action
-        action = select_action(state)
-        reward, done = env.play(transform_action(action))
-        reward = torch.tensor([reward], device=DEVICE)
+        action, last_state = select_action(env)
+        reward, done = env.play(*transform_action(action.item()))
+        reward = torch.tensor(reward, device=DEVICE, dtype=torch.long)
 
         # Observe new state
-        last_state = state
-        state = env.state()
+        state = torch.tensor(env.state(), device=DEVICE, dtype=torch.long)
 
         # Store the transition in memory
-        memory.push(last_state, action, state, reward)
+        memory.push(last_state, action.view(-1, 1), state, reward.view(-1, 1))
 
         # Perform one step of the optimization (on the target network)
         optimize_model()
