@@ -161,8 +161,9 @@ def run_game(queue) :
 
 
 q = queue.Queue()
-threading.Thread(target=run_game, args=(q,)).start()
-
+t = threading.Thread(target=run_game, args=(q,))
+t.deamon = True
+t.start()
 env = q.get()
 
 # replay memory
@@ -198,10 +199,11 @@ episode_durations = []
 num_episodes = 50
 for i_episode in range(num_episodes):
     # Initialize the environment and state
-    env.new_game()
+    # env.new_game()
     for t in count():
         # Select and perform an action
         action, last_state = select_action(env)
+        print(i_episode, 'try')
         reward, done = env.play(*transform_action(action.item()))
         reward = torch.tensor(reward, device=DEVICE, dtype=torch.long)
 
@@ -215,13 +217,12 @@ for i_episode in range(num_episodes):
         optimize_model()
         if done:
             episode_durations.append(t + 1)
-            plot_durations()
             break
     # Update the target network, copying all weights and biases in DQN
     if i_episode % TARGET_UPDATE == 0:
         target_net.load_state_dict(policy_net.state_dict())
 
-print('Complete')
+print   ('Complete')
 env.render()
 env.close()
 plt.ioff()
