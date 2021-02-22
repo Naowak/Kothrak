@@ -1,0 +1,193 @@
+# -*- coding: utf-8 -*-
+
+import sys
+import random
+
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel
+from PyQt5.QtCore import Qt
+
+from envs.game.Utils import APP_PIXDIM, MESSAGE_PIXDIM
+from envs.game.Grid import Grid
+from envs.game.Player import Player
+from envs.game.Cell import Cell
+
+
+class MyApp:
+    
+    def __init__(self) :
+        # Initialisation de la fenetre
+        self.window = QWidget()
+        self.window.resize(APP_PIXDIM[0], APP_PIXDIM[1])
+        self.window.setWindowTitle('MyApp')
+        self.window.mouseReleaseEvent = lambda event:self._on_click(event)
+        # self.window.keyReleaseEvent=lambda event:self.on_keyboard(event)
+
+        # Initialisation du message
+        self.message = QLabel(self.window)
+        self.message.setGeometry(0, 0, MESSAGE_PIXDIM[0], MESSAGE_PIXDIM[1])
+        self.message.setText("")
+        self.message.setAlignment(Qt.AlignCenter)
+        self.message.setObjectName('Hello')
+
+        # Initialisation des variables
+        self.players = []
+        self.next_player_id = -1
+        self.current_player = None
+        self.current_step = 'init'
+
+        # Init new game
+        self.new_game()
+
+
+    def new_game(self) :
+        """ Init and run a new game, clear the display if a previous game has been launched."""
+
+        def create_players(self, nb_players=2) :
+            
+            cells = self.grid.get_all_cells()
+            cells_selected = []
+            
+            for player_id in range(nb_players) :
+                c = random.choice(cells)
+                cells.remove(c)
+                cells_selected += [(player_id, c)]
+
+            cells_selected = sorted(cells_selected, key=lambda x : x[1].r)
+
+            self.players = []
+            for player_id, cell in cells_selected :
+                self.players += [Player(player_id, cell, self)]
+
+        def init_game(self) :
+            self.next_player_id = random.choice(range(len(self.players)))
+            self._next_player()
+            self.current_step = 'move'         
+        
+
+        # Nettoyage de l'affichage
+        if self.current_step != 'init':
+            self._clear_display()
+
+        # Initialisation des Cells
+        self.grid = Grid(self)
+
+        # Initialisation des Players
+        create_players(self)
+
+        # Lancement de la partie
+        init_game(self)
+        self._update_message()
+
+    def play(self, q, r) :
+        """Make the play (move or build) on the cell on coordinates [q, r]."""
+
+        q = self.current_player.cell.q + q
+        r = self.current_player.cell.r + r 
+        cell = self.grid.get_cell_from_coord(q, r)
+
+        if self.current_step != 'game_over' :
+
+            if self.current_step == 'move' :
+                if cell in self._get_neighbors(self.current_player.cell) \
+                    and self._get_player_on_cell(cell) is None \
+                    and cell.stage <= self.current_player.cell.stage + 1 :
+                    self.current_player.move(cell)
+                    self.current_step = 'build'
+                    if self._is_game_over() :
+                        self.current_step = 'game_over'
+                        print('Game over !')
+                        print('Player {} won the game.'.format(self.current_player.player_id))
+
+            elif self.current_step == 'build' and self._get_player_on_cell(cell) is None :
+                if cell in self._get_neighbors(self.current_player.cell) :
+                    if cell.stage < cell.MAX_STAGE :
+                        cell.grew()
+                        self._next_player()
+                        self.current_step = 'move'
+
+            self._update_message()
+
+    def state(self) : 
+        """Return the state of the grid."""
+        state = []
+        for p in self.players :
+            state += [p.cell.q, p.cell.r]
+        state += [c.stage for c in self.grid.grid]
+        return state
+
+    def show(self) :
+        """Display the window on the screen."""
+        self.window.show()
+        
+
+
+    def _update_message(self) :
+        if self.current_step != 'game_over' :
+            text = 'Player {} : {}'.format(self.current_player.player_id + 1, self.current_step)
+        else :
+            text = 'Game Over'
+        self.message.setText(text)
+
+    def _is_game_over(self) :
+        return self.current_player.cell.stage == Cell.MAX_STAGE
+
+    def _get_neighbors(self, cell) :
+        dir_coords = [(0, -1), (-1, 0), (-1, 1), (0, 1), (1, 0), (1, -1)]
+        neighbors_coord = [(cell.q + c[0], cell.r + c[1]) for c in dir_coords]
+        neighbors = [self.grid.get_cell_from_coord(q, r) for q, r in neighbors_coord]
+        neighbors = [c for c in neighbors if c is not None]
+        return neighbors
+
+    def _next_player(self) :
+        self.current_player = self.players[self.next_player_id]
+        self.next_player_id = (self.next_player_id + 1) % 2
+
+
+
+    def _on_click(self, event) :
+        x, y = event.pos().x(), event.pos().y()
+        cell = self.grid.get_cell_from_pos(x, y)
+        if cell is not None :
+            q_relative = cell.q - self.current_player.cell.q
+            r_relative = cell.r - self.current_player.cell.r
+            self.play(q_relative, r_relative)
+        
+        # Uncomment to restart a game right after the end off the previous one
+        # if self.current_step == 'game_over' :
+        #     self.new_game()
+
+    def _get_player_on_cell(self, cell) :
+        for p in self.players :
+            if p.cell == cell :
+                return p
+
+    
+    def _clear_display(self):
+        for p in self.players:
+            p.delete()
+        self.grid.delete()
+        del(self.grid)
+        del(self.players)
+
+
+style = '''
+QWidget {
+    background-color: rgb(40, 41, 35);
+} 
+QLabel {
+    background-color: rgba(255, 255, 255, 0);
+}
+QLabel#Hello {
+    color:rgb(210, 90, 20);
+    font:30pt;
+}
+'''
+
+def run():
+    qapp = QApplication(sys.argv)
+    qapp.setStyleSheet(style)
+    main_window = MyApp()
+    main_window.show()
+    sys.exit(qapp.exec_())
+
+    # print('hello')
