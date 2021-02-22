@@ -86,7 +86,7 @@ class MyApp:
         r = self.current_player.cell.r + r 
         cell = self.grid.get_cell_from_coord(q, r)
 
-        if self.current_step != 'game_over' :
+        if not self.is_game_over() :
 
             if self.current_step == 'move' :
                 if cell in self._get_neighbors(self.current_player.cell) \
@@ -94,7 +94,7 @@ class MyApp:
                     and cell.stage <= self.current_player.cell.stage + 1 :
                     self.current_player.move(cell)
                     self.current_step = 'build'
-                    if self._is_game_over() :
+                    if self._player_on_top() :
                         self.current_step = 'game_over'
                         print('Game over !')
                         print('Player {} won the game.'.format(self.current_player.player_id))
@@ -129,21 +129,27 @@ class MyApp:
             state['step'] = [0, 0]
 
         return state
+    
+    def evaluate(self):
+        pass
 
     def show(self) :
         """Display the window on the screen."""
         self.window.show()
+    
+    def is_game_over(self):
+        return self.current_step == 'game_over'
         
 
 
     def _update_message(self) :
-        if self.current_step != 'game_over' :
+        if not self.is_game_over() :
             text = 'Player {} : {}'.format(self.current_player.player_id + 1, self.current_step)
         else :
             text = 'Game Over'
         self.message.setText(text)
 
-    def _is_game_over(self) :
+    def _player_on_top(self) :
         return self.current_player.cell.stage == Cell.MAX_STAGE
 
     def _get_neighbors(self, cell) :
@@ -168,7 +174,7 @@ class MyApp:
             self.play(q_relative, r_relative)
         
         # Uncomment to restart a game right after the end off the previous one
-        # if self.current_step == 'game_over' :
+        # if self.is_game_over() :
         #     self.new_game()
 
     def _get_player_on_cell(self, cell) :

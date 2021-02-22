@@ -28,10 +28,17 @@ class KothrakEnv(gym.Env):
     
     def reset(self):
         self.game.new_game()
-        
+        obs = self.game.state()
+        return obs
 
     def step(self, action):
-        pass
+        q, r = action
+        self.game.play(q, r)
+
+        obs = self.game.state()
+        reward = self.game.evaluate()
+        done = self.game.is_game_over()
+        return obs, reward, done, {}
     
     def render(self, mode='human'):
         pass
