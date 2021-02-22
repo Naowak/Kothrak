@@ -6,10 +6,11 @@ import random
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel
 from PyQt5.QtCore import Qt
 
-from envs.game.Utils import APP_PIXDIM, MESSAGE_PIXDIM
+from envs.game.Utils import APP_PIXDIM, MESSAGE_PIXDIM, NB_PLAYERS
 from envs.game.Grid import Grid
 from envs.game.Player import Player
 from envs.game.Cell import Cell
+
 
 
 class MyApp:
@@ -42,7 +43,7 @@ class MyApp:
     def new_game(self) :
         """ Init and run a new game, clear the display if a previous game has been launched."""
 
-        def create_players(self, nb_players=2) :
+        def create_players(self, nb_players=NB_PLAYERS) :
             
             cells = self.grid.get_all_cells()
             cells_selected = []
@@ -109,10 +110,24 @@ class MyApp:
 
     def state(self) : 
         """Return the state of the grid."""
-        state = []
+        state = {}
+
+        # Players
+        state['players'] = []
         for p in self.players :
-            state += [p.cell.q, p.cell.r]
-        state += [c.stage for c in self.grid.grid]
+            state['players'] += [(p.cell.q, p.cell.r)]
+
+        # Cells
+        state['cells'] = [c.stage for c in self.grid.grid]
+
+        # Step
+        if self.current_step == 'move':
+            state['step'] = [1, 0]
+        elif self.current_step == 'build':
+            state['step'] = [0, 1]
+        else:
+            state['step'] = [0, 0]
+
         return state
 
     def show(self) :
@@ -188,6 +203,4 @@ def run():
     qapp.setStyleSheet(style)
     main_window = MyApp()
     main_window.show()
-    sys.exit(qapp.exec_())
-
-    # print('hello')
+    qapp.exec_()

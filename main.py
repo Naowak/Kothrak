@@ -1,7 +1,14 @@
 from envs.game import MyApp
-# from envs.KothrakEnv import KothrakEnv
+from envs.KothrakEnv import KothrakEnv
 import sys
+import asyncio
 
-if __name__ == '__main__':
+# values = ['ENV', 'GAME']
+RUN = 'ENV'
+
+if RUN == 'GAME':
     MyApp.run()
-    # kkenv = KothrakEnv()
+
+elif RUN == 'ENV':
+    kkenv = KothrakEnv()
+    kkenv.reset()

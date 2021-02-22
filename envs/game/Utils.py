@@ -1,5 +1,14 @@
+def nb_cells(n):
+    s=0
+    for i in range(n+1, 2*n+1):
+        s += 2*n
+    s += 2*n+1
+    return s
+
 COEF = 0.3
 GRID_RAY = 2
+NB_CELLS = nb_cells(GRID_RAY)
+NB_PLAYERS = 2
 
 APP_PIXDIM = (2800 * COEF, 2300 * COEF)
 MESSAGE_PIXDIM = (APP_PIXDIM[0], 200 * COEF)
