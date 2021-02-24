@@ -117,6 +117,12 @@ class MyApp:
         for p in self.players :
             state['players'] += [(p.cell.q, p.cell.r)]
 
+        # index_current = self.players.index(self.current_player)
+        # state['players'] += 
+        
+        # if self.players[0] == self.current_player:
+        #     state['players'] += [(p[0].cell.q)]
+
         # Cells
         state['cells'] = [c.stage for c in self.grid.grid]
 
@@ -131,7 +137,10 @@ class MyApp:
         return state
     
     def evaluate(self):
-        pass
+        if self.is_game_over():
+            return 100
+        else :
+            return 0
 
     def show(self) :
         """Display the window on the screen."""
@@ -161,7 +170,7 @@ class MyApp:
 
     def _next_player(self) :
         self.current_player = self.players[self.next_player_id]
-        self.next_player_id = (self.next_player_id + 1) % 2
+        self.next_player_id = (self.next_player_id + 1) % NB_PLAYERS
 
 
 
