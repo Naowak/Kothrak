@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QLabel
 
-from envs.game.Utils import IMGPLAYER_PIXDIM, PIXSIZE_VECTOR_PLAYER_CELL
+from kothrak.envs.game.Utils import IMGPLAYER_PIXDIM, PIXSIZE_VECTOR_PLAYER_CELL
 
 class Player:
 

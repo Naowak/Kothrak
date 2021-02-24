@@ -1,13 +1,13 @@
-import sys
-import asyncio
 from PyQt5.QtWidgets import QApplication
+import sys
 
 import gym
 import numpy as np
 
-from envs.game.MyApp import MyApp, style
-from envs.game.Utils import GRID_RAY, NB_CELLS, NB_PLAYERS
-from envs.game.Cell import Cell
+from kothrak.envs.game.MyApp import MyApp, style
+from kothrak.envs.game.Utils import GRID_RAY, NB_CELLS, NB_PLAYERS
+from kothrak.envs.game.Cell import Cell
+
 
 class KothrakEnv(gym.Env):
     

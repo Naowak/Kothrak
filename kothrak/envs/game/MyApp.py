@@ -6,10 +6,10 @@ import random
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel
 from PyQt5.QtCore import Qt
 
-from envs.game.Utils import APP_PIXDIM, MESSAGE_PIXDIM, NB_PLAYERS
-from envs.game.Grid import Grid
-from envs.game.Player import Player
-from envs.game.Cell import Cell
+from kothrak.envs.game.Utils import APP_PIXDIM, MESSAGE_PIXDIM, NB_PLAYERS
+from kothrak.envs.game.Grid import Grid
+from kothrak.envs.game.Player import Player
+from kothrak.envs.game.Cell import Cell
 
 
 
@@ -116,12 +116,6 @@ class MyApp:
         state['players'] = []
         for p in self.players :
             state['players'] += [(p.cell.q, p.cell.r)]
-
-        # index_current = self.players.index(self.current_player)
-        # state['players'] += 
-        
-        # if self.players[0] == self.current_player:
-        #     state['players'] += [(p[0].cell.q)]
 
         # Cells
         state['cells'] = [c.stage for c in self.grid.grid]

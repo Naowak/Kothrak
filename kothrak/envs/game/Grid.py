@@ -1,7 +1,7 @@
 from PyQt5 import QtCore
 
-from envs.game.Utils import GRID_RAY, POS_CENTER, MV_DR, MV_R
-from envs.game.Cell import Cell
+from kothrak.envs.game.Utils import GRID_RAY, POS_CENTER, MV_DR, MV_R
+from kothrak.envs.game.Cell import Cell
 
 class Grid:
 
