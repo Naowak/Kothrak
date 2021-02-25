@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel
+from PyQt5.QtWidgets import QLabel
 
 from kothrak.envs.game.Utils import PIXSIZE_STAGE_CELL, IMGCELL_PIXDIM, COEF
 

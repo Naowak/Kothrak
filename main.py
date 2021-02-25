@@ -5,13 +5,13 @@ import gym
 import tensorflow as tf
 from time import sleep
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton
 
 from kothrak.envs.game.MyApp import MyApp, style, run
-from kothrak.envs.KothrakEnv import KothrakEnv
 from kothrak.envs.game.Utils import APP_PIXDIM
 from dqn.DeepQNetwork import DeepQNetwork
 
+TIME_TO_SLEEP = 0.1
 
 def play_game(qapp, env, TrainNet, TargetNet, epsilon, copy_step):
     """Play a game with DeepQNetwork agent and train it.
@@ -36,7 +36,7 @@ def play_game(qapp, env, TrainNet, TargetNet, epsilon, copy_step):
         rewards += reward
 
         qapp.processEvents()
-        sleep(0.1)
+        sleep(TIME_TO_SLEEP)
         
         # Reset the game if the gym environnement is finished
         if done:

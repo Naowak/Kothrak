@@ -1,5 +1,3 @@
-from PyQt5 import QtCore
-
 from kothrak.envs.game.Utils import GRID_RAY, POS_CENTER, MV_DR, MV_R
 from kothrak.envs.game.Cell import Cell
 
