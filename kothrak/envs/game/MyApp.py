@@ -177,7 +177,6 @@ class MyApp:
                 self.reward_dict[k] = self.REWARDS[reason]['current']
             else:
                 self.reward_dict[k] = self.REWARDS[reason]['others']
-        print(f'Rewards updated : {self.reward_dict}')
 
     def _update_message(self) :
         if not self.is_game_over() :

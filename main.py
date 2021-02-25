@@ -57,6 +57,7 @@ def play_game(env, TrainNet, TargetNet, epsilon, copy_step):
 
 def main():
     env = gym.make('kothrak-v0')
+    env.render()
 
     # tuning hyperparameters
     lr = 1e-2
@@ -119,7 +120,7 @@ def main():
 if __name__ == '__main__':
 
     # values = ['ENV', 'GAME']
-    RUN = 'GAME'
+    RUN = 'ENV'
 
     if RUN == 'GAME':
         MyApp.run()
