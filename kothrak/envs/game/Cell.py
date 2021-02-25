@@ -5,7 +5,7 @@ from kothrak.envs.game.Utils import PIXSIZE_STAGE_CELL, IMGCELL_PIXDIM, COEF
 
 class Cell:
 
-    PATH_IMG = "envs/game/img/cell_{}.png"
+    PATH_IMG = "kothrak/envs/game/img/cell_{}.png"
     # PATH_IMG = 'cell1_resized.png'
     X_MIN_LIM = 10 * COEF
     X_MAX_LIM = 450 * COEF

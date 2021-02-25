@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QApplication
 import sys
+import time
 
 import gym
 import numpy as np
@@ -7,6 +8,12 @@ import numpy as np
 from kothrak.envs.game.MyApp import MyApp, style
 from kothrak.envs.game.Utils import GRID_RAY, NB_CELLS, NB_PLAYERS
 from kothrak.envs.game.Cell import Cell
+
+TIME_TO_SLEEP = 1
+
+def transform_action(action):
+    coord_actions = [(-1, 0), (-1, 1), (0, 1), (1, 0), (1, -1), (0, -1)]
+    return coord_actions[action]
 
 
 class KothrakEnv(gym.Env):
@@ -28,20 +35,29 @@ class KothrakEnv(gym.Env):
     
     def reset(self):
         self.game.new_game()
-        obs = self.game.state()
+        obs = self._get_observation()
         return obs
 
     def step(self, action):
-        q, r = action
+        q, r = transform_action(action)
         self.game.play(q, r)
+        time.sleep(TIME_TO_SLEEP)
 
-        obs = self.game.state()
+        obs = self._get_observation()
         reward = self.game.evaluate()
         done = self.game.is_game_over()
+
         return obs, reward, done, {}
     
     def render(self, mode='human'):
         pass
 
+    def _get_observation(self):
+        obs = self.game.state()
+        observations = []
+        for v in obs.values():
+            observations += v
+        observations = np.array(observations)
+        return observations
     
     

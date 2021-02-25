@@ -5,7 +5,7 @@ from kothrak.envs.game.Utils import IMGPLAYER_PIXDIM, PIXSIZE_VECTOR_PLAYER_CELL
 
 class Player:
 
-    PATH_IMG = "envs/game/img/player_img{}.png"
+    PATH_IMG = "kothrak/envs/game/img/player_img{}.png"
 
     def __init__(self, player_id, cell, app):
         self.app = app

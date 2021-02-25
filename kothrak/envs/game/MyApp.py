@@ -14,6 +14,10 @@ from kothrak.envs.game.Cell import Cell
 
 
 class MyApp:
+
+    REWARDS = {'init' : {'current' : 0, 'others' : 0}, 
+               'win' : {'current' : 100, 'others' : -100},
+               'invalid_attempt' : {'current' : -100, 'others' : 20}}
     
     def __init__(self) :
         # Initialisation de la fenetre
@@ -32,6 +36,7 @@ class MyApp:
 
         # Initialisation des variables
         self.players = []
+        self.reward_dict = {}
         self.next_player_id = -1
         self.current_player = None
         self.current_step = 'init'
@@ -63,6 +68,7 @@ class MyApp:
             self.next_player_id = random.choice(range(len(self.players)))
             self._next_player()
             self.current_step = 'move'         
+            self._update_rewards('init')
         
 
         # Nettoyage de l'affichage
@@ -75,17 +81,32 @@ class MyApp:
         # Initialisation des Players
         create_players(self)
 
-        # Lancement de la partie
+        # Initialisation des joueurs et récompense
+        # Lancement de la partie 
         init_game(self)
         self._update_message()
 
-    def play(self, q, r) :
-        """Make the play (move or build) on the cell on coordinates [q, r]."""
 
+    def play(self, q, r) :
+        """Make the play (move or build) on the cell on relative coordinates [q, r] 
+        from the player."""
+
+        def invalid_attempt(self, attempt):
+            """The player made an invalid attempt, end the game and punish him."""
+            self.current_step = 'game_over'
+            self._update_rewards('invalid_attempt')       
+            print(f'Invalid {attempt}. Player {self.current_player.player_id} got eliminated.')
+
+        # Retrieve the corresponding cell
         q = self.current_player.cell.q + q
         r = self.current_player.cell.r + r 
         cell = self.grid.get_cell_from_coord(q, r)
 
+        # If cell is out of map, game is over
+        if cell is None:
+            invalid_attempt(self, 'cell')
+
+        # Make the move is the game is still playing
         if not self.is_game_over() :
 
             if self.current_step == 'move' :
@@ -96,15 +117,20 @@ class MyApp:
                     self.current_step = 'build'
                     if self._player_on_top() :
                         self.current_step = 'game_over'
-                        print('Game over !')
+                        self._update_rewards('win')
                         print('Player {} won the game.'.format(self.current_player.player_id))
+                else:
+                    invalid_attempt(self, 'move')
 
-            elif self.current_step == 'build' and self._get_player_on_cell(cell) is None :
-                if cell in self._get_neighbors(self.current_player.cell) :
-                    if cell.stage < cell.MAX_STAGE :
-                        cell.grew()
-                        self._next_player()
-                        self.current_step = 'move'
+            elif self.current_step == 'build' :
+                if cell in self._get_neighbors(self.current_player.cell) \
+                    and self._get_player_on_cell(cell) is None \
+                    and cell.stage < cell.MAX_STAGE:
+                    cell.grew()
+                    self._next_player()
+                    self.current_step = 'move'
+                else:
+                    invalid_attempt(self, 'build')
 
             self._update_message()
 
@@ -115,10 +141,10 @@ class MyApp:
         # Players
         state['players'] = []
         for p in self.players :
-            state['players'] += [(p.cell.q, p.cell.r)]
+            state['players'] += [p.cell.q, p.cell.r]
 
         # Cells
-        state['cells'] = [c.stage for c in self.grid.grid]
+        state['cells'] = [c.stage for c in self.grid.get_all_cells()]
 
         # Step
         if self.current_step == 'move':
@@ -130,11 +156,8 @@ class MyApp:
 
         return state
     
-    def evaluate(self):
-        if self.is_game_over():
-            return 100
-        else :
-            return 0
+    def evaluate(self, player_id=0):
+        return self.reward_dict[player_id]
 
     def show(self) :
         """Display the window on the screen."""
@@ -142,8 +165,19 @@ class MyApp:
     
     def is_game_over(self):
         return self.current_step == 'game_over'
-        
+    
 
+
+    def _update_rewards(self, reason):
+        """Récompense et/ou puni les joueurs en fonction du motif."""
+        pid = self.current_player.player_id
+        players_ids = [p.player_id for p in self.players]
+        for k in players_ids:
+            if k == pid:
+                self.reward_dict[k] = self.REWARDS[reason]['current']
+            else:
+                self.reward_dict[k] = self.REWARDS[reason]['others']
+        print(f'Rewards updated : {self.reward_dict}')
 
     def _update_message(self) :
         if not self.is_game_over() :
