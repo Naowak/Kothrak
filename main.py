@@ -3,6 +3,7 @@ import numpy as np
 import datetime
 import gym
 import tensorflow as tf
+from time import sleep
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout
 
@@ -12,7 +13,7 @@ from kothrak.envs.game.Utils import APP_PIXDIM
 from dqn.DeepQNetwork import DeepQNetwork
 
 
-def play_game(env, TrainNet, TargetNet, epsilon, copy_step):
+def play_game(qapp, env, TrainNet, TargetNet, epsilon, copy_step):
     """Play a game with DeepQNetwork agent and train it.
         - env : Environnement gym
         - TrainNet : DeepQNetwork original
@@ -33,6 +34,9 @@ def play_game(env, TrainNet, TargetNet, epsilon, copy_step):
         prev_observations = observations
         observations, reward, done, _ = env.step(action)
         rewards += reward
+
+        qapp.processEvents()
+        sleep(0.1)
         
         # Reset the game if the gym environnement is finished
         if done:
@@ -58,7 +62,8 @@ def play_game(env, TrainNet, TargetNet, epsilon, copy_step):
     return rewards, np.mean(losses)
 
 
-def run_n_games(env, N=50000):
+def run_n_games(qapp, env, N=50000):
+
     # tuning hyperparameters
     lr = 1e-2
     gamma = 0.90
@@ -91,8 +96,7 @@ def run_n_games(env, N=50000):
 
     for n in range(N):
         # Play one game and update epsilon & rewards
-        total_reward, losses = play_game(
-            env, TrainNet, TargetNet, epsilon, copy_step)
+        total_reward, losses = play_game(qapp, env, TrainNet, TargetNet, epsilon, copy_step)
         total_rewards[n] = total_reward
         epsilon = max(min_epsilon, epsilon * decay)
         avg_rewards = total_rewards[max(0, n - 100):(n + 1)].mean()
@@ -128,7 +132,7 @@ def main():
 
     button = QPushButton('Play N Games', window)
     button.setGeometry(QtCore.QRect(APP_PIXDIM[0], 100, 100, 40))
-    button.clicked.connect(lambda : run_n_games(env))
+    button.clicked.connect(lambda : run_n_games(qapp, env))
 
     window.show()
     sys.exit(qapp.exec_())

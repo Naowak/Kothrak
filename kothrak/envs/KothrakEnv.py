@@ -40,7 +40,7 @@ class KothrakEnv(gym.Env):
     def step(self, action):
         q, r = transform_action(action)
         self.game.play(q, r)
-        time.sleep(TIME_TO_SLEEP)
+        # time.sleep(TIME_TO_SLEEP)
 
         obs = self._get_observation()
         reward = self.game.evaluate()

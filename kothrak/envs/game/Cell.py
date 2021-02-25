@@ -91,4 +91,4 @@ class Cell:
         return True
     
     def delete(self):
-        self.img.deleteLater()
+        self.img.setParent(None)

@@ -17,7 +17,6 @@ class Player:
         self.size_y = IMGPLAYER_PIXDIM[1]
 
         self.img = QLabel(self.app.window)
-        # self.img.setGeometry(QtCore.QRect(self.x, self.y, self.size_x, self.size_y))
         self.img.setPixmap(QtGui.QPixmap(self.PATH_IMG.format(self.player_id)))
         self.img.setScaledContents(True)
         self.img.setObjectName("Player_{}".format(self.player_id))
@@ -28,9 +27,7 @@ class Player:
         self.cell = cell
         self.x = cell.x + PIXSIZE_VECTOR_PLAYER_CELL[0]
         self.y = cell.y + PIXSIZE_VECTOR_PLAYER_CELL[1]
-        self.img.setGeometry(QtCore.QRect(
-            self.x, self.y, self.size_x, self.size_y))
-        print('hello i moved')
+        self.img.setGeometry(QtCore.QRect(self.x, self.y, self.size_x, self.size_y))
     
     def delete(self):
-        self.img.deleteLater()
+        self.img.setParent(None)
