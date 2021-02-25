@@ -3,9 +3,12 @@ import numpy as np
 import datetime
 import gym
 import tensorflow as tf
+from PyQt5 import QtCore
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout
 
-from kothrak.envs.game import MyApp
+from kothrak.envs.game.MyApp import MyApp, style, run
 from kothrak.envs.KothrakEnv import KothrakEnv
+from kothrak.envs.game.Utils import APP_PIXDIM
 from dqn.DeepQNetwork import DeepQNetwork
 
 
@@ -55,10 +58,7 @@ def play_game(env, TrainNet, TargetNet, epsilon, copy_step):
     return rewards, np.mean(losses)
 
 
-def main():
-    env = gym.make('kothrak-v0')
-    env.render()
-
+def run_n_games(env, N=50000):
     # tuning hyperparameters
     lr = 1e-2
     gamma = 0.90
@@ -87,7 +87,6 @@ def main():
                     max_experiences, min_experiences, batch_size, lr)
 
     # Make N games
-    N = 50000
     total_rewards = np.empty(N)
 
     for n in range(N):
@@ -116,6 +115,24 @@ def main():
     env.close()
 
 
+def main():    
+    qapp = QApplication(sys.argv)
+    qapp.setStyleSheet(style)
+    window = QWidget()
+    window.resize(1000, APP_PIXDIM[1])
+    window.setWindowTitle('Main')
+
+    game = MyApp(window)
+    env = gym.make('kothrak-v0')
+    env.set_game(game)
+
+    button = QPushButton('Play N Games', window)
+    button.setGeometry(QtCore.QRect(APP_PIXDIM[0], 100, 100, 40))
+    button.clicked.connect(lambda : run_n_games(env))
+
+    window.show()
+    sys.exit(qapp.exec_())
+
 
 if __name__ == '__main__':
 
@@ -123,7 +140,7 @@ if __name__ == '__main__':
     RUN = 'ENV'
 
     if RUN == 'GAME':
-        MyApp.run()
+        run()
 
     elif RUN == 'ENV':
         main()

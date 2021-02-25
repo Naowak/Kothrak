@@ -19,11 +19,7 @@ def transform_action(action):
 class KothrakEnv(gym.Env):
     
     def __init__(self):
-        # Initalise l'app
-        self.qapp = QApplication(sys.argv)
-        self.qapp.setStyleSheet(style)
-        self.game = MyApp()
-        self.game.show()
+        self.game = None
 
         # Initialise les actions et observations
         self.action_space = gym.spaces.Discrete(6)
@@ -33,6 +29,9 @@ class KothrakEnv(gym.Env):
             'step': gym.spaces.Discrete(2)
         })
     
+    def set_game(self, game):
+        self.game = game
+    
     def reset(self):
         self.game.new_game()
         obs = self._get_observation()
@@ -41,7 +40,7 @@ class KothrakEnv(gym.Env):
     def step(self, action):
         q, r = transform_action(action)
         self.game.play(q, r)
-        # time.sleep(TIME_TO_SLEEP)
+        time.sleep(TIME_TO_SLEEP)
 
         obs = self._get_observation()
         reward = self.game.evaluate()

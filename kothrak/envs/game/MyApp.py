@@ -19,9 +19,9 @@ class MyApp:
                'win' : {'current' : 100, 'others' : -100},
                'invalid_attempt' : {'current' : -100, 'others' : 20}}
     
-    def __init__(self) :
+    def __init__(self, parent=None) :
         # Initialisation de la fenetre
-        self.window = QWidget()
+        self.window = QWidget(parent)
         self.window.resize(APP_PIXDIM[0], APP_PIXDIM[1])
         self.window.setWindowTitle('MyApp')
         self.window.mouseReleaseEvent = lambda event:self._on_click(event)
@@ -133,6 +133,7 @@ class MyApp:
                     invalid_attempt(self, 'build')
 
             self._update_message()
+
 
     def state(self) : 
         """Return the state of the grid."""

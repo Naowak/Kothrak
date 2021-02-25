@@ -30,6 +30,7 @@ class Player:
         self.y = cell.y + PIXSIZE_VECTOR_PLAYER_CELL[1]
         self.img.setGeometry(QtCore.QRect(
             self.x, self.y, self.size_x, self.size_y))
+        print('hello i moved')
     
     def delete(self):
         self.img.deleteLater()
