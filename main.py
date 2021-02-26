@@ -1,18 +1,20 @@
 import sys
-import numpy as np
 import datetime
+import numpy as np
+from time import sleep
 import gym
 import tensorflow as tf
-from time import sleep
+from torch.utils.tensorboard import SummaryWriter
+
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton
-
 from kothrak.envs.game.MyApp import MyApp, style, run
 from kothrak.envs.game.Utils import APP_PIXDIM, NB_CELLS
 from dqn.DeepQNetwork import DeepQNetwork
 
 TIME_TO_SLEEP = 0.05
 NB_GAMES = 500
+NB_LAST_GAMES = 20
 
 def play_game(qapp, env, TrainNet, TargetNet, epsilon):
     """Play a game with DeepQNetwork agent and train it.
@@ -65,19 +67,17 @@ def run_n_games(qapp, env, N=NB_GAMES):
     batch_size = 32
     min_experiences = 100
     max_experiences = 10000
-    hidden_units = [40, 30, 20]
+    hidden_units = [200, 200]
     epsilon = 0.99
-    decay = 0.999
+    decay = 0.99
     min_epsilon = 0.05
     
     # Retieve number of state and action values
     num_states = len(env.observation_space.sample())
     num_actions = env.action_space.n
 
-    # Prepare logs
-    current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    log_dir = 'logs/' + current_time
-    summary_writer = tf.summary.create_file_writer(log_dir)
+    # Prepare logs writer
+    log_writer = SummaryWriter(log_dir='./logs/')
 
     # Create DQNs
     TrainNet = DeepQNetwork(num_states, num_actions, hidden_units, gamma,
@@ -88,7 +88,6 @@ def run_n_games(qapp, env, N=NB_GAMES):
     # Make N games
     total_rewards = np.empty(N)
     mean_losses = np.empty(N)
-    nb_last_games = 50
 
     for n in range(N):
         # Play one game and update epsilon & rewards
@@ -96,26 +95,23 @@ def run_n_games(qapp, env, N=NB_GAMES):
         epsilon = max(min_epsilon, epsilon * decay)
 
         total_rewards[n] = total_reward
-        avg_rewards = total_rewards[max(0, n - nb_last_games):(n + 1)].mean()
+        avg_rewards = total_rewards[max(0, n - NB_LAST_GAMES):(n + 1)].mean()
 
         mean_losses[n] = mean_loss
-        avg_losses = mean_losses[max(0, n - nb_last_games):(n + 1)].mean()
+        avg_losses = mean_losses[max(0, n - NB_LAST_GAMES):(n + 1)].mean()
         
         # Make the summary
-        summary_writer.as_default()
-        tf.summary.scalar('episode reward', total_reward, step=n)
-        tf.summary.scalar('running avg reward(100)', avg_rewards, step=n)
-        tf.summary.scalar('average loss)', mean_loss, step=n)
-        summary_writer.close()
+        log_writer.add_scalar('Reward', total_reward, n)
+        log_writer.add_scalar(f'Avg Rewards (last {NB_LAST_GAMES})', 
+            avg_rewards, n)
+        log_writer.add_scalar('Loss', mean_loss, n)
 
-        # Each nb_last_games games, display information and update the model
-        if (n+1) % nb_last_games == 0:
-            print(f'episode: {n+1}, eps: {epsilon}, avg reward (last {nb_last_games}): {avg_rewards}, \
-                avg losses (last {nb_last_games}): {avg_losses}')
+        # Each NB_LAST_GAMES games, display information and update the model
+        if (n+1) % NB_LAST_GAMES == 0:
+            print(f'episode: {n+1}, eps: {epsilon}, avg reward (last {NB_LAST_GAMES}): {avg_rewards}, avg losses (last {NB_LAST_GAMES}): {avg_losses}')
             TargetNet.copy_weights(TrainNet)
     
     # End of the training
-    print("avg reward for last 100 episodes:", avg_rewards)
     env.close()
 
 
