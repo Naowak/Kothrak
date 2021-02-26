@@ -139,13 +139,19 @@ class MyApp:
         """Return the state of the grid."""
         state = {}
 
-        # Players
-        state['players'] = []
-        for p in self.players :
-            state['players'] += [p.cell.q, p.cell.r]
+        cell_from = self.current_player.cell
+        cells_around = self.grid.get_neighbors(cell_from, ray=GRID_RAY) 
 
-        # Cells
-        state['cells'] = [c.stage for c in self.grid.get_all_cells()]
+        # Hauteur de chaque cellule
+        cells_stage = [c.stage/Cell.MAX_STAGE if c is not None else 0 for c in cells_around]
+        state['cells_stage'] = cells_stage
+
+        # Boolean if cell is taken
+        cells_taken = []
+        for c in cells_around:
+            player = self._get_player_on_cell(c)
+            cells_taken += [1] if player else [0]                
+        state['cells_taken'] = cells_taken
 
         # Step
         if self.current_step == 'move':
@@ -153,7 +159,8 @@ class MyApp:
         elif self.current_step == 'build':
             state['step'] = [0, 1]
         else:
-            state['step'] = [0, 0]
+            raise Exception(f'Error in state from MyApp: current step invalid :\
+                 {self.current_step}.')
 
         return state
     

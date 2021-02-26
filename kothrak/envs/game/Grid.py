@@ -10,7 +10,7 @@ def distance(coord_1, coord_2):
             + abs(coord_1[1] - coord_2[1])) / 2
 
 def get_neighbors_rel_coord(ray=GRID_RAY, dir_coords = DIR_COORDS):
-    rel_coords = {c for c in dir_coords}
+    rel_coords = [(0, 0)] + dir_coords
     queue = [c for c in dir_coords]
 
     while len(queue) > 0:
@@ -19,9 +19,9 @@ def get_neighbors_rel_coord(ray=GRID_RAY, dir_coords = DIR_COORDS):
         for c2 in dir_coords:
             new_coord = (c1[0] + c2[0], c1[1] + c2[1])
             
-            if new_coord not in rel_coords and distance(new_coord, (0, 0)) <= ray:
+            if distance(new_coord, (0, 0)) <= ray and new_coord not in rel_coords:
                 queue += [new_coord]
-                rel_coords.add(new_coord)
+                rel_coords += [new_coord]
 
     return list(rel_coords)
 

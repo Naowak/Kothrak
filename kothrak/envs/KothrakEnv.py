@@ -17,8 +17,8 @@ class KothrakEnv(gym.Env):
         # Initialise les actions et observations
         self.action_space = gym.spaces.Discrete(6)
         self.observation_space = gym.spaces.Dict({
-            'players': gym.spaces.Box(low=-GRID_RAY, high=GRID_RAY, shape=(2*NB_PLAYERS,)),
-            'cells': gym.spaces.Box(low=1, high=Cell.MAX_STAGE, shape=(NB_CELLS,)),
+            'cells_stage': gym.spaces.Box(low=0, high=1, shape=(NB_CELLS,)),
+            'cells_taken': gym.spaces.Discrete(NB_CELLS),
             'step': gym.spaces.Discrete(2)
         })
     
@@ -49,6 +49,7 @@ class KothrakEnv(gym.Env):
         for v in obs.values():
             observations += v
         observations = np.array(observations)
+        print(observations)
         return observations
     
     
