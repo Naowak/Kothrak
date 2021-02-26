@@ -8,7 +8,7 @@ from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton
 
 from kothrak.envs.game.MyApp import MyApp, style, run
-from kothrak.envs.game.Utils import APP_PIXDIM
+from kothrak.envs.game.Utils import APP_PIXDIM, NB_CELLS
 from dqn.DeepQNetwork import DeepQNetwork
 
 TIME_TO_SLEEP = 0.1
@@ -64,7 +64,7 @@ def run_n_games(qapp, env, N=3000):
     batch_size = 32
     min_experiences = 100
     max_experiences = 10000
-    hidden_units = [200, 200]
+    hidden_units = [40, 30, 20]
     epsilon = 0.99
     decay = 0.999
     min_epsilon = 0.05
