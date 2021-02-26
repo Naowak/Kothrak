@@ -6,7 +6,7 @@ import random
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel
 from PyQt5.QtCore import Qt
 
-from kothrak.envs.game.Utils import APP_PIXDIM, MESSAGE_PIXDIM, NB_PLAYERS
+from kothrak.envs.game.Utils import APP_PIXDIM, MESSAGE_PIXDIM, NB_PLAYERS, GRID_RAY
 from kothrak.envs.game.Grid import Grid
 from kothrak.envs.game.Player import Player
 from kothrak.envs.game.Cell import Cell
@@ -110,7 +110,7 @@ class MyApp:
         if not self.is_game_over() :
 
             if self.current_step == 'move' :
-                if cell in self._get_neighbors(self.current_player.cell) \
+                if cell in self.grid.get_neighbors(self.current_player.cell) \
                     and self._get_player_on_cell(cell) is None \
                     and cell.stage <= self.current_player.cell.stage + 1 :
                     self.current_player.move(cell)
@@ -123,7 +123,7 @@ class MyApp:
                     invalid_attempt(self, 'move')
 
             elif self.current_step == 'build' :
-                if cell in self._get_neighbors(self.current_player.cell) \
+                if cell in self.grid.get_neighbors(self.current_player.cell) \
                     and self._get_player_on_cell(cell) is None \
                     and cell.stage < cell.MAX_STAGE:
                     cell.grew()
@@ -189,12 +189,6 @@ class MyApp:
     def _player_on_top(self) :
         return self.current_player.cell.stage == Cell.MAX_STAGE
 
-    def _get_neighbors(self, cell) :
-        dir_coords = [(0, -1), (-1, 0), (-1, 1), (0, 1), (1, 0), (1, -1)]
-        neighbors_coord = [(cell.q + c[0], cell.r + c[1]) for c in dir_coords]
-        neighbors = [self.grid.get_cell_from_coord(q, r) for q, r in neighbors_coord]
-        neighbors = [c for c in neighbors if c is not None]
-        return neighbors
 
     def _next_player(self) :
         self.current_player = self.players[self.next_player_id]

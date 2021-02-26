@@ -1,6 +1,32 @@
 from kothrak.envs.game.Utils import GRID_RAY, POS_CENTER, MV_DR, MV_R
 from kothrak.envs.game.Cell import Cell
 
+
+DIR_COORDS = [(0, -1), (-1, 0), (-1, 1), (0, 1), (1, 0), (1, -1)]
+
+def distance(coord_1, coord_2):
+    return (abs(coord_1[0] - coord_2[0])
+            + abs(coord_1[0] + coord_1[1] - coord_2[0] - coord_2[1])
+            + abs(coord_1[1] - coord_2[1])) / 2
+
+def get_neighbors_rel_coord(ray=GRID_RAY, dir_coords = DIR_COORDS):
+    rel_coords = {c for c in dir_coords}
+    queue = [c for c in dir_coords]
+
+    while len(queue) > 0:
+        c1 = queue.pop(0)
+
+        for c2 in dir_coords:
+            new_coord = (c1[0] + c2[0], c1[1] + c2[1])
+            
+            if new_coord not in rel_coords and distance(new_coord, (0, 0)) <= ray:
+                queue += [new_coord]
+                rel_coords.add(new_coord)
+
+    return list(rel_coords)
+
+
+
 class Grid:
 
     def __init__(self, app, ray=GRID_RAY):
@@ -69,3 +95,15 @@ class Grid:
         for line in self.grid:
             for cell in line:
                 cell.delete()
+    
+    def get_neighbors(self, cell, ray=1, with_none=False):
+
+        neighbors_coord = [(cell.q + c[0], cell.r + c[1])
+                           for c in get_neighbors_rel_coord(ray)]
+        neighbors = [self.get_cell_from_coord(q, r) for q, r in neighbors_coord]
+
+        if not with_none: 
+            neighbors = [c for c in neighbors if c is not None]
+
+        return neighbors
+    
