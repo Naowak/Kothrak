@@ -140,7 +140,7 @@ class MyApp:
         state = {}
 
         cell_from = self.current_player.cell
-        cells_around = self.grid.get_neighbors(cell_from, ray=GRID_RAY) 
+        cells_around = self.grid.get_neighbors(cell_from, ray=GRID_RAY, with_none=True) 
 
         # Hauteur de chaque cellule
         cells_stage = [c.stage/Cell.MAX_STAGE if c is not None else 0 for c in cells_around]
@@ -158,6 +158,8 @@ class MyApp:
             state['step'] = [1, 0]
         elif self.current_step == 'build':
             state['step'] = [0, 1]
+        elif self.current_step == 'game_over':
+            state['step'] = [0, 0]
         else:
             raise Exception(f'Error in state from MyApp: current step invalid :\
                  {self.current_step}.')

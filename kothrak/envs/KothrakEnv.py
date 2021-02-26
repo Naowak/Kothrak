@@ -49,7 +49,6 @@ class KothrakEnv(gym.Env):
         for v in obs.values():
             observations += v
         observations = np.array(observations)
-        print(observations)
         return observations
     
     

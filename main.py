@@ -11,7 +11,8 @@ from kothrak.envs.game.MyApp import MyApp, style, run
 from kothrak.envs.game.Utils import APP_PIXDIM, NB_CELLS
 from dqn.DeepQNetwork import DeepQNetwork
 
-TIME_TO_SLEEP = 0.1
+TIME_TO_SLEEP = 0.05
+NB_GAMES = 500
 
 def play_game(qapp, env, TrainNet, TargetNet, epsilon):
     """Play a game with DeepQNetwork agent and train it.
@@ -56,7 +57,7 @@ def play_game(qapp, env, TrainNet, TargetNet, epsilon):
     return rewards, np.mean(losses)
 
 
-def run_n_games(qapp, env, N=3000):
+def run_n_games(qapp, env, N=NB_GAMES):
 
     # tuning hyperparameters
     lr = 1e-2
@@ -143,7 +144,7 @@ def main():
 
 if __name__ == '__main__':
     # values = ['ENV', 'GAME']
-    RUN = 'GAME'
+    RUN = 'ENV'
 
     if RUN == 'GAME':
         run()
