@@ -6,6 +6,7 @@ from dqn.NeuralNet import NeuralNet
 class DeepQNetwork:
     
     def __init__(self, num_states, num_actions, hidden_units, gamma, max_experiences, min_experiences, batch_size, lr):
+        self.num_states = num_states
         self.num_actions = num_actions
         self.batch_size = batch_size
         self.optimizer = tf.optimizers.Adam(lr)
@@ -14,6 +15,7 @@ class DeepQNetwork:
         self.max_experiences = max_experiences
         self.min_experiences = min_experiences
         self.model = NeuralNet(num_states, hidden_units, num_actions)
+        self.model.build((self.batch_size, self.num_states))
     
     def predict(self, inputs):
         """Predict q_value for each action in function of inputs."""

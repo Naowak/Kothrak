@@ -10,11 +10,11 @@ from torch.utils.tensorboard import SummaryWriter
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton
 from kothrak.envs.game.MyApp import MyApp, style, run
-from kothrak.envs.game.Utils import APP_PIXDIM, NB_CELLS
+from kothrak.envs.game.Utils import APP_PIXDIM
 from dqn.DeepQNetwork import DeepQNetwork
 
-TIME_TO_SLEEP = 0.05
-NB_GAMES = 5000
+TIME_TO_SLEEP = 0.01
+NB_GAMES = 10000
 NB_LAST_GAMES = 20
 
 def play_game(qapp, env, TrainNet, TargetNet, epsilon):
@@ -39,7 +39,7 @@ def play_game(qapp, env, TrainNet, TargetNet, epsilon):
         rewards += reward
 
         qapp.processEvents()
-        sleep(TIME_TO_SLEEP)
+        # sleep(TIME_TO_SLEEP)
         
         # Reset the game if the gym environnement is finished
         if done:
@@ -63,14 +63,14 @@ def play_game(qapp, env, TrainNet, TargetNet, epsilon):
 def run_n_games(qapp, env, run_name='', N=NB_GAMES):
 
     # tuning hyperparameters
-    lr = 1e-2
+    lr = 1e-3
     gamma = 0.99
     batch_size = 32
     min_experiences = 100
     max_experiences = 10000
-    hidden_units = [200, 200]
+    hidden_units = [150, 150, 150]
     epsilon = 0.99
-    decay = 0.999
+    decay = 0.9995
     min_epsilon = 0.01
     
     # Retieve number of state and action values
@@ -87,6 +87,7 @@ def run_n_games(qapp, env, run_name='', N=NB_GAMES):
                    max_experiences, min_experiences, batch_size, lr)
     TargetNet = DeepQNetwork(num_states, num_actions, hidden_units, gamma,
                     max_experiences, min_experiences, batch_size, lr)
+    TrainNet.model.summary()
 
     # Make N games
     total_rewards = np.empty(N)
@@ -116,7 +117,9 @@ def run_n_games(qapp, env, run_name='', N=NB_GAMES):
     
     # End of the training
     env.close()
-    pickle.dump(TrainNet, open('model.pick', 'wb'))
+    
+    # /!\ Saving does not works !
+    # pickle.dump(TrainNet, open('model.pick', 'wb'))
 
 
 def main():    

@@ -16,11 +16,7 @@ class KothrakEnv(gym.Env):
 
         # Initialise les actions et observations
         self.action_space = gym.spaces.Discrete(6)
-        self.observation_space = gym.spaces.Dict({
-            'cells_stage': gym.spaces.Box(low=0, high=1, shape=(NB_CELLS,)),
-            'cells_taken': gym.spaces.Discrete(NB_CELLS),
-            'step': gym.spaces.Discrete(2)
-        })
+        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(2*NB_CELLS+2, ))
     
     def set_game(self, game):
         self.game = game
