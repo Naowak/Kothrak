@@ -10,10 +10,10 @@ class DeepQNetwork:
         self.batch_size = batch_size
         self.optimizer = tf.optimizers.Adam(lr)
         self.gamma = gamma
-        self.model = NeuralNet(num_states, hidden_units, num_actions)
         self.experience = {'s': [], 'a': [], 'r': [], 's2': [], 'done': []}
         self.max_experiences = max_experiences
         self.min_experiences = min_experiences
+        self.model = NeuralNet(num_states, hidden_units, num_actions)
     
     def predict(self, inputs):
         """Predict q_value for each action in function of inputs."""

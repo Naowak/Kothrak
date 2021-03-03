@@ -1,5 +1,6 @@
 import sys
 import datetime
+import pickle
 import numpy as np
 from time import sleep
 import gym
@@ -13,7 +14,7 @@ from kothrak.envs.game.Utils import APP_PIXDIM, NB_CELLS
 from dqn.DeepQNetwork import DeepQNetwork
 
 TIME_TO_SLEEP = 0.05
-NB_GAMES = 500
+NB_GAMES = 5000
 NB_LAST_GAMES = 20
 
 def play_game(qapp, env, TrainNet, TargetNet, epsilon):
@@ -59,7 +60,7 @@ def play_game(qapp, env, TrainNet, TargetNet, epsilon):
     return rewards, np.mean(losses)
 
 
-def run_n_games(qapp, env, N=NB_GAMES):
+def run_n_games(qapp, env, run_name='', N=NB_GAMES):
 
     # tuning hyperparameters
     lr = 1e-2
@@ -69,15 +70,17 @@ def run_n_games(qapp, env, N=NB_GAMES):
     max_experiences = 10000
     hidden_units = [200, 200]
     epsilon = 0.99
-    decay = 0.99
-    min_epsilon = 0.05
+    decay = 0.999
+    min_epsilon = 0.01
     
     # Retieve number of state and action values
     num_states = len(env.observation_space.sample())
     num_actions = env.action_space.n
 
     # Prepare logs writer
-    log_writer = SummaryWriter(log_dir='./logs/')
+    if run_name == '':
+        run_name = datetime.datetime.now().strftime("%m%d%Y-%H%M")
+    log_writer = SummaryWriter(log_dir=f'./logs/{run_name}/')
 
     # Create DQNs
     TrainNet = DeepQNetwork(num_states, num_actions, hidden_units, gamma,
@@ -113,6 +116,7 @@ def run_n_games(qapp, env, N=NB_GAMES):
     
     # End of the training
     env.close()
+    pickle.dump(TrainNet, open('model.pick', 'wb'))
 
 
 def main():    
@@ -128,10 +132,15 @@ def main():
     env = gym.make('kothrak-v0')
     env.set_game(game)
 
+    # Get the run name in the args
+    run_name = ''
+    if len(sys.argv) > 1:
+        run_name = sys.argv[1]
+
     # Add button to launch the trainig to the interface
     button = QPushButton('Play N Games', window)
     button.setGeometry(QtCore.QRect(APP_PIXDIM[0], 100, 100, 40))
-    button.clicked.connect(lambda : run_n_games(qapp, env))
+    button.clicked.connect(lambda : run_n_games(qapp, env, run_name=run_name))
 
     # Launch the PyQt programm
     window.show()
