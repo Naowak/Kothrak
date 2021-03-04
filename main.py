@@ -14,7 +14,7 @@ from kothrak.envs.game.Utils import APP_PIXDIM
 from dqn.DeepQNetwork import DeepQNetwork
 
 TIME_TO_SLEEP = 0.01
-NB_GAMES = 10000
+NB_GAMES = 50000
 NB_LAST_GAMES = 20
 
 def play_game(qapp, env, TrainNet, TargetNet, epsilon):
@@ -67,11 +67,11 @@ def run_n_games(qapp, env, run_name='', N=NB_GAMES):
     gamma = 0.99
     batch_size = 32
     min_experiences = 100
-    max_experiences = 10000
-    hidden_units = [150, 150, 150]
+    max_experiences = 2000
+    hidden_units = [120, 120, 120, 120]
     epsilon = 0.99
-    decay = 0.9995
-    min_epsilon = 0.01
+    decay = 0.9998
+    min_epsilon = 0
     
     # Retieve number of state and action values
     num_states = len(env.observation_space.sample())
