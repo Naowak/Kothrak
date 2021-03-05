@@ -11,10 +11,10 @@ from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton
 from kothrak.envs.game.MyApp import MyApp, style, run
 from kothrak.envs.game.Utils import APP_PIXDIM
-from dqn.DeepQNetwork import DeepQNetwork
+from dqn.DeepQNetwork import DeepQNetwork, save_dqn, load_dqn
 
 TIME_TO_SLEEP = 0.01
-NB_GAMES = 50000
+NB_GAMES = 10000
 NB_LAST_GAMES = 20
 
 def play_game(qapp, env, TrainNet, TargetNet, epsilon):
@@ -60,38 +60,70 @@ def play_game(qapp, env, TrainNet, TargetNet, epsilon):
     return rewards, np.mean(losses)
 
 
-def run_n_games(qapp, env, run_name='', N=NB_GAMES):
+def run_n_games(qapp, env, run_name='', params_iter=None, loading_file=None, N=NB_GAMES):
 
-    # tuning hyperparameters
-    lr = 1e-3
-    gamma = 0.99
-    batch_size = 32
-    min_experiences = 100
-    max_experiences = 2000
-    hidden_units = [120, 120, 120, 120]
-    epsilon = 0.99
-    decay = 0.9998
-    min_epsilon = 0
-    
-    # Retieve number of state and action values
-    num_states = len(env.observation_space.sample())
-    num_actions = env.action_space.n
-
-    # Prepare logs writer
+    # If no run_name given, take the date
     if run_name == '':
         run_name = datetime.datetime.now().strftime("%m%d%Y-%H%M")
-    log_writer = SummaryWriter(log_dir=f'./logs/{run_name}/')
 
-    # Create DQNs
-    TrainNet = DeepQNetwork(num_states, num_actions, hidden_units, gamma,
-                   max_experiences, min_experiences, batch_size, lr)
-    TargetNet = DeepQNetwork(num_states, num_actions, hidden_units, gamma,
-                    max_experiences, min_experiences, batch_size, lr)
+    # Create or load DQNs
+    if loading_file is None:
+        # Create DQNs
+        lr = 1e-3
+        gamma = 0.99
+        batch_size = 32
+        min_experiences = 100
+        max_experiences = 2000
+        hidden_units = [120, 120, 120, 120]
+        
+        # Retieve number of state and action values from the gym env
+        num_states = len(env.observation_space.sample())
+        num_actions = env.action_space.n
+
+        # Instanciate the DQNs
+        TrainNet = DeepQNetwork(run_name, num_states, num_actions, hidden_units, gamma,
+                        max_experiences, min_experiences, batch_size, lr)
+        TargetNet = DeepQNetwork(run_name + '_target', num_states, num_actions, hidden_units, gamma,
+                        max_experiences, min_experiences, batch_size, lr)
+
+    else:
+        # Load TrainNet and params_iter
+        TrainNet, params_iter = load_dqn(loading_file)
+
+        # load hyperpameters
+        lr = TrainNet.lr
+        gamma = TrainNet.gamma
+        batch_size = TrainNet.batch_size
+        min_experiences = TrainNet.min_experiences
+        max_experiences = TrainNet.max_experiences
+        hidden_units = TrainNet.hidden_units
+        num_states = TrainNet.num_states
+        num_actions = TrainNet.num_actions
+
+        # Create TargetNet
+        TargetNet = DeepQNetwork(run_name + '_target', num_states, num_actions, hidden_units, gamma,
+                        max_experiences, min_experiences, batch_size, lr)
+        TrainNet.copy_weights(TargetNet)
+
     TrainNet.model.summary()
+
+    # Prepare logs writer
+    log_writer = SummaryWriter(log_dir=f'./logs/{run_name}/')
 
     # Make N games
     total_rewards = np.empty(N)
     mean_losses = np.empty(N)
+    
+    if params_iter is None :
+        epsilon = 0.99
+        decay = 0.9998
+        min_epsilon = 0
+        n_begin = 0
+    else:
+        epsilon = params_iter['epsilon']
+        decay = params_iter['decay']
+        min_epsilon = params_iter['min_epsilon']
+        n_begin = params_iter['n_iter']
 
     for n in range(N):
         # Play one game and update epsilon & rewards
@@ -105,22 +137,28 @@ def run_n_games(qapp, env, run_name='', N=NB_GAMES):
         avg_losses = mean_losses[max(0, n - NB_LAST_GAMES):(n + 1)].mean()
         
         # Make the summary
-        log_writer.add_scalar('Reward', total_reward, n)
+        log_writer.add_scalar('Reward', total_reward, n_begin + n)
         log_writer.add_scalar(f'Avg Rewards (last {NB_LAST_GAMES})', 
-            avg_rewards, n)
-        log_writer.add_scalar('Loss', mean_loss, n)
+                              avg_rewards, n_begin + n)
+        log_writer.add_scalar('Loss', mean_loss, n_begin + n)
 
         # Each NB_LAST_GAMES games, display information and update the model
         if (n+1) % NB_LAST_GAMES == 0:
-            print(f'episode: {n+1}, eps: {epsilon}, avg reward (last {NB_LAST_GAMES}): {avg_rewards}, avg losses (last {NB_LAST_GAMES}): {avg_losses}')
+            print(f'episode: {n_begin + n+1}, \
+                    eps: {epsilon}, \
+                    avg reward (last {NB_LAST_GAMES}): {avg_rewards}, \
+                    avg losses (last {NB_LAST_GAMES}): {avg_losses}')
             TargetNet.copy_weights(TrainNet)
     
     # End of the training
     env.close()
     
-    # /!\ Saving does not works !
-    # pickle.dump(TrainNet, open('model.pick', 'wb'))
-
+    # Save the model
+    params_iter = {'epsilon': epsilon, 
+                'decay': decay, 
+                'min_epsilon': min_epsilon,
+                'n_iter': n+1}
+    save_dqn(TrainNet, params_iter)
 
 def main():    
     # Create the main window
@@ -143,7 +181,9 @@ def main():
     # Add button to launch the trainig to the interface
     button = QPushButton('Play N Games', window)
     button.setGeometry(QtCore.QRect(APP_PIXDIM[0], 100, 100, 40))
-    button.clicked.connect(lambda : run_n_games(qapp, env, run_name=run_name))
+    button.clicked.connect(lambda : run_n_games(qapp, env, 
+                                                run_name=run_name, 
+                                                loading_file='saves/test_continue_training.zip'))
 
     # Launch the PyQt programm
     window.show()

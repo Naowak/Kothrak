@@ -2,6 +2,8 @@ kothrak.egg-info
 kothrak.egg-info/*
 logs
 logs/*
+saves/
+saves/*
 
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,vscode
