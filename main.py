@@ -6,9 +6,9 @@ from time import sleep
 import gym
 import tensorflow as tf
 from torch.utils.tensorboard import SummaryWriter
-
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton
+
 from kothrak.envs.game.MyApp import MyApp, style, run
 from kothrak.envs.game.Utils import APP_PIXDIM
 from dqn.DeepQNetwork import DeepQNetwork, save_dqn, load_dqn
