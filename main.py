@@ -5,9 +5,9 @@ from PyQt5.QtWidgets import QApplication, QWidget, QPushButton
 
 from kothrak.envs.game.MyApp import MyApp, style, run
 from kothrak.envs.game.Utils import APP_PIXDIM
-from dqn.Trainer import run_n_games
+from dqn.Trainer import Trainer
 
-NB_GAMES = 10000
+NB_GAMES = 100
 
 def main():    
     # Create the main window
@@ -27,12 +27,13 @@ def main():
     if len(sys.argv) > 1:
         run_name = sys.argv[1]
 
+    # Create the trainer
+    trainer = Trainer(qapp, env, run_name=run_name, loading_file='saves/test-trainer.zip')
+
     # Add button to launch the trainig to the interface
     button = QPushButton('Play N Games', window)
     button.setGeometry(QtCore.QRect(APP_PIXDIM[0], 100, 100, 40))
-    button.clicked.connect(lambda : run_n_games(NB_GAMES, qapp, env, 
-                                                run_name=run_name, 
-                                                loading_file='saves/test_continue_training.zip'))
+    button.clicked.connect(lambda: trainer.run_n_games(NB_GAMES))
 
     # Launch the PyQt programm
     window.show()
