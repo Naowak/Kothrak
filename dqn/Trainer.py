@@ -1,7 +1,6 @@
 import os
 import pickle
 import shutil
-from datetime import datetime
 from time import sleep
 import numpy as np
 import tensorflow as tf
@@ -19,60 +18,28 @@ class Trainer():
     HYPERPARAMETERS = ['lr', 'gamma', 'batch_size', 'min_experiences',
                         'max_experiences', 'hidden_units']
 
-    def __init__(self, qapp, env, run_name='', loading_file='', epsilon=0.99,
-            decay=0.9998, min_epsilon=0, lr=1e-3, gamma=0.99, batch_size=32,
-            min_experiences=100, max_experiences=2000, 
-            hidden_units=[120, 120, 120, 120]):  
+    def __init__(self, qapp, env):  
         """Initalize the trainer and create the DeepQNetworks
         - qapp : Main QWidget window
         - env : gym env
-        - run_name** : name of the training, if None, take the date
-        - loading_file : path to a save, if not None, load the params too
-        - epsilon* : initial percentage of random plays
-        - decay* : decay of epsilon at each game
-        - min_epsilon* : minimum value of epsilon
-        - lr : learning rate
-        - gamma : coefficiant of next_q_value
-        - batch_size : size of a batch
-        - min_experience : min size of the memory
-        - max_experience : max size of the memory
-        - hidden_units : size of neural network's hidden layers 
-        *Those parameters will be changed to the saved values if loading_file
-        is not None.
-        **If you want to keep the name of a loading model, you should give
-        the same run_name. The run_name isn't loaded from the save.
         """
         self.qapp = qapp
         self.env = env
-        self.epsilon = epsilon
-        self.decay = decay
-        self.min_epsilon = min_epsilon
-        self.nb_iter_prev = 0
 
+        self.run_name = ''
+        self.epsilon = 0
+        self.decay = 0
+        self.min_epsilon = 0
+        self.nb_iter_prev = 0
         self.TrainNet = None
         self.TargetNet = None
-        
-        # If no run_name given, take the date
-        if run_name == '':
-            self.run_name = datetime.now().strftime("%m%d%y-%H%M")
-        else:
-            self.run_name = run_name
-
-        # Create or load DQNs
-        if loading_file != '':
-            self._load_session(loading_file)
-        else:
-            self._new_session(lr, gamma, batch_size, min_experiences,
-                max_experiences, hidden_units)
-
-        self.TrainNet.model.summary()
-
 
     def run_n_games(self, N):
         """Play N games and train the DeepQNetwork
         - N : Number of games to play
         """
-        # Prepare logs writer
+        # Summary & Log Writer init
+        self.TrainNet.model.summary()
         log_writer = SummaryWriter(log_dir=f'./logs/{self.run_name}/')
 
         # Make N games
@@ -149,7 +116,7 @@ class Trainer():
         return rewards, np.mean(losses)
 
 
-    def modify_params(self, **params):
+    def set_params(self, **params):
         """This function modify parameters in the Trainer and DQNs.
         To modify a parameter, call the function with args like :
         param1=value1, param2=value2, ...
@@ -157,21 +124,25 @@ class Trainer():
         - ['epsilon', 'decay', 'min_epsilon', 'nb_iter_prev'] for Trainer.
         - ['lr', 'gamma', 'batch_size', 'min_experiences', 'max_experiences',
         'hidden_units'] for DQNs
-        """        
+        """
         for k, v in params.items():
+
             if k == 'run_name':
                 self.run_name = v
 
             elif k in self.TRAINING_PARAMS:
-                setattr(self, k, v)
+                if getattr(self, k) != v:
+                    setattr(self, k, v)
 
             elif k in self.HYPERPARAMETERS:
-                setattr(self.TrainNet, k, v)
-                setattr(self.TargetNet, k, v)
+                if getattr(self.TrainNet, k) != v:
+                    
+                    setattr(self.TrainNet, k, v)
+                    setattr(self.TargetNet, k, v)
 
-                if k == 'hidden_units':
-                    self.TrainNet.create_neural_net()
-                    self.TargetNet.create_neural_net()
+                    if k == 'hidden_units':
+                        self.TrainNet.create_neural_net()
+                        self.TargetNet.create_neural_net()
 
             else:
                 raise Exception(f'Parameter {k} not known.')
@@ -183,23 +154,45 @@ class Trainer():
         return params
 
 
-    def _new_session(self, lr, gamma, batch_size, min_experiences,
-            max_experiences, hidden_units):
-        # Create DQNs
+    def new_session(self, run_name, epsilon, decay, min_epsilon, lr, gamma,
+            batch_size, min_experiences, max_experiences, hidden_units):
+        """Create a new session with those parameters
+        - run_name** : name of the training, if None, take the date
+        - loading_file : path to a save, if not None, load the params too
+        - epsilon* : initial percentage of random plays
+        - decay* : decay of epsilon at each game
+        - min_epsilon* : minimum value of epsilon
+        - lr : learning rate
+        - gamma : coefficiant of next_q_value
+        - batch_size : size of a batch
+        - min_experience : min size of the memory
+        - max_experience : max size of the memory
+        - hidden_units : size of neural network's hidden layers 
+        *Those parameters will be changed to the saved values if loading_file
+        is not None.
+        **If you want to keep the name of a loading model, you should give
+        the same run_name. The run_name isn't loaded from the save.
+        """
+        # training parameters
+        self.run_name = run_name
+        self.epsilon = epsilon
+        self.decay = decay
+        self.min_epsilon = min_epsilon
+
         # Retieve number of state and action values from the gym env
         num_states = len(self.env.observation_space.sample())
         num_actions = self.env.action_space.n        
 
         # Instanciate the DQNs
-        self.TrainNet = DeepQNetwork(self.run_name, num_states, num_actions,
+        self.TrainNet = DeepQNetwork(run_name, num_states, num_actions,
             lr, gamma, batch_size, min_experiences,
             max_experiences, hidden_units)
-        self.TargetNet = DeepQNetwork(self.run_name + '_target', num_states, 
+        self.TargetNet = DeepQNetwork(run_name + '_target', num_states, 
             num_actions, lr, gamma, batch_size, min_experiences,
             max_experiences, hidden_units)
 
 
-    def _load_session(self, loading_file):
+    def load_session(self, loading_file):
         # Load TrainNet and training_params
         self._load_from_zip(loading_file)
 
@@ -265,7 +258,8 @@ class Trainer():
             pickle.dump(self.TrainNet, file)
 
         # Params of the training
-        training_params = {'epsilon': self.epsilon,
+        training_params = {'run_name': self.run_name,
+                        'epsilon': self.epsilon,
                         'decay': self.decay,
                         'min_epsilon': self.min_epsilon,
                         'nb_iter_prev': self.nb_iter_prev}
@@ -324,6 +318,7 @@ class Trainer():
         with open(f'{directory_tmp}training_params.pick', 'rb') as file:
             training_params = pickle.load(file)
 
+        self.run_name = training_params['run_name']
         self.epsilon = training_params['epsilon']
         self.decay = training_params['decay']
         self.min_epsilon = training_params['min_epsilon']
