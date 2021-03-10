@@ -41,10 +41,8 @@ QLabel#player* {
 }
 '''
 
-NB_GAMES = 300
-
 DEFAULT_PARAMS = {'run_name': datetime.now().strftime("%m%d%y-%H%M"),
-            'epsilon': 0.99, 'decay': 0.9998, 
+            'nb_games': 2000, 'epsilon': 0.99, 'decay': 0.9998, 
             'min_epsilon': 0, 'lr': 1e-3, 'gamma': 0.99, 'batch_size': 32,
             'min_experiences': 100, 'max_experiences': 2000, 
             'hidden_units': [120, 120, 120, 120]}
@@ -80,12 +78,12 @@ def run():
 
     # Add button to load a model
     button = QPushButton('Load model', window)
-    button.setGeometry(QtCore.QRect(APP_PIXDIM[0] + 25, APP_PIXDIM[1] - 100, 170, 40))
+    button.setGeometry(QtCore.QRect(APP_PIXDIM[0] + 25, APP_PIXDIM[1] - 70, 170, 40))
     button.clicked.connect(lambda: load_model(trainer, entries))
     
     # Add button to launch the trainig to the interface
     button = QPushButton('Play N Games', window)
-    button.setGeometry(QtCore.QRect(APP_PIXDIM[0] + 205, APP_PIXDIM[1] - 100, 170, 40))
+    button.setGeometry(QtCore.QRect(APP_PIXDIM[0] + 205, APP_PIXDIM[1] - 70, 170, 40))
     button.clicked.connect(lambda: launch_training(trainer, entries))
 
     # Launch the PyQt programm
@@ -104,7 +102,8 @@ def launch_training(trainer, entries):
         elif param == 'hidden_units':
             params[param] = eval(value)
 
-        elif param in ['batch_size', 'min_experiences', 'max_experiences']:
+        elif param in ['batch_size', 'min_experiences', 'max_experiences',
+                'nb_games']:
             params[param] = int(value)
 
         else:
@@ -117,7 +116,7 @@ def launch_training(trainer, entries):
         # Trainer has been load, change parameters if user change something
         trainer.set_params(**params)
 
-    trainer.run_n_games(NB_GAMES)
+    trainer.run_nb_games()
 
 
 def load_model(trainer, entries):

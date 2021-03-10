@@ -14,7 +14,7 @@ class Trainer():
 
     TIME_TO_SLEEP = 0
     NB_LAST_GAMES = 20
-    TRAINING_PARAMS = ['epsilon', 'decay', 'min_epsilon']
+    TRAINING_PARAMS = ['nb_games', 'epsilon', 'decay', 'min_epsilon']
     HYPERPARAMETERS = ['lr', 'gamma', 'batch_size', 'min_experiences',
                         'max_experiences', 'hidden_units']
 
@@ -27,6 +27,7 @@ class Trainer():
         self.env = env
 
         self.run_name = ''
+        self.nb_games = 0
         self.epsilon = 0
         self.decay = 0
         self.min_epsilon = 0
@@ -34,7 +35,7 @@ class Trainer():
         self.TrainNet = None
         self.TargetNet = None
 
-    def run_n_games(self, N):
+    def run_nb_games(self):
         """Play N games and train the DeepQNetwork
         - N : Number of games to play
         """
@@ -43,10 +44,10 @@ class Trainer():
         log_writer = SummaryWriter(log_dir=f'./logs/{self.run_name}/')
 
         # Make N games
-        total_rewards = np.empty(N)
-        mean_losses = np.empty(N)
+        total_rewards = np.empty(self.nb_games)
+        mean_losses = np.empty(self.nb_games)
 
-        for n in range(N):
+        for n in range(self.nb_games):
             step = self.nb_iter_prev + n
 
             # Play one game and update self.epsilon, rewards & losses
@@ -73,7 +74,7 @@ class Trainer():
                 self.TargetNet.copy_weights(self.TrainNet)
 
         # End of the training
-        self.nb_iter_prev += N
+        self.nb_iter_prev += self.nb_games
         self.env.close()
         self._save_in_zip()
 
@@ -136,7 +137,7 @@ class Trainer():
 
             elif k in self.HYPERPARAMETERS:
                 if getattr(self.TrainNet, k) != v:
-                    
+
                     setattr(self.TrainNet, k, v)
                     setattr(self.TargetNet, k, v)
 
@@ -154,8 +155,8 @@ class Trainer():
         return params
 
 
-    def new_session(self, run_name, epsilon, decay, min_epsilon, lr, gamma,
-            batch_size, min_experiences, max_experiences, hidden_units):
+    def new_session(self, run_name, nb_games, epsilon, decay, min_epsilon, lr, 
+          gamma, batch_size, min_experiences, max_experiences, hidden_units):
         """Create a new session with those parameters
         - run_name** : name of the training, if None, take the date
         - loading_file : path to a save, if not None, load the params too
@@ -175,6 +176,7 @@ class Trainer():
         """
         # training parameters
         self.run_name = run_name
+        self.nb_games = nb_games
         self.epsilon = epsilon
         self.decay = decay
         self.min_epsilon = min_epsilon
@@ -259,6 +261,7 @@ class Trainer():
 
         # Params of the training
         training_params = {'run_name': self.run_name,
+                        'nb_games': self.nb_games,
                         'epsilon': self.epsilon,
                         'decay': self.decay,
                         'min_epsilon': self.min_epsilon,
@@ -319,6 +322,7 @@ class Trainer():
             training_params = pickle.load(file)
 
         self.run_name = training_params['run_name']
+        self.nb_games = training_params['nb_games']
         self.epsilon = training_params['epsilon']
         self.decay = training_params['decay']
         self.min_epsilon = training_params['min_epsilon']
