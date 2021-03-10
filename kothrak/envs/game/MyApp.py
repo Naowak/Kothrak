@@ -25,14 +25,15 @@ class MyApp:
         self.window.resize(APP_PIXDIM[0], APP_PIXDIM[1])
         self.window.setWindowTitle('MyApp')
         self.window.mouseReleaseEvent = lambda event: self._on_click(event)
+        self.window.setObjectName('game_bg')
         # self.window.keyReleaseEvent=lambda event:self.on_keyboard(event)
 
         # Initialisation du message
         self.message = QLabel(self.window)
-        self.message.setGeometry(0, 0, MESSAGE_PIXDIM[0], MESSAGE_PIXDIM[1])
+        self.message.setGeometry(0, 30, MESSAGE_PIXDIM[0], MESSAGE_PIXDIM[1])
         self.message.setText("")
         self.message.setAlignment(Qt.AlignCenter)
-        self.message.setObjectName('Hello')
+        self.message.setObjectName('message')
 
         # Initialisation des variables
         self.players = []
@@ -238,7 +239,7 @@ QWidget {
 QLabel {
     background-color: rgba(255, 255, 255, 0);
 }
-QLabel#Hello {
+QLabel#message {
     color:rgb(210, 90, 20);
     font:30pt;
 }

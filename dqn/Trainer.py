@@ -15,6 +15,9 @@ class Trainer():
 
     TIME_TO_SLEEP = 0
     NB_LAST_GAMES = 20
+    TRAINING_PARAMS = ['epsilon', 'decay', 'min_epsilon']
+    HYPERPARAMETERS = ['lr', 'gamma', 'batch_size', 'min_experiences',
+                        'max_experiences', 'hidden_units']
 
     def __init__(self, qapp, env, run_name='', loading_file='', epsilon=0.99,
             decay=0.9998, min_epsilon=0, lr=1e-3, gamma=0.99, batch_size=32,
@@ -51,7 +54,7 @@ class Trainer():
         
         # If no run_name given, take the date
         if run_name == '':
-            self.run_name = datetime.now().strftime("%m%d%Y-%H%M")
+            self.run_name = datetime.now().strftime("%m%d%y-%H%M")
         else:
             self.run_name = run_name
 
@@ -154,16 +157,15 @@ class Trainer():
         - ['epsilon', 'decay', 'min_epsilon', 'nb_iter_prev'] for Trainer.
         - ['lr', 'gamma', 'batch_size', 'min_experiences', 'max_experiences',
         'hidden_units'] for DQNs
-        """
-        training_params = ['epsilon', 'decay', 'min_epsilon', 'nb_iter_prev']
-        hyperpameters = ['lr', 'gamma', 'batch_size', 'min_experiences',
-            'max_experiences', 'hidden_units']
-        
+        """        
         for k, v in params.items():
-            if k in training_params:
+            if k == 'run_name':
+                self.run_name = v
+
+            elif k in self.TRAINING_PARAMS:
                 setattr(self, k, v)
 
-            elif k in hyperpameters:
+            elif k in self.HYPERPARAMETERS:
                 setattr(self.TrainNet, k, v)
                 setattr(self.TargetNet, k, v)
 
@@ -173,6 +175,12 @@ class Trainer():
 
             else:
                 raise Exception(f'Parameter {k} not known.')
+
+    def get_params(self):
+        params = {'run_name': self.run_name}
+        params.update({p: getattr(self, p) for p in self.TRAINING_PARAMS})
+        params.update({p: getattr(self.TrainNet, p) for p in self.HYPERPARAMETERS})
+        return params
 
 
     def _new_session(self, lr, gamma, batch_size, min_experiences,
