@@ -7,20 +7,25 @@ from dqn.NeuralNet import NeuralNet
 
 class DeepQNetwork:
 
-    def __init__(self, name, num_states, num_actions, hidden_units, gamma, max_experiences, min_experiences, batch_size, lr):
+    def __init__(self, name, num_states, num_actions, lr, gamma, batch_size, 
+            min_experiences, max_experiences, hidden_units):
         self.name = name
         self.num_states = num_states
         self.num_actions = num_actions
-        self.hidden_units = hidden_units
-        self.gamma = gamma
-        self.max_experiences = max_experiences
-        self.min_experiences = min_experiences
-        self.batch_size = batch_size
         self.lr = lr
+        self.gamma = gamma
+        self.batch_size = batch_size
+        self.min_experiences = min_experiences
+        self.max_experiences = max_experiences
+        self.hidden_units = hidden_units
 
         self.optimizer = tf.optimizers.Adam(lr)
         self.experience = {'s': [], 'a': [], 'r': [], 's2': [], 'done': []}
-        self.model = NeuralNet(num_states, hidden_units, num_actions)
+        self.model = None
+        self.create_neural_net()
+
+    def create_neural_net(self):
+        self.model = NeuralNet(self.num_states, self.hidden_units, self.num_actions)
         self.model.build((self.batch_size, self.num_states))
 
     def predict(self, inputs):

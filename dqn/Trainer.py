@@ -17,7 +17,9 @@ class Trainer():
     NB_LAST_GAMES = 20
 
     def __init__(self, qapp, env, run_name='', loading_file='', epsilon=0.99,
-            decay=0.9998, min_epsilon=0):  
+            decay=0.9998, min_epsilon=0, lr=1e-3, gamma=0.99, batch_size=32,
+            min_experiences=100, max_experiences=2000, 
+            hidden_units=[120, 120, 120, 120]):  
         """Initalize the trainer and create the DeepQNetworks
         - qapp : Main QWidget window
         - env : gym env
@@ -26,6 +28,12 @@ class Trainer():
         - epsilon* : initial percentage of random plays
         - decay* : decay of epsilon at each game
         - min_epsilon* : minimum value of epsilon
+        - lr : learning rate
+        - gamma : coefficiant of next_q_value
+        - batch_size : size of a batch
+        - min_experience : min size of the memory
+        - max_experience : max size of the memory
+        - hidden_units : size of neural network's hidden layers 
         *Those parameters will be changed to the saved values if loading_file
         is not None.
         **If you want to keep the name of a loading model, you should give
@@ -51,7 +59,8 @@ class Trainer():
         if loading_file != '':
             self._load_session(loading_file)
         else:
-            self._new_session()
+            self._new_session(lr, gamma, batch_size, min_experiences,
+                max_experiences, hidden_units)
 
         self.TrainNet.model.summary()
 
@@ -135,45 +144,81 @@ class Trainer():
                 losses.append(loss.numpy())
 
         return rewards, np.mean(losses)
-    
 
-    def _new_session(self):
+
+    def modify_params(self, **params):
+        """This function modify parameters in the Trainer and DQNs.
+        To modify a parameter, call the function with args like :
+        param1=value1, param2=value2, ...
+        Where param could be :
+        - ['epsilon', 'decay', 'min_epsilon', 'nb_iter_prev'] for Trainer.
+        - ['lr', 'gamma', 'batch_size', 'min_experiences', 'max_experiences',
+        'hidden_units'] for DQNs
+        """
+        training_params = ['epsilon', 'decay', 'min_epsilon', 'nb_iter_prev']
+        hyperpameters = ['lr', 'gamma', 'batch_size', 'min_experiences',
+            'max_experiences', 'hidden_units']
+        
+        for k, v in params.items():
+            if k in training_params:
+                setattr(self, k, v)
+
+            elif k in hyperpameters:
+                setattr(self.TrainNet, k, v)
+                setattr(self.TargetNet, k, v)
+
+                if k == 'hidden_units':
+                    self.TrainNet.create_neural_net()
+                    self.TargetNet.create_neural_net()
+
+            else:
+                raise Exception(f'Parameter {k} not known.')
+
+
+    def _new_session(self, lr, gamma, batch_size, min_experiences,
+            max_experiences, hidden_units):
         # Create DQNs
-        lr = 1e-3
-        gamma = 0.99
-        batch_size = 32
-        min_experiences = 100
-        max_experiences = 2000
-        hidden_units = [120, 120, 120, 120]
-
         # Retieve number of state and action values from the gym env
         num_states = len(self.env.observation_space.sample())
-        num_actions = self.env.action_space.n
+        num_actions = self.env.action_space.n        
 
         # Instanciate the DQNs
-        self.TrainNet = DeepQNetwork(self.run_name, num_states, num_actions, hidden_units, gamma,
-                                max_experiences, min_experiences, batch_size, lr)
-        self.TargetNet = DeepQNetwork(self.run_name + '_target', num_states, num_actions, hidden_units, gamma,
-                                max_experiences, min_experiences, batch_size, lr)
+        self.TrainNet = DeepQNetwork(self.run_name, num_states, num_actions,
+            lr, gamma, batch_size, min_experiences,
+            max_experiences, hidden_units)
+        self.TargetNet = DeepQNetwork(self.run_name + '_target', num_states, 
+            num_actions, lr, gamma, batch_size, min_experiences,
+            max_experiences, hidden_units)
 
 
     def _load_session(self, loading_file):
         # Load TrainNet and training_params
         self._load_from_zip(loading_file)
 
-        # load hyperpameters
+        # load DQN hyperpameters
         lr = self.TrainNet.lr
         gamma = self.TrainNet.gamma
         batch_size = self.TrainNet.batch_size
         min_experiences = self.TrainNet.min_experiences
         max_experiences = self.TrainNet.max_experiences
         hidden_units = self.TrainNet.hidden_units
-        num_states = self.TrainNet.num_states
-        num_actions = self.TrainNet.num_actions
+        
+        # Retieve number of state and action values from the gym env
+        num_states = len(self.env.observation_space.sample())
+        num_actions = self.env.action_space.n
+        
+        if num_states != self.TrainNet.num_states:
+            raise Exception(f'Loaded model has not the same number of states \
+                than the env : {num_states} != {self.TrainNet.num_states}.')
+
+        if num_actions != self.TrainNet.num_actions:
+            raise Exception(f'Loaded model has not the same number of actions \
+                than the env : {num_actions} != {self.TrainNet.num_actions}.')
 
         # Create TargetNet
-        self.TargetNet = DeepQNetwork(self.run_name + '_target', num_states, num_actions, hidden_units, gamma,
-                                max_experiences, min_experiences, batch_size, lr)
+        self.TargetNet = DeepQNetwork(self.run_name + '_target', num_states, 
+            num_actions, lr, gamma, batch_size, min_experiences,
+            max_experiences, hidden_units)
         self.TrainNet.copy_weights(self.TargetNet)
 
 

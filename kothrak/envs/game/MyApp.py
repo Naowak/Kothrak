@@ -15,16 +15,16 @@ from kothrak.envs.game.Cell import Cell
 
 class MyApp:
 
-    REWARDS = {'init' : {'current' : 0, 'others' : 0}, 
-               'win' : {'current' : 100, 'others' : -100},
-               'invalid_attempt' : {'current' : -100, 'others' : 20}}
+    REWARDS = {'init': {'current': 0, 'others': 0}, 
+               'win': {'current': 100, 'others': -100},
+               'invalid_attempt': {'current': -100, 'others': 20}}
     
-    def __init__(self, parent=None) :
+    def __init__(self, parent=None):
         # Initialisation de la fenetre
         self.window = QWidget(parent)
         self.window.resize(APP_PIXDIM[0], APP_PIXDIM[1])
         self.window.setWindowTitle('MyApp')
-        self.window.mouseReleaseEvent = lambda event:self._on_click(event)
+        self.window.mouseReleaseEvent = lambda event: self._on_click(event)
         # self.window.keyReleaseEvent=lambda event:self.on_keyboard(event)
 
         # Initialisation du message
@@ -45,26 +45,26 @@ class MyApp:
         self.new_game()
 
 
-    def new_game(self) :
+    def new_game(self):
         """ Init and run a new game, clear the display if a previous game has been launched."""
 
-        def create_players(self, nb_players=NB_PLAYERS) :
+        def create_players(self, nb_players=NB_PLAYERS):
             
             cells = self.grid.get_all_cells()
             cells_selected = []
             
-            for player_id in range(nb_players) :
+            for player_id in range(nb_players):
                 c = random.choice(cells)
                 cells.remove(c)
                 cells_selected += [(player_id, c)]
 
-            cells_selected = sorted(cells_selected, key=lambda x : x[1].r)
+            cells_selected = sorted(cells_selected, key=lambda x: x[1].r)
 
             self.players = []
-            for player_id, cell in cells_selected :
+            for player_id, cell in cells_selected:
                 self.players += [Player(player_id, cell, self)]
 
-        def init_game(self) :
+        def init_game(self):
             self.next_player_id = random.choice(range(len(self.players)))
             self._next_player()
             self.current_step = 'move'         
@@ -87,7 +87,7 @@ class MyApp:
         self._update_message()
 
 
-    def play(self, q, r) :
+    def play(self, q, r):
         """Make the play (move or build) on the cell on relative coordinates [q, r] 
         from the player."""
 
@@ -107,25 +107,25 @@ class MyApp:
             invalid_attempt(self, 'cell')
 
         # Make the move is the game is still playing
-        if not self.is_game_over() :
+        if not self.is_game_over():
 
-            if self.current_step == 'move' :
+            if self.current_step == 'move':
                 if cell in self.grid.get_neighbors(self.current_player.cell) \
                     and self._get_player_on_cell(cell) is None \
-                    and cell.stage <= self.current_player.cell.stage + 1 :
+                        and cell.stage <= self.current_player.cell.stage + 1:
                     self.current_player.move(cell)
                     self.current_step = 'build'
-                    if self._player_on_top() :
+                    if self._player_on_top():
                         self.current_step = 'game_over'
                         self._update_rewards('win')
                         print('Player {} won the game.'.format(self.current_player.player_id))
                 else:
                     invalid_attempt(self, 'move')
 
-            elif self.current_step == 'build' :
+            elif self.current_step == 'build':
                 if cell in self.grid.get_neighbors(self.current_player.cell) \
                     and self._get_player_on_cell(cell) is None \
-                    and cell.stage < cell.MAX_STAGE:
+                        and cell.stage < cell.MAX_STAGE:
                     cell.grew()
                     self._next_player()
                     self.current_step = 'move'
@@ -135,7 +135,7 @@ class MyApp:
             self._update_message()
 
 
-    def state(self) : 
+    def state(self): 
         """Return the state of the grid."""
         state = {}
 
@@ -161,7 +161,7 @@ class MyApp:
         elif self.current_step == 'game_over':
             state['step'] = [0, 0]
         else:
-            raise Exception(f'Error in state from MyApp: current step invalid :\
+            raise Exception(f'Error in state from MyApp: current step invalid:\
                  {self.current_step}.')
 
         return state
@@ -169,7 +169,7 @@ class MyApp:
     def evaluate(self, player_id=0):
         return self.reward_dict[player_id]
 
-    def show(self) :
+    def show(self):
         """Display the window on the screen."""
         self.window.show()
     
@@ -188,38 +188,38 @@ class MyApp:
             else:
                 self.reward_dict[k] = self.REWARDS[reason]['others']
 
-    def _update_message(self) :
-        if not self.is_game_over() :
-            text = 'Player {} : {}'.format(self.current_player.player_id + 1, self.current_step)
-        else :
+    def _update_message(self):
+        if not self.is_game_over():
+            text = 'Player {}: {}'.format(self.current_player.player_id + 1, self.current_step)
+        else:
             text = 'Game Over'
         self.message.setText(text)
 
-    def _player_on_top(self) :
+    def _player_on_top(self):
         return self.current_player.cell.stage == Cell.MAX_STAGE
 
 
-    def _next_player(self) :
+    def _next_player(self):
         self.current_player = self.players[self.next_player_id]
         self.next_player_id = (self.next_player_id + 1) % NB_PLAYERS
 
 
 
-    def _on_click(self, event) :
+    def _on_click(self, event):
         x, y = event.pos().x(), event.pos().y()
         cell = self.grid.get_cell_from_pos(x, y)
-        if cell is not None :
+        if cell is not None:
             q_relative = cell.q - self.current_player.cell.q
             r_relative = cell.r - self.current_player.cell.r
             self.play(q_relative, r_relative)
         
         # Uncomment to restart a game right after the end off the previous one
-        # if self.is_game_over() :
+        # if self.is_game_over():
         #     self.new_game()
 
-    def _get_player_on_cell(self, cell) :
-        for p in self.players :
-            if p.cell == cell :
+    def _get_player_on_cell(self, cell):
+        for p in self.players:
+            if p.cell == cell:
                 return p
 
     
