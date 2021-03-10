@@ -75,7 +75,7 @@ class Trainer():
 
         # End of the training
         self.nb_iter_prev += self.nb_games
-        self.env.close()
+        # self.env.close()
         self._save_in_zip()
 
 
@@ -249,10 +249,12 @@ class Trainer():
 
         # Keras model
         self.TrainNet.model.save(f'{dirpath}keras.sm')
+        model_tmp = self.TrainNet.model
         self.TrainNet.model = None
 
         # Optimizer weights
         np.save(f'{dirpath}opt_weights.npy', self.TrainNet.optimizer.get_weights())
+        optimizer_tmp = self.TrainNet.optimizer
         self.TrainNet.optimizer = None
 
         # DQN instance
@@ -268,6 +270,10 @@ class Trainer():
                         'nb_iter_prev': self.nb_iter_prev}
         with open(f'{dirpath}training_params.pick', 'wb') as file:
             pickle.dump(training_params, file)
+
+        # Current trainer retrieve model and optimizer for next training
+        self.TrainNet.model = model_tmp
+        self.TrainNet.optimizer = optimizer_tmp
 
         # Zip the saves in one .zip archive
         zippath = f'{directory}{self.run_name}'

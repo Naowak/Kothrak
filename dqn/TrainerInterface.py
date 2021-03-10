@@ -88,7 +88,15 @@ def run():
 
     # Launch the PyQt programm
     window.show()
-    sys.exit(qapp.exec_())
+    qapp.exec_()
+    env.close()
+
+
+
+def update_params_display(trainer, entries):
+    parameters = trainer.get_params()
+    for param, widget in entries.items():
+        widget.setText(str(parameters[param]))
 
 
 def launch_training(trainer, entries):
@@ -117,6 +125,7 @@ def launch_training(trainer, entries):
         trainer.set_params(**params)
 
     trainer.run_nb_games()
+    update_params_display(trainer, entries)
 
 
 def load_model(trainer, entries):
@@ -127,8 +136,5 @@ def load_model(trainer, entries):
         return 
 
     trainer.load_session(uri)
+    update_params_display(trainer, entries)
 
-    # update entries
-    parameters = trainer.get_params()
-    for param, widget in entries.items():
-        widget.setText(str(parameters[param]))
