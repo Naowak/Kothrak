@@ -2,6 +2,24 @@
 
 Ce projet a pour objectif d'expérimenter l'apprentissage par renforcement et les réseaux de neurones (Deep Q-Network) en implémentant une intelligence artificielle dans un jeu inspiré du jeu de plateau Santorini.
 
+## Installation
+
+Pour cloner le dépôt
+```bash
+git clone https://github.com/Naowak/Kothrak
+cd Kothrak
+```
+Pour faciliter l'installation, nous pouvons créer un environnement virtual avec python3.6. 
+```bash
+python -m venv kothrak-env
+source kothrak-env/bin/activate
+```
+Mise à jour de pip & Installation des dépendances
+```bash
+python -m pip install -U pip
+python -m pip install gym pyqt5 torch tensorflow
+```
+
 ## Santorini
 
 <img src="assets/readme-img/santorini-box.jpg" width="350"/> <img src="assets/readme-img/santorini-board.jpg" width="350"/>
