@@ -24,7 +24,7 @@ Pour obtenir cet interface il faut lancer la commande `python3 main.py`. Il est 
 Nous arrivons à entrainer un DQN pour qu'il finisse par gagner 100% de ses parties (il atteint le troisième étage sans mourir).  
 Plusieurs combinaisons de paramètres permettent d'obtenir un tel résultat plus ou moins rapidement.   
 - Avec des paramètres tels que *{epsilon = 0.99, decay = 0.8, hidden_units=[150]}* nous pouvons obtenir une IA qui gagne 100% de ses parties après 80 games d'entrainement.
-- Avec des paramètres tels que *{epsilon = 0.99, decay = 0.9998, hidden_units=[120, 120, 120, 120]}* nous pouvons obtenir une IA qui gagne 100% de ses parties après 40.000 games d'entrainement. 
+- Avec des paramètres tels que *{epsilon = 0.99, decay = 0.9998, hidden_units=[120, 120, 120, 120]}* nous pouvons obtenir une IA qui gagne 100% de ses parties après 40.000 games d'entrainement.   
 Même si ces deux IA réussissent toutes deux à gagner 100% de leur partie, il semblerait qu'elle n'ai pas la même stratégie, et que l'IA ayant appris sur 80 games soit moins robuste (elle connait moins de différentes situations, et peut donc faire rapidement n'importe quoi si elle rencontre un état qu'elle n'a pas l'habitude de rencontrer).
 
 ![Convergence d'un entrainement](assets/readme-img/DQN-convergence.png)
