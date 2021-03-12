@@ -88,7 +88,7 @@ class DeepQNetwork:
             self.experience[key].append(value)
 
     def copy_weights(self, dqn):
-        """Copy the neural network from the model into dqn."""
+        """Copy the weigths from dqn.model into self.model."""
         variables1 = self.model.trainable_variables
         variables2 = dqn.model.trainable_variables
         for v1, v2 in zip(variables1, variables2):

@@ -95,19 +95,16 @@ class Trainer():
             observations, reward, done, _ = self.env.step(action)
             rewards += reward
 
+            # Update graphic events
             self.qapp.processEvents()
             sleep(self.TIME_TO_SLEEP)
-
-            # Reset the game if the gym environnement is finished
-            if done:
-                self.env.reset()
 
             # Add this experience to the list of last experiences
             exp = {'s': prev_observations, 'a': action,
                 'r': reward, 's2': observations, 'done': done}
             self.TrainNet.add_experience(exp)
 
-            # Train the model and retireve the loss
+            # Train the model and retrieve the loss
             loss = self.TrainNet.train(self.TargetNet)
             if isinstance(loss, int):
                 losses.append(loss)
@@ -222,7 +219,7 @@ class Trainer():
         self.TargetNet = DeepQNetwork(self.run_name + '_target', num_states, 
             num_actions, lr, gamma, batch_size, min_experiences,
             max_experiences, hidden_units)
-        self.TrainNet.copy_weights(self.TargetNet)
+        self.TargetNet.copy_weights(self.TrainNet)
 
 
 

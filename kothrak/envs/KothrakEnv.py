@@ -1,8 +1,7 @@
 import gym
 import numpy as np
 
-from kothrak.envs.game.Utils import GRID_RAY, NB_CELLS, NB_PLAYERS
-from kothrak.envs.game.Cell import Cell
+from kothrak.envs.game.Utils import NB_CELLS
 
 def transform_action(action):
     coord_actions = [(-1, 0), (-1, 1), (0, 1), (1, 0), (1, -1), (0, -1)]
@@ -46,5 +45,3 @@ class KothrakEnv(gym.Env):
             observations += v
         observations = np.array(observations)
         return observations
-    
-    
