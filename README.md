@@ -19,6 +19,10 @@ Mise à jour de pip & Installation des dépendances
 python -m pip install -U pip
 python -m pip install gym pyqt5 torch tensorflow
 ```
+Vous pouvez maintenant lancer l'interface
+```bash
+python main.py
+```
 
 ## Santorini
 
