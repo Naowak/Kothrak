@@ -9,7 +9,7 @@ Pour cloner le dépôt
 git clone https://github.com/Naowak/Kothrak
 cd Kothrak
 ```
-Pour faciliter l'installation, nous pouvons créer un environnement virtual avec python3.6. 
+Pour faciliter l'installation, nous pouvons créer un environnement virtual avec python3.6
 ```bash
 python -m venv kothrak-env
 source kothrak-env/bin/activate
