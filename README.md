@@ -4,20 +4,20 @@ Ce projet a pour objectif d'expérimenter l'apprentissage par renforcement et le
 
 ## Santorini
 
-![Santorini Box](assets/readme-img/santorini-box.png)  |  ![Santorini Board](assets/readme-img/santorini-board.png)
+![Santorini Box](assets/readme-img/santorini-box.jpg)  |  ![Santorini Board](assets/readme-img/santorini-board.jpg)
 
 Santorini est un jeu de plateau tour par tour et multijoueur dont le but est d'être le premier joueur à atteindre le 3ème étage.  
 A tour de rôle, chaque joueur a deux actions à effectuer : un **déplacement** d'une case, puis la **construction** d'un étage sur une case adjaçante à sa position. Un joueur ne peut se déplacer ou construire sur une case occupée par un autre joueur, ou de hauteur 4 (ayant un dôme). Si un joueur ne peut pas effectuer l'une de ces deux actions, il perd la partie.  
-**Déplacement** : Un joueur ne peut pas se déplacer sur une case ayant 2 étages ou plus que la case sur laquelle il se trouve. En revanche, il peut descendre d'autant d'étage qu'il le souhaite.  
+- **Déplacement** : Un joueur ne peut pas se déplacer sur une case ayant 2 étages ou plus que la case sur laquelle il se trouve. En revanche, il peut descendre d'autant d'étage qu'il le souhaite.  
 *Explication : Un joueur ne peut donc pas se déplacer sur une case de hauteur 3 s'il est sur une case de hauteur 0 ou 1, ni sur une case de hauteur 2 s'il est sur une case de hauteur 0. En revanche, il peut descendre d'une case de hauteur 2 à une case de hauteur 0 ou 1.*  
-**Construction** : Un joueur peut construire sur une case de hauteur 0, 1, 2, ou 3. S'il construit sur une case de hauteur 3, il construit un dôme, scellant la case jusqu'à la fin de la partie. Plus aucun joueur ne sera en mesure de se déplacer dessus ou d'y construire un étage. 
+- **Construction** : Un joueur peut construire sur une case de hauteur 0, 1, 2, ou 3. S'il construit sur une case de hauteur 3, il construit un dôme, scellant la case jusqu'à la fin de la partie. Plus aucun joueur ne sera en mesure de se déplacer dessus ou d'y construire un étage. 
 
 ## Avancement
 
 Actuellement, le jeu ne permet qu'un seul joueur, et la création de dôme n'est pas encore implémenter.  
 L'objectif de notre joueur est alors d'atteindre une case d'étage 3. S'il l'atteint, il reçoit +100 en récompense. A l'inverse, s'il essai d'effectuer un coup impossible (coup en dehors du plateau, déplacement sur un étage inateignable, construction sur un étage de hauteur 3), il perd la partie et reçoit une punition de -100. Il n'y a pas de nombre de coup maximum pour gagner la partie. Ainsi, si un joueur ne perd jamais, il finira nécessairement par gagner. 
 
-![Trainer Interface](assets/readme-img/iterface-trainer.png)
+![Trainer Interface](assets/readme-img/interface-trainer.png)
 
 Pour obtenir cet interface il faut lancer la commande `python3 main.py`. Il est alors possible de charger un modèle en cliquant sur `Load model` et de lancer l'entrainement en cliquant sur `Run N Games`. Grâce à cette interface nous pouvons facilement paramètrer nos entrainements.
 
