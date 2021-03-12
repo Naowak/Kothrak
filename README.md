@@ -4,7 +4,7 @@ Ce projet a pour objectif d'expérimenter l'apprentissage par renforcement et le
 
 ## Santorini
 
-<center><img src="assets/readme-img/santorini-box.jpg" width="300"/> <img src="assets/readme-img/santorini-board.jpg" width="300"/></center>
+<img src="assets/readme-img/santorini-box.jpg" width="350"/> <img src="assets/readme-img/santorini-board.jpg" width="350"/>
 
 Santorini est un jeu de plateau tour par tour et multijoueur dont le but est d'être le premier joueur à atteindre le 3ème étage.  
 A tour de rôle, chaque joueur a deux actions à effectuer : un **déplacement** d'une case, puis la **construction** d'un étage sur une case adjaçante à sa position. Un joueur ne peut se déplacer ou construire sur une case occupée par un autre joueur, ou de hauteur 4 (ayant un dôme). Si un joueur ne peut pas effectuer l'une de ces deux actions, il perd la partie.  
