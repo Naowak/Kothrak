@@ -11,8 +11,8 @@ cd Kothrak
 ```
 Pour faciliter l'installation, nous pouvons créer un environnement virtual avec virtualenv (Version 3.6, 3.7 et 3.8 de python compatibles), l'activer, et procéder à l'installation des dépendances avec pip
 ```bash
-virtualenv -p which-python-you-want-to-use kothrak-env
-source kothrak-env/bin/activate
+virtualenv koth-env
+source koth-env/bin/activate
 python -m pip install gym pyqt5 torch tensorflow
 ```
 Vous pouvez maintenant lancer l'interface
