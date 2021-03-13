@@ -9,14 +9,10 @@ Pour cloner le dépôt
 git clone https://github.com/Naowak/Kothrak
 cd Kothrak
 ```
-Pour faciliter l'installation, nous pouvons créer un environnement virtual avec python3.6
+Pour faciliter l'installation, nous pouvons créer un environnement virtual avec virtualenv (Version 3.6, 3.7 et 3.8 de python compatibles), l'activer, et procéder à l'installation des dépendances avec pip
 ```bash
-python -m venv kothrak-env
+virtualenv -p which-python-you-want-to-use kothrak-env
 source kothrak-env/bin/activate
-```
-Mise à jour de pip & Installation des dépendances
-```bash
-python -m pip install -U pip
 python -m pip install gym pyqt5 torch tensorflow
 ```
 Vous pouvez maintenant lancer l'interface
