@@ -1,8 +1,6 @@
 kothrak.egg-info
 logs
 saves/
-kothrak-env/
-
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,vscode
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,vscode
