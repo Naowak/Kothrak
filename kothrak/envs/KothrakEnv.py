@@ -1,24 +1,21 @@
 import gym
-import numpy as np
 
 from kothrak.envs.game.Utils import NB_CELLS
+from kothrak.envs.game.MyApp import MyApp
 
 def transform_action(action):
     coord_actions = [(-1, 0), (-1, 1), (0, 1), (1, 0), (1, -1), (0, -1)]
     return coord_actions[action]
 
 
-class KothrakEnv(gym.Env):
+class KothrakEnv():
     
-    def __init__(self):
-        self.game = None
+    def __init__(self, qapp, window=None):
+        self.game = MyApp(qapp, window)
 
         # Initialise les actions et observations
         self.action_space = gym.spaces.Discrete(6)
         self.observation_space = gym.spaces.Box(low=0, high=1, shape=(2*NB_CELLS+2, ))
-    
-    def set_game(self, game):
-        self.game = game
     
     def reset(self):
         self.game.new_game()
@@ -31,7 +28,7 @@ class KothrakEnv(gym.Env):
 
         obs = self._get_observation()
         reward = self.game.evaluate()
-        done = self.game.is_game_over()
+        done = 1 if self.game.is_game_over() else 0
 
         return obs, reward, done, {}
     
@@ -43,5 +40,4 @@ class KothrakEnv(gym.Env):
         observations = []
         for v in obs.values():
             observations += v
-        observations = np.array(observations)
         return observations

@@ -19,8 +19,9 @@ class MyApp:
                'win': {'current': 100, 'others': -100},
                'invalid_attempt': {'current': -100, 'others': 20}}
     
-    def __init__(self, parent=None):
+    def __init__(self, qapp=None, parent=None):
         # Initialisation de la fenetre
+        self.qapp = qapp
         self.window = QWidget(parent)
         self.window.resize(APP_PIXDIM[0], APP_PIXDIM[1])
         self.window.setWindowTitle('MyApp')
@@ -133,7 +134,12 @@ class MyApp:
                 else:
                     invalid_attempt(self, 'build')
 
+
             self._update_message()
+
+            if self.qapp is not None:
+                self.qapp.processEvents()
+
 
 
     def state(self): 

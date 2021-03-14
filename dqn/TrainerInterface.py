@@ -1,10 +1,9 @@
 import sys
-import gym
 from datetime import datetime
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLineEdit, QLabel, QFileDialog
 
-from kothrak.envs.game.MyApp import MyApp
+from kothrak.envs.KothrakEnv import KothrakEnv
 from kothrak.envs.game.Utils import APP_PIXDIM
 from dqn.Trainer import Trainer
 
@@ -57,9 +56,7 @@ def run():
     window.setObjectName('trainer_bg')
 
     # Load the environnement
-    game = MyApp(window)
-    env = gym.make('kothrak-v0')
-    env.set_game(game)
+    env = KothrakEnv(qapp, window)
     
     # Display parameters
     entries = {}
@@ -74,7 +71,7 @@ def run():
         entry.setObjectName('param')
         entries[param] = entry
 
-    trainer = Trainer(qapp, env)
+    trainer = Trainer(env, etc...)
 
     # Add button to load a model
     button = QPushButton('Load model', window)
