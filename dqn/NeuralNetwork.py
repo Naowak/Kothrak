@@ -1,6 +1,9 @@
 import os
 from collections import namedtuple
+from datetime import datetime
 import random
+import shutil
+import pickle
 from time import sleep
 from statistics import mean
 
@@ -41,36 +44,35 @@ class Trainer():
 
     TIME_TO_SLEEP = 0
     NB_GAMES_UPDATE = 20
+    DEFAULT_PARAMETERS = {'name': datetime.now().strftime("%m%d%y-%H%M"), 
+                            'nb_games': 200, 'epsilon': 0.99, 'decay': 0.99,
+                            'min_epsilon': 0.01, 'lr': 1e-3, 'gamma': 0.99,
+                            'batch_size': 32, 'nb_iter_prev': 0, 'memory': []}
 
-    def __init__(self, env, name, nb_games, epsilon, decay, min_epsilon,
-            num_inputs, num_actions, lr, gamma,
-            batch_size, size_min_memory, size_max_memory, hidden_units):
+    def __init__(self, env):
+        
+        # Definitive attributes
         self.env = env
-        self.name = name
-        self.nb_games = nb_games
-        self.epsilon = epsilon
-        self.decay = decay
-        self.min_epsilon = min_epsilon
-        self.nb_iter_prev = 0
-        self.num_inputs = num_inputs
-        self.num_actions = num_actions
-        self.lr = lr
-        self.gamma = gamma
-        self.batch_size = batch_size
-        self.size_min_memory = size_min_memory
-        self.size_max_memory = size_max_memory
-        self.hidden_units = hidden_units
+        self.size_max_memory = 2000
+        self.num_inputs = env.num_observations
+        self.num_actions = env.num_actions
 
-        self.policy_net = DeepQNetwork(num_inputs, num_actions).to(device)
-        self.target_net = DeepQNetwork(num_inputs, num_actions).to(device)
-        self.update_target_net()
+        # Initialize attributes (may change if model loaded)
+        for param, value in self.DEFAULT_PARAMETERS.items():
+            setattr(self, param, value)
+
+        # Initialize torch object (state_dict may change if model loaded)
+        self.policy_net = DeepQNetwork(self.num_inputs, 
+                                        self.num_actions).to(device)
+        self.target_net = DeepQNetwork(self.num_inputs, 
+                                        self.num_actions).to(device)
+        self._update_target_net()
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=self.lr)
-        self.memory = []
 
 
     def run(self):
-        """Play self.nb_games and optimize model."""
-
+        """Play self.nb_games and optimize model.
+        """
         def update_logs(summary_writer, episode, reward, loss, epsilon):
             summary_writer.add_scalar('Reward', reward, episode)
             summary_writer.add_scalar('Loss', loss, episode)
@@ -83,7 +85,7 @@ class Trainer():
         # Run nb_games
         for n in range(self.nb_games):
 
-            reward, loss = self.run_one_game()
+            reward, loss = self._run_one_game()
 
             # Update values and logs
             episode = self.nb_iter_prev + n
@@ -93,14 +95,106 @@ class Trainer():
             # Each NB_GAMES_UPDATE print and update target_net
             if (episode + 1) % self.NB_GAMES_UPDATE == 0:
                 print(f'Episode: {episode + 1}, Epsilon: {self.epsilon}')
-                self.update_target_net()
+                self._update_target_net()
 
         # End of the training
         self.nb_iter_prev += self.nb_games
-        self._save_in_zip()
+        self.save()
 
 
-    def run_one_game(self):
+    def set_parameters(self, **parameters):
+        for param, value in parameters.items():
+            if param in self.DEFAULT_PARAMETERS.keys():
+                setattr(self, param, value)
+            else:
+                raise Exception(f'Parameter {param} not known.')
+
+
+    def get_parameters(self):
+        params = {}
+        for p in self.DEFAULT_PARAMETERS.keys():
+            params[p] = getattr(self, p)
+        return params
+
+
+    def save(self, directory='saves/'):
+        """Save the model, optimizer and the trainer parameters."""
+
+        # Create dirpath for temporary dir
+        if directory[-1] != '/':
+            directory += '/'
+        dirpath = directory + self.name + '/'
+
+        if not os.path.exists(dirpath): 
+            os.makedirs(dirpath)
+        else:
+            raise Exception(f'Path {dirpath} already exists.')
+
+        # DQNs & Optimizer
+        torch.save(self.policy_net.state_dict(), f'{dirpath}dqn.pth')
+        torch.save(self.optimizer.state_dict(), f'{dirpath}optimizer.pth')
+
+        # Trainer pamameters
+        params = {}
+        for p in self.DEFAULT_PARAMETERS.keys():
+            params[p] = getattr(self, p)
+
+        with open(f'{dirpath}trainer_parameters.pick', 'wb') as file:
+            pickle.dump(params, file)
+
+        # Zip the saves in one .zip archive
+        zippath = f'{directory}{self.name}'
+        shutil.make_archive(zippath, 'zip', dirpath)
+
+        # Remove the directory dirpath and files inside
+        shutil.rmtree(dirpath)
+
+        # Display
+        print(f'Model saved at {zippath}.zip')
+
+
+    def load(self, filename, directory_tmp='saves/tmp/'):
+        """Load the model, optimizer and trainer parameters."""
+
+        # Verify path
+        if not os.path.exists(filename):
+            raise IOError(f'Filename {filename} does not exists.')
+
+        if os.path.exists(directory_tmp):
+            raise Exception(
+                f'Path {directory_tmp} already exists, \
+                please choose a non-existant path.')
+
+        if directory_tmp[-1] != '/':
+            directory_tmp += '/'
+
+        # Unzip the archive
+        shutil.unpack_archive(filename, directory_tmp, 'zip')
+
+        # DQNs & Optimizer
+        self.policy_net.load_state_dict(
+            torch.load(f'{directory_tmp}dqn.pth'))#.to(device)
+        self.policy_net.eval()
+
+        self._update_target_net()
+        self.target_net.eval()
+
+        self.optimizer.load_state_dict(
+            torch.load(f'{directory_tmp}optimizer.pth'))#.to(device)
+
+        # Trainer parameters
+        with open(f'{directory_tmp}trainer_parameters.pick', 'rb') as file:
+            params = pickle.load(file)
+        self.set_parameters(**params)
+
+        # Remove the directory directory_tmp and files inside
+        shutil.rmtree(directory_tmp)
+
+        # Display
+        print(f'Model {self.name} loaded from {filename}.')
+
+
+    def _run_one_game(self):
         """Play one game and optimize model."""
         sum_reward = 0
         done = False
@@ -111,7 +205,7 @@ class Trainer():
         while not done:
 
             # Choose action in function of observation and play it
-            action = self.select_action(state)
+            action = self._select_action(state)
             next_state, reward, done, _ = self.env.step(action.item())
 
             sum_reward += reward
@@ -120,10 +214,10 @@ class Trainer():
             done = torch.tensor([done], device=device)
             
             # Add transition to memory
-            self.add_to_memory(state, action, next_state, reward, done)
+            self._add_to_memory(state, action, next_state, reward, done)
 
             # Compute loss
-            loss = self.optimize_model()
+            loss = self._optimize_model()
             losses += [loss]
             
             # Prepare next state
@@ -135,13 +229,13 @@ class Trainer():
         return sum_reward, mean(losses)
 
 
-    def optimize_model(self):
+    def _optimize_model(self):
         """Train the model by selecting a random subset of combinaison
         (state, action) in his last experiences, calcul the loss from q_values,
         and apply back-propagation."""
 
         # Check that there is enough plays in self.experiences
-        if len(self.memory) < self.size_min_memory:
+        if len(self.memory) < self.batch_size:
             return 0
 
         # Select self.batch_size random experience
@@ -178,7 +272,7 @@ class Trainer():
         return loss.item()
 
 
-    def select_action(self, state):
+    def _select_action(self, state):
         """Choose randomly in function of epsilon between a random action
         or the action having the best q_value."""
         if random.random() < self.epsilon:
@@ -189,7 +283,7 @@ class Trainer():
                 return self.policy_net(state).max(1)[1].view(1, 1)
 
 
-    def add_to_memory(self, state, action, next_state, reward, done):
+    def _add_to_memory(self, state, action, next_state, reward, done):
         """Add a new transition to the memory, remove the first ones if there
         is no more room in the memory."""
         if len(self.memory) >= self.size_max_memory:
@@ -197,69 +291,11 @@ class Trainer():
         self.memory += [Transition(state, action, next_state, reward, done)]
 
 
-    def update_target_net(self):
+    def _update_target_net(self):
         """Copy the weights and biais from policy_net to target_net"""
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
 
-
-    # def _save_in_zip(self, directory='saves/'):
-
-    #     # Create dirpath for temporary dir
-    #     if directory[-1] != '/':
-    #         directory += '/'
-    #     dirpath = directory + self.name + '/'
-
-    #     if not os.path.exists(dirpath): 
-    #         os.makedirs(dirpath)
-    #     else:
-    #         raise Exception(f'Path {dirpath} already exists.')
-
-    #     # DQNs
-    #     torch.save(self.policy_net.state_dict(), f'{dirpath}dqn.pth')
-
-    #     # Optimizer
-    #     torch.save(self.optimizer.state_dict(), f'{dirpath}optimizer.pth')
-
-
-
-    #     # Keras model
-    #     self.TrainNet.model.save(f'{dirpath}keras.sm')
-    #     model_tmp = self.TrainNet.model
-    #     self.TrainNet.model = None
-
-    #     # Optimizer weights
-    #     np.save(f'{dirpath}opt_weights.npy', self.TrainNet.optimizer.get_weights())
-    #     optimizer_tmp = self.TrainNet.optimizer
-    #     self.TrainNet.optimizer = None
-
-    #     # DQN instance
-    #     with open(f'{dirpath}dqn.pick', 'wb') as file:
-    #         pickle.dump(self.TrainNet, file)
-
-    #     # Params of the training
-    #     training_params = {'run_name': self.run_name,
-    #                     'nb_games': self.nb_games,
-    #                     'epsilon': self.epsilon,
-    #                     'decay': self.decay,
-    #                     'min_epsilon': self.min_epsilon,
-    #                     'nb_iter_prev': self.nb_iter_prev}
-    #     with open(f'{dirpath}training_params.pick', 'wb') as file:
-    #         pickle.dump(training_params, file)
-
-    #     # Current trainer retrieve model and optimizer for next training
-    #     self.TrainNet.model = model_tmp
-    #     self.TrainNet.optimizer = optimizer_tmp
-
-    #     # Zip the saves in one .zip archive
-    #     zippath = f'{directory}{self.run_name}'
-    #     shutil.make_archive(zippath, 'zip', dirpath)
-
-    #     # Remove the directory dirpath and files inside
-    #     shutil.rmtree(dirpath)
-
-    #     # Display
-    #     print(f'Model saved at {zippath}.zip')
 
 
 
@@ -279,9 +315,10 @@ def launch():
     window.setObjectName('trainer_bg')
 
     env = KothrakEnv(qapp, window)
+    window.show()
 
-    trainer = Trainer(env, 'name', 100, 0.99, 0.8, 0.05, 40, 6, 0.001, 0.99, 32, 100, 1000, [])
-    print('hello')
+    trainer = Trainer(env)
+    trainer.load('saves/031421-1523.zip')
     trainer.run()
 
-    # qapp.exec_()
+    qapp.exec_()

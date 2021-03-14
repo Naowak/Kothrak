@@ -1,5 +1,3 @@
-import gym
-
 from kothrak.envs.game.Utils import NB_CELLS
 from kothrak.envs.game.MyApp import MyApp
 
@@ -14,8 +12,8 @@ class KothrakEnv():
         self.game = MyApp(qapp, window)
 
         # Initialise les actions et observations
-        self.action_space = gym.spaces.Discrete(6)
-        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(2*NB_CELLS+2, ))
+        self.num_actions = 6
+        self.num_observations = 2*NB_CELLS+2
     
     def reset(self):
         self.game.new_game()
