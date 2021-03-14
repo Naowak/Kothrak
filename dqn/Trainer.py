@@ -1,279 +1,130 @@
 import os
 import pickle
 import shutil
+import random
 from time import sleep
-import numpy as np
-import tensorflow as tf
+from statistics import mean
+from collections import namedtuple
+from datetime import datetime
+
+import torch
+from torch import optim
+import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
+from torchsummary import summary
 
 from dqn.DeepQNetwork import DeepQNetwork
 
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+Transition = namedtuple('Transition',
+                        ('state', 'action', 'next_state', 'reward', 'done'))
 
 
 class Trainer():
 
     TIME_TO_SLEEP = 0
-    NB_LAST_GAMES = 20
-    TRAINING_PARAMS = ['nb_games', 'epsilon', 'decay', 'min_epsilon']
-    HYPERPARAMETERS = ['lr', 'gamma', 'batch_size', 'min_experiences',
-                        'max_experiences', 'hidden_units']
+    NB_GAMES_UPDATE = 20
+    DEFAULT_PARAMETERS = {'name': datetime.now().strftime("%m%d%y-%H%M"), 
+                            'nb_games': 200, 'epsilon': 0.99, 'decay': 0.99,
+                            'min_epsilon': 0.01, 'lr': 1e-3, 'gamma': 0.99,
+                            'batch_size': 32, 'nb_iter_prev': 0, 'memory': []}
 
-    def __init__(self, qapp, env):  
-        """Initalize the trainer and create the DeepQNetworks
-        - qapp : Main QWidget window
-        - env : gym env
-        """
-        self.qapp = qapp
+    def __init__(self, env):
+        
+        # Definitive attributes
         self.env = env
+        self.size_max_memory = 2000
+        self.num_inputs = env.num_observations
+        self.num_actions = env.num_actions
 
-        self.run_name = ''
-        self.nb_games = 0
-        self.epsilon = 0
-        self.decay = 0
-        self.min_epsilon = 0
-        self.nb_iter_prev = 0
-        self.TrainNet = None
-        self.TargetNet = None
+        # Initialize attributes (may change if model loaded)
+        self.set_parameters(**self.DEFAULT_PARAMETERS)
 
-    def run_nb_games(self):
-        """Play N games and train the DeepQNetwork
-        - N : Number of games to play
+        # Initialize torch object (state_dict may change if model loaded)
+        self.policy_net = DeepQNetwork(self.num_inputs, 
+                                        self.num_actions).to(device)
+        self.target_net = DeepQNetwork(self.num_inputs, 
+                                        self.num_actions).to(device)
+        self._update_target_net()
+        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=self.lr)
+
+
+    def run(self):
+        """Play self.nb_games and optimize model.
         """
-        # Summary & Log Writer init
-        self.TrainNet.model.summary()
-        log_writer = SummaryWriter(log_dir=f'./logs/{self.run_name}/')
+        def update_logs(summary_writer, episode, reward, loss, epsilon):
+            summary_writer.add_scalar('Reward', reward, episode)
+            summary_writer.add_scalar('Loss', loss, episode)
+            summary_writer.add_scalar('Epsilon', epsilon, episode)
+        
+        # Print model and init summary_writer
+        summary(self.policy_net, (1, self.num_inputs))
+        summary_writer = SummaryWriter(log_dir=f'./logs/{self.name}/')
 
-        # Make N games
-        total_rewards = np.empty(self.nb_games)
-        mean_losses = np.empty(self.nb_games)
-
+        # Run nb_games
         for n in range(self.nb_games):
-            step = self.nb_iter_prev + n
 
-            # Play one game and update self.epsilon, rewards & losses
-            total_reward, mean_loss = self.play_one_game()
+            reward, loss = self._run_one_game()
+
+            # Update values and logs
+            episode = self.nb_iter_prev + n
             self.epsilon = max(self.min_epsilon, self.epsilon * self.decay)
-
-            total_rewards[n] = total_reward
-            avg_rewards = total_rewards[max(0, n - self.NB_LAST_GAMES):(n + 1)].mean()
-
-            mean_losses[n] = mean_loss
-            avg_losses = mean_losses[max(0, n - self.NB_LAST_GAMES):(n + 1)].mean()
-
-            # Make the summary
-            log_writer.add_scalar('Reward', total_reward, step)
-            log_writer.add_scalar(f'Avg Rewards (last {self.NB_LAST_GAMES})', avg_rewards, step)
-            log_writer.add_scalar('Loss', mean_loss, step)
-
-            # Each self.NB_LAST_GAMES games, display information and update the model
-            if (step + 1) % self.NB_LAST_GAMES == 0:
-                print(f'episode: {step + 1}, \
-                        eps: {self.epsilon}, \
-                        avg reward (last {self.NB_LAST_GAMES}): {avg_rewards}, \
-                        avg losses (last {self.NB_LAST_GAMES}): {avg_losses}')
-                self.TargetNet.copy_weights(self.TrainNet)
+            update_logs(summary_writer, episode, reward, loss, self.epsilon)
+            
+            # Each NB_GAMES_UPDATE print and update target_net
+            if (episode + 1) % self.NB_GAMES_UPDATE == 0:
+                print(f'Episode: {episode + 1}, Epsilon: {self.epsilon}')
+                self._update_target_net()
 
         # End of the training
         self.nb_iter_prev += self.nb_games
-        # self.env.close()
-        self._save_in_zip()
+        self.save()
 
 
-    def play_one_game(self):
-        """Play a game with DeepQNetwork agent and train it.
-        """
-        # Initialize the game
-        rewards = 0
-        done = False
-        observations = self.env.reset()
-        losses = list()
-
-        while not done:
-            # Choose action in function of observation and play it
-            action = self.TrainNet.get_action(observations, self.epsilon)
-            prev_observations = observations
-            observations, reward, done, _ = self.env.step(action)
-            rewards += reward
-
-            # Update graphic events
-            self.qapp.processEvents()
-            sleep(self.TIME_TO_SLEEP)
-
-            # Add this experience to the list of last experiences
-            exp = {'s': prev_observations, 'a': action,
-                'r': reward, 's2': observations, 'done': done}
-            self.TrainNet.add_experience(exp)
-
-            # Train the model and retrieve the loss
-            loss = self.TrainNet.train(self.TargetNet)
-            if isinstance(loss, int):
-                losses.append(loss)
+    def set_parameters(self, **parameters):
+        for param, value in parameters.items():
+            if param in self.DEFAULT_PARAMETERS.keys():
+                setattr(self, param, value)
             else:
-                losses.append(loss.numpy())
-
-        return rewards, np.mean(losses)
+                raise Exception(f'Parameter {param} not known.')
 
 
-    def set_params(self, **params):
-        """This function modify parameters in the Trainer and DQNs.
-        To modify a parameter, call the function with args like :
-        param1=value1, param2=value2, ...
-        Where param could be :
-        - ['epsilon', 'decay', 'min_epsilon', 'nb_iter_prev'] for Trainer.
-        - ['lr', 'gamma', 'batch_size', 'min_experiences', 'max_experiences',
-        'hidden_units'] for DQNs
-        """
-        for k, v in params.items():
-
-            if k == 'run_name':
-                self.run_name = v
-
-            elif k in self.TRAINING_PARAMS:
-                if getattr(self, k) != v:
-                    setattr(self, k, v)
-
-            elif k in self.HYPERPARAMETERS:
-                if getattr(self.TrainNet, k) != v:
-
-                    setattr(self.TrainNet, k, v)
-                    setattr(self.TargetNet, k, v)
-
-                    if k == 'hidden_units':
-                        self.TrainNet.create_neural_net()
-                        self.TargetNet.create_neural_net()
-
-            else:
-                raise Exception(f'Parameter {k} not known.')
-
-    def get_params(self):
-        params = {'run_name': self.run_name}
-        params.update({p: getattr(self, p) for p in self.TRAINING_PARAMS})
-        params.update({p: getattr(self.TrainNet, p) for p in self.HYPERPARAMETERS})
+    def get_parameters(self):
+        params = {}
+        for p in self.DEFAULT_PARAMETERS.keys():
+            params[p] = getattr(self, p)
         return params
 
 
-    def new_session(self, run_name, nb_games, epsilon, decay, min_epsilon, lr, 
-          gamma, batch_size, min_experiences, max_experiences, hidden_units):
-        """Create a new session with those parameters
-        - run_name** : name of the training, if None, take the date
-        - loading_file : path to a save, if not None, load the params too
-        - epsilon* : initial percentage of random plays
-        - decay* : decay of epsilon at each game
-        - min_epsilon* : minimum value of epsilon
-        - lr : learning rate
-        - gamma : coefficiant of next_q_value
-        - batch_size : size of a batch
-        - min_experience : min size of the memory
-        - max_experience : max size of the memory
-        - hidden_units : size of neural network's hidden layers 
-        *Those parameters will be changed to the saved values if loading_file
-        is not None.
-        **If you want to keep the name of a loading model, you should give
-        the same run_name. The run_name isn't loaded from the save.
-        """
-        # training parameters
-        self.run_name = run_name
-        self.nb_games = nb_games
-        self.epsilon = epsilon
-        self.decay = decay
-        self.min_epsilon = min_epsilon
-
-        # Retieve number of state and action values from the gym env
-        num_states = len(self.env.observation_space.sample())
-        num_actions = self.env.action_space.n        
-
-        # Instanciate the DQNs
-        self.TrainNet = DeepQNetwork(run_name, num_states, num_actions,
-            lr, gamma, batch_size, min_experiences,
-            max_experiences, hidden_units)
-        self.TargetNet = DeepQNetwork(run_name + '_target', num_states, 
-            num_actions, lr, gamma, batch_size, min_experiences,
-            max_experiences, hidden_units)
-
-
-    def load_session(self, loading_file):
-        # Load TrainNet and training_params
-        self._load_from_zip(loading_file)
-
-        # load DQN hyperpameters
-        lr = self.TrainNet.lr
-        gamma = self.TrainNet.gamma
-        batch_size = self.TrainNet.batch_size
-        min_experiences = self.TrainNet.min_experiences
-        max_experiences = self.TrainNet.max_experiences
-        hidden_units = self.TrainNet.hidden_units
-        
-        # Retieve number of state and action values from the gym env
-        num_states = len(self.env.observation_space.sample())
-        num_actions = self.env.action_space.n
-        
-        if num_states != self.TrainNet.num_states:
-            raise Exception(f'Loaded model has not the same number of states \
-                than the env : {num_states} != {self.TrainNet.num_states}.')
-
-        if num_actions != self.TrainNet.num_actions:
-            raise Exception(f'Loaded model has not the same number of actions \
-                than the env : {num_actions} != {self.TrainNet.num_actions}.')
-
-        # Create TargetNet
-        self.TargetNet = DeepQNetwork(self.run_name + '_target', num_states, 
-            num_actions, lr, gamma, batch_size, min_experiences,
-            max_experiences, hidden_units)
-        self.TargetNet.copy_weights(self.TrainNet)
-
-
-
-    def _save_in_zip(self, directory='saves/'):
-        """Saves the model into directory/name.zip. The archive contains four
-        files : 
-        -> the keras model into the keras.sm dir
-        -> the optimizer weights into the opt_weights.npy
-        -> the params of the training into the training_params.pick 
-        -> the dqn instance into the dqn.pick
-        * If no name provided, use the model name. 
-        ** If not directory provided, use the saves/ directory in the root of the project.
-        """
+    def save(self, directory='saves/'):
+        """Save the model, optimizer and the trainer parameters."""
 
         # Create dirpath for temporary dir
         if directory[-1] != '/':
             directory += '/'
-        dirpath = directory + self.run_name + '/'
+        dirpath = directory + self.name + '/'
 
         if not os.path.exists(dirpath): 
             os.makedirs(dirpath)
         else:
             raise Exception(f'Path {dirpath} already exists.')
 
-        # Keras model
-        self.TrainNet.model.save(f'{dirpath}keras.sm')
-        model_tmp = self.TrainNet.model
-        self.TrainNet.model = None
+        # DQNs & Optimizer
+        torch.save(self.policy_net.state_dict(), f'{dirpath}dqn.pth')
+        torch.save(self.optimizer.state_dict(), f'{dirpath}optimizer.pth')
 
-        # Optimizer weights
-        np.save(f'{dirpath}opt_weights.npy', self.TrainNet.optimizer.get_weights())
-        optimizer_tmp = self.TrainNet.optimizer
-        self.TrainNet.optimizer = None
+        # Trainer pamameters
+        params = {}
+        for p in self.DEFAULT_PARAMETERS.keys():
+            params[p] = getattr(self, p)
 
-        # DQN instance
-        with open(f'{dirpath}dqn.pick', 'wb') as file:
-            pickle.dump(self.TrainNet, file)
-
-        # Params of the training
-        training_params = {'run_name': self.run_name,
-                        'nb_games': self.nb_games,
-                        'epsilon': self.epsilon,
-                        'decay': self.decay,
-                        'min_epsilon': self.min_epsilon,
-                        'nb_iter_prev': self.nb_iter_prev}
-        with open(f'{dirpath}training_params.pick', 'wb') as file:
-            pickle.dump(training_params, file)
-
-        # Current trainer retrieve model and optimizer for next training
-        self.TrainNet.model = model_tmp
-        self.TrainNet.optimizer = optimizer_tmp
+        with open(f'{dirpath}trainer_parameters.pick', 'wb') as file:
+            pickle.dump(params, file)
 
         # Zip the saves in one .zip archive
-        zippath = f'{directory}{self.run_name}'
+        zippath = f'{directory}{self.name}'
         shutil.make_archive(zippath, 'zip', dirpath)
 
         # Remove the directory dirpath and files inside
@@ -283,13 +134,8 @@ class Trainer():
         print(f'Model saved at {zippath}.zip')
 
 
-    def _load_from_zip(self, filename, directory_tmp='saves/tmp/'):
-        """Loads the model from a .zip file containing :
-        -> the keras model
-        -> the optimizer weights
-        -> the params of the training
-        -> the dqn instance
-        """
+    def load(self, filename, directory_tmp='saves/tmp/'):
+        """Load the model, optimizer and trainer parameters."""
 
         # Verify path
         if not os.path.exists(filename):
@@ -297,7 +143,8 @@ class Trainer():
 
         if os.path.exists(directory_tmp):
             raise Exception(
-                f'Path {directory_tmp} already exists, please choose a non-existant path.')
+                f'Path {directory_tmp} already exists, \
+                please choose a non-existant path.')
 
         if directory_tmp[-1] != '/':
             directory_tmp += '/'
@@ -305,63 +152,154 @@ class Trainer():
         # Unzip the archive
         shutil.unpack_archive(filename, directory_tmp, 'zip')
 
-        # DQN instance
-        self.TrainNet = None
-        with open(f'{directory_tmp}dqn.pick', 'rb') as file:
-            self.TrainNet = pickle.load(file)
+        # DQNs & Optimizer
+        self.policy_net.load_state_dict(
+            torch.load(f'{directory_tmp}dqn.pth'))
+        self.policy_net.eval()
 
-        # Keras model
-        self.TrainNet.model = tf.keras.models.load_model(f'{directory_tmp}keras.sm')
+        self._update_target_net()
+        self.target_net.eval()
 
-        # Optimizer weights
-        self.TrainNet.optimizer = tf.optimizers.Adam(self.TrainNet.lr)
-        variables = self.TrainNet.model.trainable_variables
-        self._load_optimizer_state(
-            self.TrainNet.optimizer, f'{directory_tmp}opt_weights.npy', variables)
+        self.optimizer.load_state_dict(
+            torch.load(f'{directory_tmp}optimizer.pth'))
 
-        # Params of the training
-        training_params = None
-        with open(f'{directory_tmp}training_params.pick', 'rb') as file:
-            training_params = pickle.load(file)
-
-        self.run_name = training_params['run_name']
-        self.nb_games = training_params['nb_games']
-        self.epsilon = training_params['epsilon']
-        self.decay = training_params['decay']
-        self.min_epsilon = training_params['min_epsilon']
-        self.nb_iter_prev = training_params['nb_iter_prev']
+        # Trainer parameters
+        with open(f'{directory_tmp}trainer_parameters.pick', 'rb') as file:
+            params = pickle.load(file)
+        self.set_parameters(**params)
 
         # Remove the directory directory_tmp and files inside
         shutil.rmtree(directory_tmp)
 
         # Display
-        print(f'Model {self.TrainNet.name} loaded from {filename}.')
+        print(f'Model {self.name} loaded from {filename}.')
 
 
-    def _load_optimizer_state(self, optimizer, path, model_train_vars):
-        '''
-        Loads keras.optimizers object state.
+    def _run_one_game(self):
+        """Play one game and optimize model."""
+        sum_reward = 0
+        done = False
+        # state = torch.from_numpy(self.env.reset()).double().to(device)
+        state = torch.tensor(self.env.reset(), device=device).view(1, -1)
+        losses = list()
 
-        Arguments:
-        optimizer --- Optimizer object to be loaded.
-        path --- path to the save
-        model_train_vars --- List of model variables (obtained using Model.trainable_variables)
+        while not done:
 
-        '''
+            # Choose action in function of observation and play it
+            action = self._select_action(state)
+            next_state, reward, done, _ = self.env.step(action.item())
 
-        # Load optimizer weights
-        opt_weights = np.load(path, allow_pickle=True)
+            sum_reward += reward
+            next_state = torch.tensor(next_state, device=device).view(1, -1)
+            reward = torch.tensor([reward], device=device)
+            done = torch.tensor([done], device=device)
+            
+            # Add transition to memory
+            self._add_to_memory(state, action, next_state, reward, done)
 
-        # dummy zero gradients
-        zero_grads = [tf.zeros_like(w) for w in model_train_vars]
-        # save current state of variables
-        saved_vars = [tf.identity(w) for w in model_train_vars]
+            # Compute loss
+            loss = self._optimize_model()
+            losses += [loss]
+            
+            # Prepare next state
+            state = next_state
 
-        # Apply gradients which don't do nothing with Adam
-        optimizer.apply_gradients(zip(zero_grads, model_train_vars))
+            sleep(self.TIME_TO_SLEEP)
+            
 
-        # Reload variables
-        [x.assign(y) for x, y in zip(model_train_vars, saved_vars)]
+        return sum_reward, mean(losses)
 
-        # Set the weights of the optimizer
-        optimizer.set_weights(opt_weights)
+
+    def _optimize_model(self):
+        """Train the model by selecting a random subset of combinaison
+        (state, action) in his last experiences, calcul the loss from q_values,
+        and apply back-propagation."""
+
+        # Check that there is enough plays in self.experiences
+        if len(self.memory) < self.batch_size:
+            return 0
+
+        # Select self.batch_size random experience
+        transitions = random.sample(self.memory, self.batch_size)
+        batch = Transition(*zip(*transitions))
+
+        state_batch = torch.cat(batch.state)
+        action_batch = torch.cat(batch.action)
+        next_state_batch = torch.cat(batch.next_state)
+        reward_batch = torch.cat(batch.reward)
+        done_batch = torch.cat(batch.done)
+
+        # Compute Q(s, a) for all state
+        q_values = self.policy_net(state_batch).gather(1, action_batch)
+
+        # Compute Q(s_{t+1}) for all next_state
+        next_q_values = torch.zeros(self.batch_size, device=device)
+        next_q_values[~done_batch] = self.target_net(
+            next_state_batch[~done_batch]).max(1)[0].detach()
+
+        # Compute expected Q-value
+        expected_q_values = (next_q_values * self.gamma) + reward_batch
+
+        # Compute loss
+        loss = F.smooth_l1_loss(q_values, expected_q_values.unsqueeze(1))
+
+        # Optimize the model
+        self.optimizer.zero_grad()
+        loss.backward()
+        for param in self.policy_net.parameters():
+            param.grad.data.clamp_(-1, 1)
+        self.optimizer.step()
+
+        return loss.item()
+
+
+    def _select_action(self, state):
+        """Choose randomly in function of epsilon between a random action
+        or the action having the best q_value."""
+        if random.random() < self.epsilon:
+            action = random.randrange(self.num_actions)
+            return torch.tensor([[action]], device=device, dtype=torch.long)
+        else:
+            with torch.no_grad():
+                return self.policy_net(state).max(1)[1].view(1, 1)
+
+
+    def _add_to_memory(self, state, action, next_state, reward, done):
+        """Add a new transition to the memory, remove the first ones if there
+        is no more room in the memory."""
+        if len(self.memory) >= self.size_max_memory:
+            self.memory.pop(0)
+        self.memory += [Transition(state, action, next_state, reward, done)]
+
+
+    def _update_target_net(self):
+        """Copy the weights and biais from policy_net to target_net"""
+        self.target_net.load_state_dict(self.policy_net.state_dict())
+        self.target_net.eval()
+
+
+
+
+
+
+
+def launch():
+    import sys
+    from kothrak.envs.KothrakEnv import KothrakEnv
+    from kothrak.envs.game.MyApp import style
+    from PyQt5.QtWidgets import QApplication, QWidget
+
+    qapp = QApplication(sys.argv)
+    qapp.setStyleSheet(style)
+    window = QWidget()
+    window.setWindowTitle('Kothrak training')
+    window.setObjectName('trainer_bg')
+
+    env = KothrakEnv(qapp, window)
+    window.show()
+
+    trainer = Trainer(env)
+    # trainer.load('saves/031421-1523.zip')
+    trainer.run()
+
+    qapp.exec_()
