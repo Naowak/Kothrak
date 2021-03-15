@@ -62,14 +62,19 @@ def run():
         entry.setObjectName('param')
         entries[param] = entry
 
+    # Add button to reset the model
+    button = QPushButton('New Model', window)
+    button.setGeometry(QtCore.QRect(APP_PIXDIM[0] + 25, APP_PIXDIM[1] - 120, 170, 40))
+    button.clicked.connect(lambda: new_model(trainer, entries))
+
     # Add button to load a model
     button = QPushButton('Load model', window)
-    button.setGeometry(QtCore.QRect(APP_PIXDIM[0] + 25, APP_PIXDIM[1] - 70, 170, 40))
+    button.setGeometry(QtCore.QRect(APP_PIXDIM[0] + 205, APP_PIXDIM[1] - 120, 170, 40))
     button.clicked.connect(lambda: load_model(trainer, entries))
     
     # Add button to launch the trainig to the interface
     button = QPushButton('Train', window)
-    button.setGeometry(QtCore.QRect(APP_PIXDIM[0] + 205, APP_PIXDIM[1] - 70, 170, 40))
+    button.setGeometry(QtCore.QRect(APP_PIXDIM[0] + 25, APP_PIXDIM[1] - 70, 350, 40))
     button.clicked.connect(lambda: launch_training(trainer, entries))
 
     # Launch the PyQt programm
@@ -109,6 +114,10 @@ def load_model(trainer, entries):
         return 
 
     trainer.load(uri)
+    update_params_display(trainer, entries)
+
+def new_model(trainer, entries):
+    trainer.__init__(trainer.env)
     update_params_display(trainer, entries)
 
 
