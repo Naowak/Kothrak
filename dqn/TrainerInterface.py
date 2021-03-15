@@ -13,13 +13,13 @@ QWidget#game_bg {
 } 
 
 QWidget#trainer_bg{
-    background-color: rgb(100, 100, 100)
+    background-color: rgb(100, 100, 100);
 }
 
 QLabel#message {
     background-color: rgba(255, 255, 255, 0);
-    color:rgb(85, 85, 85);
-    font:30pt;
+    color: rgb(85, 85, 85);
+    font: 30pt;
 }
 
 QLineEdit#param {
@@ -29,15 +29,8 @@ QLineEdit#param {
 QPushButton {
     background-color: rgb(180, 180, 180);
 }
-
-QLabel#cell* {
-    background-color: rgba(255, 255, 255, 0);
-}
-
-QLabel#player* {
-    background-color: rgba(255, 255, 255, 0);
-}
 '''
+
 
 def run():    
     # Create the main window

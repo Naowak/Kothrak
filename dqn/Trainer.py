@@ -283,7 +283,7 @@ class Trainer():
 
 
 
-def launch():
+def launch_test():
     import sys
     from kothrak.envs.KothrakEnv import KothrakEnv
     from kothrak.envs.game.MyApp import style
@@ -293,7 +293,6 @@ def launch():
     qapp.setStyleSheet(style)
     window = QWidget()
     window.setWindowTitle('Kothrak training')
-    window.setObjectName('trainer_bg')
 
     env = KothrakEnv(qapp, window)
     window.show()
