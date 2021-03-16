@@ -1,6 +1,7 @@
 import sys
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLineEdit, QLabel, QFileDialog
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLineEdit, \
+    QLabel, QFileDialog
 
 from kothrak.envs.KothrakEnv import KothrakEnv
 from kothrak.envs.game.Utils import APP_PIXDIM
@@ -32,6 +33,8 @@ QPushButton {
 
 
 def run():
+    """Open the TrainerInterface window.
+    """
     # Create the main window
     qapp = QApplication(sys.argv)
     qapp.setStyleSheet(STYLE)
@@ -80,6 +83,10 @@ def run():
 
 
 def launch_training(trainer, entries):
+    """Launch the training from the trainer.
+    - trainer: instance of Trainer to use for the training
+    - entries: dictionary containing instance of QLineEdit and their param
+    """
     # Convert params
     params = {}
     for param, widget in entries.items():
@@ -88,10 +95,10 @@ def launch_training(trainer, entries):
         if param == 'name':
             params[param] = value
 
-        # elif param == 'hidden_units':
-        #     params[param] = eval(value)
+        elif param == 'hidden_layers':
+            params[param] = eval(value)
 
-        elif param in ['batch_size', 'nb_games']:
+        elif param in ['batch_size', 'nb_games', 'update_frequency']:
             params[param] = int(value)
 
         else:
@@ -100,26 +107,39 @@ def launch_training(trainer, entries):
     trainer.set_parameters(**params)
     trainer.run()
 
-    update_params_display(trainer, entries)
+    _update_params_display(trainer, entries)
 
 
 def load_model(trainer, entries):
+    """Load a model in the trainer.
+    - trainer: instance of Trainer
+    - entries: dictionary containing instance of QLineEdit and their param
+    """
     uri = QFileDialog().getOpenFileName(caption="Select your model.zip",
+                                        directory='./saves/',
                                         filter="*.zip")[0]
     if uri == "":
         # The user close the dialog without pick any file.
         return 
 
     trainer.load(uri)
-    update_params_display(trainer, entries)
+    _update_params_display(trainer, entries)
 
 
 def new_model(trainer, entries):
+    """Reset the trainer to a new model. Reset entries as well.
+    - trainer: instance of Trainer 
+    - entries: dictionary containing instance of QLineEdit and their param
+    """
     trainer.__init__(trainer.env)
-    update_params_display(trainer, entries)
+    _update_params_display(trainer, entries)
 
 
-def update_params_display(trainer, entries):
+def _update_params_display(trainer, entries):
+    """Set the value of entries' paramaters to the trainer parameters values.
+    - trainer: instance of Trainer 
+    - entries: dictionary containing instance of QLineEdit and their param
+    """
     parameters = trainer.get_parameters()
     for param, widget in entries.items():
         widget.setText(str(parameters[param]))

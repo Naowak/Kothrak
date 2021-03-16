@@ -42,7 +42,9 @@ class Trainer():
                         'memory': []}
 
     def __init__(self, env):
-        
+        """Initialize the Trainer.
+        - env : KothrakEnv instance
+        """        
         # Definitive attributes
         self.env = env
         self.size_max_memory = 2000
@@ -72,13 +74,12 @@ class Trainer():
         self.target_net = DeepQNetwork(self.num_inputs,
                                         self.hidden_layers, 
                                         self.num_actions).to(device)
-        print(self.policy_net.__dict__, self.target_net.__dict__)
         self._update_target_net()
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=self.lr)
 
 
     def run(self):
-        """Play self.nb_games and optimize model.
+        """Play nb_games and optimize model.
         """
         def update_logs(summary_writer, episode, reward, loss, epsilon):
             summary_writer.add_scalar('Reward', reward, episode)
@@ -101,7 +102,8 @@ class Trainer():
             
             # Each update_frequency print and update target_net
             if (episode + 1) % self.update_frequency == 0:
-                print(f'Episode: {episode + 1}, Epsilon: {self.epsilon}')
+                print(f'Episode: {episode + 1}, Epsilon: {self.epsilon}, '
+                    f'Reward: {reward}, Loss: {loss}.')
                 self._update_target_net()
 
         # End of the training
@@ -110,6 +112,9 @@ class Trainer():
 
 
     def set_parameters(self, **parameters):
+        """Set all couple (k, v) in **parameters as self.k = v.
+        - Any k=v couple values, where k is a string a v a value.
+        """
         for param, value in parameters.items():
             if param in self.DEFAULT_VALUES.keys():
                 setattr(self, param, value)
@@ -118,6 +123,8 @@ class Trainer():
 
 
     def get_parameters(self):
+        """Return all parameters values.
+        """
         params = {}
         for p in self.DEFAULT_VALUES.keys():
             params[p] = getattr(self, p)
@@ -125,8 +132,8 @@ class Trainer():
 
 
     def save(self, directory='saves/'):
-        """Save the model, optimizer and the trainer parameters."""
-
+        """Save the model, optimizer and the trainer parameters.
+        """
         # Create dirpath for temporary dir
         if directory[-1] != '/':
             directory += '/'
@@ -161,8 +168,8 @@ class Trainer():
 
 
     def load(self, filename, directory_tmp='saves/tmp/'):
-        """Load the model, optimizer and trainer parameters."""
-
+        """Load the model, optimizer and trainer parameters.
+        """
         # Verify path
         if not os.path.exists(filename):
             raise IOError(f'Filename {filename} does not exists.')
@@ -202,10 +209,10 @@ class Trainer():
 
 
     def _run_one_game(self):
-        """Play one game and optimize model."""
+        """Play one game and optimize model.
+        """
         sum_reward = 0
         done = False
-        # state = torch.from_numpy(self.env.reset()).double().to(device)
         state = torch.tensor(self.env.reset(), device=device).view(1, -1)
         losses = list()
 
@@ -230,6 +237,7 @@ class Trainer():
             # Prepare next state
             state = next_state
 
+            # Wait time_to_sleep second so the user can view the state
             sleep(self.time_to_sleep)
             
 
@@ -238,9 +246,9 @@ class Trainer():
 
     def _optimize_model(self):
         """Train the model by selecting a random subset of combinaison
-        (state, action) in his last experiences, calcul the loss from q_values,
-        and apply back-propagation."""
-
+        (state, action) in his memory, calcul the loss from q_values,
+        and apply back-propagation.
+        """
         # Check that there is enough plays in self.experiences
         if len(self.memory) < self.batch_size:
             return 0
@@ -281,7 +289,9 @@ class Trainer():
 
     def _select_action(self, state):
         """Choose randomly in function of epsilon between a random action
-        or the action having the best q_value."""
+        or the action having the best q_value.
+        - state : list of values describing the game
+        """
         if random.random() < self.epsilon:
             action = random.randrange(self.num_actions)
             return torch.tensor([[action]], device=device, dtype=torch.long)
@@ -292,14 +302,21 @@ class Trainer():
 
     def _add_to_memory(self, state, action, next_state, reward, done):
         """Add a new transition to the memory, remove the first ones if there
-        is no more room in the memory."""
+        is no more room in the memory.
+        - state : list of values describing the game
+        - action : a number representing an action
+        - next_state : list of values describing the game after the action
+        - reward : value rewarding the player for his action
+        - done : Boolean indicating if the game is finished of not
+        """
         if len(self.memory) >= self.size_max_memory:
             self.memory.pop(0)
         self.memory += [Transition(state, action, next_state, reward, done)]
 
 
     def _update_target_net(self):
-        """Copy the weights and biais from policy_net to target_net"""
+        """Copy the weights and biais from policy_net to target_net
+        """
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
 
@@ -310,6 +327,8 @@ class Trainer():
 
 
 def launch_test():
+    """Create an instance of trainer and launch the training to test the class
+    """
     import sys
     from kothrak.envs.KothrakEnv import KothrakEnv
     from kothrak.envs.game.MyApp import style

@@ -6,7 +6,8 @@ import random
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel
 from PyQt5.QtCore import Qt
 
-from kothrak.envs.game.Utils import APP_PIXDIM, MESSAGE_PIXDIM, NB_PLAYERS, GRID_RAY
+from kothrak.envs.game.Utils import APP_PIXDIM, MESSAGE_PIXDIM, NB_PLAYERS, \
+    GRID_RAY
 from kothrak.envs.game.Grid import Grid
 from kothrak.envs.game.Player import Player
 from kothrak.envs.game.Cell import Cell
@@ -19,10 +20,14 @@ class MyApp:
                'win': {'current': 100, 'others': -100},
                'invalid_attempt': {'current': -100, 'others': 20}}
     
-    def __init__(self, qapp=None, parent=None):
+    def __init__(self, qapp, parent_window=None):
+        """Initialize the game.
+        - qapp : main QApplication
+        - parent_window : main window (optionnal)
+        """ 
         # Initialisation de la fenetre
         self.qapp = qapp
-        self.window = QWidget(parent)
+        self.window = QWidget(parent_window)
         self.window.resize(APP_PIXDIM[0], APP_PIXDIM[1])
         self.window.setWindowTitle('MyApp')
         self.window.mouseReleaseEvent = lambda event: self._on_click(event)
@@ -48,10 +53,11 @@ class MyApp:
 
 
     def new_game(self):
-        """ Init and run a new game, clear the display if a previous game has been launched."""
-
+        """ Init and run a new game, clear the display if a previous game has 
+        been launched.
+        """
         def create_players(self, nb_players=NB_PLAYERS):
-            
+            # Instanciate the players
             cells = self.grid.get_all_cells()
             cells_selected = []
             
@@ -91,13 +97,16 @@ class MyApp:
 
     def play(self, q, r):
         """Make the play (move or build) on the cell on relative coordinates [q, r] 
-        from the player."""
-
+        from the player.
+        - q : relative coord from current_player in q axis
+        - r : relative coord from current_player in r axis
+        """
         def invalid_attempt(self, attempt):
-            """The player made an invalid attempt, end the game and punish him."""
+            # The player made an invalid attempt, end the game and punish him.
             self.current_step = 'game_over'
             self._update_rewards('invalid_attempt')       
-            print(f'Invalid {attempt}. Player {self.current_player.player_id} got eliminated.')
+            print(f'Invalid {attempt}. Player {self.current_player.player_id} '
+                'got eliminated.')
 
         # Retrieve the corresponding cell
         q = self.current_player.cell.q + q
@@ -120,7 +129,8 @@ class MyApp:
                     if self._player_on_top():
                         self.current_step = 'game_over'
                         self._update_rewards('win')
-                        print('Player {} won the game.'.format(self.current_player.player_id))
+                        print('Player {} won the game.'.format(
+                            self.current_player.player_id))
                 else:
                     invalid_attempt(self, 'move')
 
@@ -134,23 +144,27 @@ class MyApp:
                 else:
                     invalid_attempt(self, 'build')
 
-
+            # Display message to the screen
             self._update_message()
 
+            # Refresh screen graphics
             if self.qapp is not None:
                 self.qapp.processEvents()
 
 
 
     def state(self): 
-        """Return the state of the grid."""
+        """Return the state of the game.
+        """
         state = {}
 
         cell_from = self.current_player.cell
-        cells_around = self.grid.get_neighbors(cell_from, ray=GRID_RAY, with_none=True) 
+        cells_around = self.grid.get_neighbors(cell_from, ray=GRID_RAY, 
+            with_none=True) 
 
         # Hauteur de chaque cellule
-        cells_stage = [c.stage/Cell.MAX_STAGE if c is not None else 0 for c in cells_around]
+        cells_stage = [c.stage/Cell.MAX_STAGE if c is not None else 0 
+            for c in cells_around]
         state['cells_stage'] = cells_stage
 
         # Boolean if cell is taken
@@ -168,25 +182,32 @@ class MyApp:
         elif self.current_step == 'game_over':
             state['step'] = [0, 0]
         else:
-            raise Exception(f'Error in state from MyApp: current step invalid:\
-                 {self.current_step}.')
+            raise Exception(f'Error in state from MyApp: current step invalid:'
+                 f'{self.current_step}.')
 
         return state
     
     def evaluate(self, player_id=0):
+        """Return the reward for a player
+        - player_id :  id of the player
+        """
         return self.reward_dict[player_id]
 
     def show(self):
-        """Display the window on the screen."""
+        """Display the window on the screen.
+        """
         self.window.show()
     
     def is_game_over(self):
+        """Return True if game is over, else False
+        """
         return self.current_step == 'game_over'
     
 
 
     def _update_rewards(self, reason):
-        """Récompense et/ou puni les joueurs en fonction du motif."""
+        """Récompense et/ou puni les joueurs en fonction du motif.
+        """
         pid = self.current_player.player_id
         players_ids = [p.player_id for p in self.players]
         for k in players_ids:
@@ -196,23 +217,35 @@ class MyApp:
                 self.reward_dict[k] = self.REWARDS[reason]['others']
 
     def _update_message(self):
+        """Update the message displayed on the screen.
+        """
         if not self.is_game_over():
-            text = 'Player {}: {}'.format(self.current_player.player_id + 1, self.current_step)
+            text = 'Player {}: {}'.format(self.current_player.player_id + 1, 
+                self.current_step)
+
         else:
             text = 'Game Over'
         self.message.setText(text)
 
     def _player_on_top(self):
+        """Verify if current player if on the third stage
+        """
         return self.current_player.cell.stage == Cell.MAX_STAGE
 
 
     def _next_player(self):
+        """Change current_player to the next one.
+        """
         self.current_player = self.players[self.next_player_id]
         self.next_player_id = (self.next_player_id + 1) % NB_PLAYERS
 
 
 
     def _on_click(self, event):
+        """Called when the user click on the screen.
+        Evaluate the position of the click and make the action asked.
+        - event : event instance containing the position of the click
+        """
         x, y = event.pos().x(), event.pos().y()
         cell = self.grid.get_cell_from_pos(x, y)
         if cell is not None:
@@ -225,12 +258,16 @@ class MyApp:
         #     self.new_game()
 
     def _get_player_on_cell(self, cell):
+        """Get the player on the cell, None if no player on the cell.
+        - cell : instance of the Cell
+        """
         for p in self.players:
             if p.cell == cell:
                 return p
 
-    
     def _clear_display(self):
+        """Clear the display, delete every cell or player instance.
+        """
         for p in self.players:
             p.delete()
         self.grid.delete()

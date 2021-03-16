@@ -6,7 +6,6 @@ from kothrak.envs.game.Utils import PIXSIZE_STAGE_CELL, IMGCELL_PIXDIM, COEF
 class Cell:
 
     PATH_IMG = "kothrak/envs/game/img/cell_{}.png"
-    # PATH_IMG = 'cell1_resized.png'
     X_MIN_LIM = 10 * COEF
     X_MAX_LIM = 450 * COEF
     Y_MIN_LIM = 0 * COEF
@@ -46,7 +45,7 @@ class Cell:
         self.change_img()
 
         player = self.app._get_player_on_cell(self)
-        if player != None:
+        if player is not None:
             player.move(self)
 
     def change_img(self):
@@ -60,8 +59,9 @@ class Cell:
         return (x - self.x, y - self.y)
 
     def is_pos_in_cell(self, x, y):
-        """On vérifie que x et y sont bien dans l'image et non dans le fond transparent."""
-
+        """On vérifie que x et y sont bien dans l'image et non dans le fond 
+        transparent.
+        """
         x, y = self.absolute_to_relative_position(x, y)
 
         # Up
@@ -74,8 +74,10 @@ class Cell:
                 return False
 
         # Down
-        segments_down = [(self.CORNER_DOWN_PIXPOS, self.CORNER_RIGHTDOWN_PIXPOS),
-                         (self.CORNER_LEFTDOWN_PIXPOS, self.CORNER_DOWN_PIXPOS)]
+        segments_down = [(self.CORNER_DOWN_PIXPOS, 
+                            self.CORNER_RIGHTDOWN_PIXPOS),
+                         (self.CORNER_LEFTDOWN_PIXPOS, 
+                            self.CORNER_DOWN_PIXPOS)]
         for m, n in segments_down:
             p = (m[0], m[1] + PIXSIZE_STAGE_CELL[1] * self.stage)
             q = (n[0], n[1] + PIXSIZE_STAGE_CELL[1] * self.stage)

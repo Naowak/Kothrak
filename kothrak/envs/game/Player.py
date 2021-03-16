@@ -27,7 +27,8 @@ class Player:
         self.cell = cell
         self.x = cell.x + PIXSIZE_VECTOR_PLAYER_CELL[0]
         self.y = cell.y + PIXSIZE_VECTOR_PLAYER_CELL[1]
-        self.img.setGeometry(QtCore.QRect(self.x, self.y, self.size_x, self.size_y))
+        self.img.setGeometry(
+            QtCore.QRect(self.x, self.y, self.size_x, self.size_y))
     
     def delete(self):
         self.img.setParent(None)

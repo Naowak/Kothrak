@@ -9,6 +9,11 @@ def transform_action(action):
 class KothrakEnv():
     
     def __init__(self, qapp, window=None):
+        """Initialize the environnement.
+        - qapp : main QApplication
+        - window : main window (optional)
+        """
+        # Create the game
         self.game = MyApp(qapp, window)
 
         # Initialise les actions et observations
@@ -16,11 +21,16 @@ class KothrakEnv():
         self.num_observations = 2*NB_CELLS+2
     
     def reset(self):
+        """Reset the environnement for a new game."""
         self.game.new_game()
         obs = self._get_observation()
         return obs
 
     def step(self, action):
+        """Make an action to the game and return observations, reward, done
+        and a list of informations (set to null for now).
+        - action : An integer representing the action to make
+        """
         q, r = transform_action(action)
         self.game.play(q, r)
 
@@ -31,6 +41,8 @@ class KothrakEnv():
         return obs, reward, done, {}
     
     def render(self, mode='human'):
+        """Not implemented.
+        """
         pass
 
     def _get_observation(self):
