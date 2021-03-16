@@ -6,7 +6,6 @@ from kothrak.envs.KothrakEnv import KothrakEnv
 from kothrak.envs.game.Utils import APP_PIXDIM
 from dqn.Trainer import Trainer
 
-
 STYLE = '''
 QWidget#game_bg {
     background-color: rgb(180, 180, 180);
@@ -32,7 +31,7 @@ QPushButton {
 '''
 
 
-def run():    
+def run():
     # Create the main window
     qapp = QApplication(sys.argv)
     qapp.setStyleSheet(STYLE)
@@ -45,14 +44,12 @@ def run():
     env = KothrakEnv(qapp, window)
     trainer = Trainer(env)
 
-    params_removed = ['nb_iter_prev', 'memory']
-    default_parameters = {k: v for k, v in trainer.DEFAULT_PARAMETERS.items()
-                             if k not in params_removed}
-    
+    default_values = {p: trainer.DEFAULT_VALUES[p] for p in trainer.PARAMETERS}
+   
     # Display parameters
     entries = {}
-    for i, (param, value) in enumerate(default_parameters.items()):
-        y = 30 + 50*i
+    for i, (param, value) in enumerate(default_values.items()):
+        y = 20 + 50*i
 
         label = QLabel(param, window)
         label.setGeometry(QtCore.QRect(APP_PIXDIM[0] + 25, y, 120, 40))
@@ -64,17 +61,17 @@ def run():
 
     # Add button to reset the model
     button = QPushButton('New Model', window)
-    button.setGeometry(QtCore.QRect(APP_PIXDIM[0] + 25, APP_PIXDIM[1] - 120, 170, 40))
+    button.setGeometry(QtCore.QRect(APP_PIXDIM[0] + 25, APP_PIXDIM[1] - 110, 170, 40))
     button.clicked.connect(lambda: new_model(trainer, entries))
 
     # Add button to load a model
     button = QPushButton('Load model', window)
-    button.setGeometry(QtCore.QRect(APP_PIXDIM[0] + 205, APP_PIXDIM[1] - 120, 170, 40))
+    button.setGeometry(QtCore.QRect(APP_PIXDIM[0] + 205, APP_PIXDIM[1] - 110, 170, 40))
     button.clicked.connect(lambda: load_model(trainer, entries))
     
     # Add button to launch the trainig to the interface
     button = QPushButton('Train', window)
-    button.setGeometry(QtCore.QRect(APP_PIXDIM[0] + 25, APP_PIXDIM[1] - 70, 350, 40))
+    button.setGeometry(QtCore.QRect(APP_PIXDIM[0] + 25, APP_PIXDIM[1] - 60, 350, 40))
     button.clicked.connect(lambda: launch_training(trainer, entries))
 
     # Launch the PyQt programm
@@ -115,6 +112,7 @@ def load_model(trainer, entries):
 
     trainer.load(uri)
     update_params_display(trainer, entries)
+
 
 def new_model(trainer, entries):
     trainer.__init__(trainer.env)

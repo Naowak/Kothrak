@@ -24,12 +24,22 @@ Transition = namedtuple('Transition',
 
 class Trainer():
 
-    TIME_TO_SLEEP = 0
-    NB_GAMES_UPDATE = 20
-    DEFAULT_PARAMETERS = {'name': datetime.now().strftime("%m%d%y-%H%M"), 
-                            'nb_games': 200, 'epsilon': 0.99, 'decay': 0.99,
-                            'min_epsilon': 0.01, 'lr': 1e-3, 'gamma': 0.99,
-                            'batch_size': 32, 'nb_iter_prev': 0, 'memory': []}
+    PARAMETERS = ['name', 'nb_games', 'update_frequency', 'time_to_sleep',
+                    'epsilon', 'decay', 'min_epsilon', 'lr', 'gamma', 
+                    'batch_size', 'hidden_layers']
+    DEFAULT_VALUES = {'name': datetime.now().strftime("%m%d%y-%H%M"), 
+                        'nb_games': 200, 
+                        'update_frequency': 25,
+                        'time_to_sleep': 0,
+                        'epsilon': 0.99, 
+                        'decay': 0.99,
+                        'min_epsilon': 0.01, 
+                        'lr': 1e-3, 
+                        'gamma': 0.99,
+                        'batch_size': 32,
+                        'hidden_layers': [200, 100],
+                        'nb_iter_prev': 0, 
+                        'memory': []}
 
     def __init__(self, env):
         
@@ -40,13 +50,29 @@ class Trainer():
         self.num_actions = env.num_actions
 
         # Initialize attributes (may change if model loaded)
-        self.set_parameters(**self.DEFAULT_PARAMETERS)
+        self.name = None
+        self.nb_games = None
+        self.update_frequency = None
+        self.time_to_sleep = None
+        self.epsilon = None
+        self.decay = None
+        self.min_epsilon = None
+        self.lr = None
+        self.gamma = None
+        self.batch_size = None
+        self.hidden_layers = None
+        self.nb_iter_prev = None
+        self.memory = None
+        self.set_parameters(**self.DEFAULT_VALUES)
 
         # Initialize torch object (state_dict may change if model loaded)
-        self.policy_net = DeepQNetwork(self.num_inputs, 
+        self.policy_net = DeepQNetwork(self.num_inputs,
+                                        self.hidden_layers, 
                                         self.num_actions).to(device)
-        self.target_net = DeepQNetwork(self.num_inputs, 
+        self.target_net = DeepQNetwork(self.num_inputs,
+                                        self.hidden_layers, 
                                         self.num_actions).to(device)
+        print(self.policy_net.__dict__, self.target_net.__dict__)
         self._update_target_net()
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=self.lr)
 
@@ -73,8 +99,8 @@ class Trainer():
             self.epsilon = max(self.min_epsilon, self.epsilon * self.decay)
             update_logs(summary_writer, episode, reward, loss, self.epsilon)
             
-            # Each NB_GAMES_UPDATE print and update target_net
-            if (episode + 1) % self.NB_GAMES_UPDATE == 0:
+            # Each update_frequency print and update target_net
+            if (episode + 1) % self.update_frequency == 0:
                 print(f'Episode: {episode + 1}, Epsilon: {self.epsilon}')
                 self._update_target_net()
 
@@ -85,7 +111,7 @@ class Trainer():
 
     def set_parameters(self, **parameters):
         for param, value in parameters.items():
-            if param in self.DEFAULT_PARAMETERS.keys():
+            if param in self.DEFAULT_VALUES.keys():
                 setattr(self, param, value)
             else:
                 raise Exception(f'Parameter {param} not known.')
@@ -93,7 +119,7 @@ class Trainer():
 
     def get_parameters(self):
         params = {}
-        for p in self.DEFAULT_PARAMETERS.keys():
+        for p in self.DEFAULT_VALUES.keys():
             params[p] = getattr(self, p)
         return params
 
@@ -117,7 +143,7 @@ class Trainer():
 
         # Trainer pamameters
         params = {}
-        for p in self.DEFAULT_PARAMETERS.keys():
+        for p in self.DEFAULT_VALUES.keys():
             params[p] = getattr(self, p)
 
         with open(f'{dirpath}trainer_parameters.pick', 'wb') as file:
@@ -204,7 +230,7 @@ class Trainer():
             # Prepare next state
             state = next_state
 
-            sleep(self.TIME_TO_SLEEP)
+            sleep(self.time_to_sleep)
             
 
         return sum_reward, mean(losses)
