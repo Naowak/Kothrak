@@ -28,7 +28,7 @@ class Trainer():
                     'epsilon', 'decay', 'min_epsilon', 'lr', 'gamma', 
                     'batch_size', 'hidden_layers']
     DEFAULT_VALUES = {'name': datetime.now().strftime("%m%d%y-%H%M"), 
-                        'nb_games': 200, 
+                        'nb_games': 1000, 
                         'update_frequency': 20,
                         'time_to_sleep': 0,
                         'epsilon': 0.99, 
@@ -287,8 +287,9 @@ class Trainer():
 
         # Compute Q(s_{t+1}) for all next_state
         next_q_values = torch.zeros(self.batch_size, device=device)
-        next_q_values[~done_batch] = self.target_net(
-            next_state_batch[~done_batch]).max(1)[0].detach()
+        with torch.no_grad():
+            next_q_values[~done_batch] = self.target_net(
+                next_state_batch[~done_batch]).max(1)[0].detach()
 
         # Compute expected Q-value
         expected_q_values = (next_q_values * self.gamma) + reward_batch
@@ -299,8 +300,6 @@ class Trainer():
         # Optimize the model
         self.optimizer.zero_grad()
         loss.backward()
-        for param in self.policy_net.parameters():
-            param.grad.data.clamp_(-1, 1)
         self.optimizer.step()
 
         return loss.item()
@@ -355,7 +354,8 @@ class Trainer():
 
     def _create_optimizer(self):
         """Create optimizer with lr."""
-        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=self.lr)
+        self.optimizer = optim.Adam(self.policy_net.parameters(), 
+            lr=self.lr, eps=1e-7)
 
 
 def launch_test():
