@@ -29,15 +29,15 @@ class Trainer():
                     'batch_size', 'hidden_layers']
     DEFAULT_VALUES = {'name': datetime.now().strftime("%m%d%y-%H%M"), 
                         'nb_games': 200, 
-                        'update_frequency': 25,
+                        'update_frequency': 20,
                         'time_to_sleep': 0,
                         'epsilon': 0.99, 
-                        'decay': 0.99,
+                        'decay': 0.8,
                         'min_epsilon': 0.01, 
                         'lr': 1e-3, 
                         'gamma': 0.99,
                         'batch_size': 32,
-                        'hidden_layers': [200, 100],
+                        'hidden_layers': [150],
                         'nb_iter_prev': 0, 
                         'memory': []}
 
