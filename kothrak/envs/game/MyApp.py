@@ -20,10 +20,11 @@ class MyApp:
                'win': {'current': 100, 'others': -100},
                'invalid_attempt': {'current': -100, 'others': 20}}
     
-    def __init__(self, qapp, parent_window=None):
+    def __init__(self, qapp, parent_window=None, state_mode='relative'):
         """Initialize the game.
         - qapp : main QApplication
         - parent_window : main window (optionnal)
+        - a value between 'relative', 'absolute'
         """ 
         # Initialisation de la fenetre
         self.qapp = qapp
@@ -41,12 +42,16 @@ class MyApp:
         self.message.setAlignment(Qt.AlignCenter)
         self.message.setObjectName('message')
 
+        # Retrieve args
+        self.state_mode = state_mode
+
         # Initialisation des variables
         self.players = []
         self.reward_dict = {}
         self.next_player_id = -1
         self.current_player = None
         self.current_step = 'init'
+
 
         # Init new game
         self.new_game()
@@ -158,18 +163,24 @@ class MyApp:
         """
         state = {}
 
-        cell_from = self.current_player.cell
-        cells_around = self.grid.get_neighbors(cell_from, ray=GRID_RAY, 
-            with_none=True) 
+        if self.state_mode == 'relative':
+            cell_from = self.current_player.cell
+        elif self.state_mode == 'absolute':
+            cell_from = self.grid.get_cell_from_coord(0, 0)
+        else:
+            raise Exception(f'Value {self.state_mode} unknown for state_mode.')
+
+        cells = self.grid.get_neighbors(cell_from, 
+                                        ray=GRID_RAY, with_none=True)
 
         # Hauteur de chaque cellule
         cells_stage = [c.stage/Cell.MAX_STAGE if c is not None else 0 
-            for c in cells_around]
+            for c in cells]
         state['cells_stage'] = cells_stage
 
         # Boolean if cell is taken
         cells_taken = []
-        for c in cells_around:
+        for c in cells:
             player = self._get_player_on_cell(c)
             cells_taken += [1] if player else [0]                
         state['cells_taken'] = cells_taken

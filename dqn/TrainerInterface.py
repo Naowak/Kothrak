@@ -44,7 +44,7 @@ def run():
     window.setObjectName('trainer_bg')
 
     # Load the environnement
-    env = KothrakEnv(qapp, window)
+    env = KothrakEnv(qapp, window, 'relative')
     trainer = Trainer(env)
 
     default_values = {p: trainer.DEFAULT_VALUES[p] for p in trainer.PARAMETERS}

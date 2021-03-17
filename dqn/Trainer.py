@@ -65,17 +65,10 @@ class Trainer():
         self.hidden_layers = None
         self.nb_iter_prev = None
         self.memory = None
-        self.set_parameters(**self.DEFAULT_VALUES)
-
-        # Initialize torch object (state_dict may change if model loaded)
-        self.policy_net = DeepQNetwork(self.num_inputs,
-                                        self.hidden_layers, 
-                                        self.num_actions).to(device)
-        self.target_net = DeepQNetwork(self.num_inputs,
-                                        self.hidden_layers, 
-                                        self.num_actions).to(device)
-        self._update_target_net()
-        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=self.lr)
+        self.policy_net = None
+        self.target_net = None
+        self.optimizer = None
+        self.set_parameters(**self.DEFAULT_VALUES)       
 
 
     def run(self):
@@ -90,6 +83,8 @@ class Trainer():
         summary(self.policy_net, (1, self.num_inputs))
         summary_writer = SummaryWriter(log_dir=f'./logs/{self.name}/')
 
+        sum_reward = 0
+
         # Run nb_games
         for n in range(self.nb_games):
 
@@ -97,13 +92,16 @@ class Trainer():
 
             # Update values and logs
             episode = self.nb_iter_prev + n
+            sum_reward += reward
             self.epsilon = max(self.min_epsilon, self.epsilon * self.decay)
             update_logs(summary_writer, episode, reward, loss, self.epsilon)
             
             # Each update_frequency print and update target_net
             if (episode + 1) % self.update_frequency == 0:
                 print(f'Episode: {episode + 1}, Epsilon: {self.epsilon}, '
-                    f'Reward: {reward}, Loss: {loss}.')
+                    f'Reward: {reward}, Loss: {loss}, '
+                    f'Mean reward: {sum_reward/self.update_frequency}.')
+                sum_reward = 0
                 self._update_target_net()
 
         # End of the training
@@ -112,14 +110,35 @@ class Trainer():
 
 
     def set_parameters(self, **parameters):
-        """Set all couple (k, v) in **parameters as self.k = v.
+        """Set all couple (k, v) in **parameters as self.k = v. Create 
+        optimizer instance if lr is part of paramaters, and dqns instances 
+        if hidden_layer is part of parameters.
         - Any k=v couple values, where k is a string a v a value.
         """
+        flag_neural_network = False
+        flag_optimizer = False
+
+        # Set attributes
         for param, value in parameters.items():
             if param in self.DEFAULT_VALUES.keys():
-                setattr(self, param, value)
+                if getattr(self, param) != value:
+                    # Set value
+                    setattr(self, param, value)
+
+                    if param == 'hidden_layers':
+                        flag_neural_network = True
+                    elif param == 'lr':
+                        flag_optimizer = True
+
             else:
                 raise Exception(f'Parameter {param} not known.')
+
+        # Create torch instances : neural networks need to be initiate
+        # before optimizer
+        if flag_neural_network:
+            self._create_neural_networks()
+        if flag_optimizer:
+            self._create_optimizer()
 
 
     def get_parameters(self):
@@ -275,7 +294,7 @@ class Trainer():
         expected_q_values = (next_q_values * self.gamma) + reward_batch
 
         # Compute loss
-        loss = F.smooth_l1_loss(q_values, expected_q_values.unsqueeze(1))
+        loss = F.mse_loss(q_values, expected_q_values.unsqueeze(1))
 
         # Optimize the model
         self.optimizer.zero_grad()
@@ -321,9 +340,22 @@ class Trainer():
         self.target_net.eval()
 
 
+    def _create_neural_networks(self):
+        """Create policy_net and target_net, and copy weights from policy_net
+        to target_net.
+        """
+        self.policy_net = DeepQNetwork(self.num_inputs,
+                                        self.hidden_layers, 
+                                        self.num_actions).to(device)
+        self.target_net = DeepQNetwork(self.num_inputs,
+                                        self.hidden_layers, 
+                                        self.num_actions).to(device)
+        self._update_target_net()
 
 
-
+    def _create_optimizer(self):
+        """Create optimizer with lr."""
+        self.optimizer = optim.Adam(self.policy_net.parameters(), lr=self.lr)
 
 
 def launch_test():

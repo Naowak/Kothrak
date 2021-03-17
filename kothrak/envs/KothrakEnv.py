@@ -8,13 +8,13 @@ def transform_action(action):
 
 class KothrakEnv():
     
-    def __init__(self, qapp, window=None):
+    def __init__(self, qapp, window=None, state_mode='relative'):
         """Initialize the environnement.
         - qapp : main QApplication
         - window : main window (optional)
         """
         # Create the game
-        self.game = MyApp(qapp, window)
+        self.game = MyApp(qapp, window, state_mode=state_mode)
 
         # Initialise les actions et observations
         self.num_actions = 6
