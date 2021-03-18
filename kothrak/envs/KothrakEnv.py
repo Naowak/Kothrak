@@ -36,7 +36,7 @@ class KothrakEnv():
 
         obs = self._get_observation()
         reward = self.game.evaluate()
-        done = 1 if self.game.is_game_over() else 0
+        done = self.game.is_game_over()
 
         return obs, reward, done, {}
     
