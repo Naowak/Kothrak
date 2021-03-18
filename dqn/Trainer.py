@@ -70,8 +70,6 @@ class Trainer():
         self.optimizer = None
         self.set_parameters(**self.DEFAULT_VALUES) 
 
-        print(self.optimizer.state_dict())    
-
 
     def run(self):
         """Play nb_games and optimize model.
@@ -111,36 +109,29 @@ class Trainer():
         self.save()
 
 
-    def set_parameters(self, **parameters):
+    def set_parameters(self, create_models=True, **parameters):
         """Set all couple (k, v) in **parameters as self.k = v. Create 
-        optimizer instance if lr is part of paramaters, and dqns instances 
-        if hidden_layer is part of parameters.
+        optimizer and dqns instances if lr or hidden_layer is part in 
+        parameters, and have different values than the one existing.
         - Any k=v couple values, where k is a string a v a value.
         """
-        flag_neural_network = False
-        flag_optimizer = False
+        flag_nn_opti = False
 
         # Set attributes
         for param, value in parameters.items():
             if param in self.DEFAULT_VALUES.keys():
                 if getattr(self, param) != value:
-                    # Set value
+                    # We change param value
                     setattr(self, param, value)
-
-                    if param == 'hidden_layers':
-                        flag_neural_network = True
-                    elif param == 'lr':
-                        flag_optimizer = True
+                    if param in ['hidden_layers', 'lr']:
+                        flag_nn_opti = True
 
             else:
                 raise Exception(f'Parameter {param} not known.')
 
-        # Create torch instances : neural networks need to be initiate
-        # before optimizer
-        if flag_neural_network:
-            self._create_neural_networks()
-        if flag_optimizer:
-            self._create_optimizer()
+        # Create torch instances
+        if create_models and flag_nn_opti:
+            self._create_networks_and_optimizer()
 
 
     def get_parameters(self):
@@ -205,6 +196,11 @@ class Trainer():
 
         # Unzip the archive
         shutil.unpack_archive(filename, directory_tmp, 'zip')
+        
+        # Trainer parameters
+        with open(f'{directory_tmp}trainer_parameters.pick', 'rb') as file:
+            params = pickle.load(file)
+        self.set_parameters(**params)
 
         # DQNs & Optimizer
         self.policy_net.load_state_dict(
@@ -217,10 +213,6 @@ class Trainer():
         self.optimizer.load_state_dict(
             torch.load(f'{directory_tmp}optimizer.pth'))
 
-        # Trainer parameters
-        with open(f'{directory_tmp}trainer_parameters.pick', 'rb') as file:
-            params = pickle.load(file)
-        self.set_parameters(**params)
 
         # Remove the directory directory_tmp and files inside
         shutil.rmtree(directory_tmp)
@@ -341,9 +333,9 @@ class Trainer():
         self.target_net.eval()
 
 
-    def _create_neural_networks(self):
+    def _create_networks_and_optimizer(self):
         """Create policy_net and target_net, and copy weights from policy_net
-        to target_net.
+        to target_net, then create optimizer with lr.
         """
         self.policy_net = DeepQNetwork(self.num_inputs,
                                         self.hidden_layers, 
@@ -352,12 +344,10 @@ class Trainer():
                                         self.hidden_layers, 
                                         self.num_actions).to(device)
         self._update_target_net()
-
-
-    def _create_optimizer(self):
-        """Create optimizer with lr."""
+        
         self.optimizer = optim.Adam(self.policy_net.parameters(), 
             lr=self.lr, eps=1e-7)
+
 
 
 def launch_test():
