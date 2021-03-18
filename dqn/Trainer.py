@@ -68,7 +68,9 @@ class Trainer():
         self.policy_net = None
         self.target_net = None
         self.optimizer = None
-        self.set_parameters(**self.DEFAULT_VALUES)       
+        self.set_parameters(**self.DEFAULT_VALUES) 
+
+        print(self.optimizer.state_dict())    
 
 
     def run(self):

@@ -7,6 +7,9 @@ from kothrak.envs.KothrakEnv import KothrakEnv
 from kothrak.envs.game.Utils import APP_PIXDIM
 from dqn.Trainer import Trainer
 
+import random
+random.seed(343)
+
 STYLE = '''
 QWidget#game_bg {
     background-color: rgb(180, 180, 180);
