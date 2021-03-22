@@ -37,11 +37,11 @@ L'objectif de notre joueur est alors d'atteindre une case d'étage 3. S'il l'att
 
 ![Trainer Interface](assets/readme-img/interface-trainer.png)
 
-Pour obtenir cet interface il faut lancer la commande `python3 main.py`. Il est alors possible de charger un modèle en cliquant sur `Load model` et de lancer l'entrainement en cliquant sur `Run N Games`. Grâce à cette interface nous pouvons facilement paramètrer nos entrainements.
+Pour obtenir cet interface il faut lancer la commande `python3 main.py`. Il est alors possible de charger un modèle en cliquant sur `Load model` et de lancer l'entrainement en cliquant sur `Train`. Vous pouvez aussi créer un nouveau modèle grâce au bouton `New Model`. Grâce à cette interface nous pouvons facilement paramètrer nos entrainements.
 
 Nous arrivons à entrainer un DQN pour qu'il finisse par gagner 100% de ses parties (il atteint le troisième étage sans mourir).  
 Plusieurs combinaisons de paramètres permettent d'obtenir un tel résultat plus ou moins rapidement.   
-- Avec des paramètres tels que *{epsilon = 0.99, decay = 0.8, hidden_units=[150]}* nous pouvons obtenir une IA qui gagne 100% de ses parties après 80 games d'entrainement.
+- Avec des paramètres tels que *{epsilon = 0.99, decay = 0.8, hidden_units=[150]}* nous pouvons obtenir une IA qui commence à converger à partir de 80 games, et qui peut gagner 100% de ses parties au bout d'environ 200 parties.
 - Avec des paramètres tels que *{epsilon = 0.99, decay = 0.9998, hidden_units=[120, 120, 120, 120]}* nous pouvons obtenir une IA qui gagne 100% de ses parties après 40.000 games d'entrainement.   
 
 Même si ces deux IA réussissent toutes deux à gagner 100% de leur partie, il semblerait qu'elle n'ai pas la même stratégie, et que l'IA ayant appris sur 80 games soit moins robuste (elle connait moins de différentes situations, et peut donc faire rapidement n'importe quoi si elle rencontre un état qu'elle n'a pas l'habitude de rencontrer).
