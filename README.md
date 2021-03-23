@@ -58,6 +58,9 @@ Deux systèmes d'états ont été implémenter pour ce projet : l'un dit **relat
 Dans ce système d'état, la hauteur des cellules est indiquée par un premier vecteur dont les valeur sont ramenées entre 0 et 1, puis la présence ou non d'un d'adversaire sur une cellule est indiqué par un second vecteur boolean.
 - Le système d'état **absolu** ne montre que les cellules existantes, et indique alors leur hauteur dans un premier vecteur dont les valeur sont ramenées entre 0 et 1, puis la présence ou non d'un joueur sur une cellule est indiqué par un second vecteur boolean. Pour indiquer la position du joueur : à revoir ! 
 
+Nous pouvons observer que ces deux systèmes d'état permettent à une IA un joueur de converger, mais nous pouvons constater quelques différences : le système d'état **absolu** converge en trouvant un endroit spécifique dans la map (un couple de deux cellules) où il arrive à atteindre le troisième niveau, et essai alors systématiquement de rejoindre cet endroit pour gagner la partie. Alors que le système d'état **relatif** est en mesure de trouver la victoire sur plusieurs couples de cellules différents, mais conservera la même relation adjaçante (le couple de cellule qu'il utilisera sera toujours agencer pareil : deux cellules en diagonales, ou deux cellules horizontales par exemple).
+
+
 ## To-do
 
 - Un réseau de neurone par actions
