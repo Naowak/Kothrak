@@ -77,6 +77,10 @@ class MyApp:
             for player_id, cell in cells_selected:
                 self.players += [Player(player_id, cell, self)]
 
+        def init_rewards(self):
+            for p in self.players:
+                self.reward_dict[p.player_id] = 0
+
         def init_game(self):
             self.next_player_id = random.choice(range(len(self.players)))
             self._next_player()
@@ -91,8 +95,9 @@ class MyApp:
         # Initialisation des Cells
         self.grid = Grid(self)
 
-        # Initialisation des Players
+        # Initialisation des Players & reward dict
         create_players(self)
+        init_rewards(self)
 
         # Initialisation des joueurs et récompense
         # Lancement de la partie 
@@ -225,7 +230,7 @@ class MyApp:
             if k == pid:
                 self.reward_dict[k] = self.REWARDS[reason]['current']
             else:
-                self.reward_dict[k] = self.REWARDS[reason]['others']
+                self.reward_dict[k] += self.REWARDS[reason]['others']
 
     def _update_message(self):
         """Update the message displayed on the screen.

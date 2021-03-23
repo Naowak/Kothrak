@@ -229,6 +229,8 @@ class Trainer():
         state = torch.tensor(self.env.reset(), device=device).view(1, -1)
         losses = list()
 
+        # turn_memory = {}
+
         while not done:
 
             # Choose action in function of observation and play it
