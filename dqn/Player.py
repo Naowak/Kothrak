@@ -16,7 +16,6 @@ from torchsummary import summary
 from dqn.DeepQNetwork import DeepQNetwork
 
 
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 Transition = namedtuple('Transition',
@@ -30,9 +29,7 @@ class Player():
                     'batch_size', 'hidden_layers']
 
     _DEFAULT_VALUES = {'name': datetime.now().strftime("%m%d%y-%H%M"), 
-                        'nb_games': 1000, 
                         'update_frequency': 20,
-                        'time_to_sleep': 0,
                         'epsilon': 0.99, 
                         'decay': 0.8,
                         'min_epsilon': 0.01, 
@@ -40,7 +37,7 @@ class Player():
                         'gamma': 0.99,
                         'batch_size': 32,
                         'hidden_layers': [150],
-                        'nb_iter_prev': 0, 
+                        'game_played': 0, 
                         'memory': []}
 
     def __init__(self, num_observations, num_actions):
@@ -60,7 +57,7 @@ class Player():
         self.gamma = None
         self.batch_size = None
         self.hidden_layers = None
-        self.nb_iter_prev = None
+        self.game_played = None
         self.memory = None
 
         # SummaryWriter for Logs
@@ -75,7 +72,6 @@ class Player():
         self.set_parameters(**self._DEFAULT_VALUES)
 
         # Temporary attributes
-        self.game_played = 0
         self.last_state = None
         self.last_action = None
         self.rewards = []
@@ -105,10 +101,9 @@ class Player():
 
 
     def update(self, next_state, reward, done):
-        """Update memory and epsilon parameters, compute loss, optimize_model
-        and update target_net at each update_frequency episode.
+        """Update memory, compute loss, optimize_model and update target_net 
+        and epsilon parameters at each update_frequency game played.
         """
-
         # Convert to tensor
         next_state = torch.tensor(next_state, device=device).view(1, -1)
         reward = torch.tensor([reward], device=device)

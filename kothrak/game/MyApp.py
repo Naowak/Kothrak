@@ -207,7 +207,7 @@ class MyApp:
         """Return the reward for a player
         - player_id :  id of the player
         """
-        return self.reward_dict[player_id]
+        return self.reward_dict
 
     def show(self):
         """Display the window on the screen.

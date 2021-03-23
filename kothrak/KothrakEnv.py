@@ -35,10 +35,10 @@ class KothrakEnv():
         self.game.play(q, r)
 
         obs = self._get_observation()
-        reward = self.game.evaluate()
+        players_reward = self.game.evaluate()
         done = self.game.is_game_over()
 
-        return obs, reward, done, {}
+        return obs, players_reward, done, {}
     
     def render(self, mode='human'):
         """Not implemented.
