@@ -51,6 +51,13 @@ Même si ces deux IA réussissent toutes deux à gagner 100% de leur partie, il 
 Dans cet exemple, le DQN fini par converger au bout de 40.000 parties.  
 Cet exemple utilise un réseau de 4 couches relu de 120 neurones, et une output linear de 6 neurones. L'entrée correspond à la vision des cases autour du joueur sur un rayon de 2 : leur hauteur (ramenée entre 0 et 1), et la présence d'un joueur (0 ou 1). Elle prends aussi deux boolean indiquant l'étape de jeu : *Move* ou *Build*.
 
+## Observations
+
+Deux systèmes d'états ont été implémenter pour ce projet : l'un dit **relatif**, l'autre dit **absolu**.
+- Le système d'état **relatif** centre toujours le joueur au milieu de son système d'état. Il offre comme information au joueur une "vision" du jeu à partir de sa position. Ainsi le joueur peut voir dans un cercle de rayon 2 autour de lui. Il peut donc voir les cellules en dehors de la map, indiquées de hauteur 0. Cependant, si le rayon de vision n'est pas deux fois supérieur au rayon du plateau de jeu, le joueur ne verra pas systématiquement toutes les cellules du plateau.
+Dans ce système d'état, la hauteur des cellules est indiquée par un premier vecteur dont les valeur sont ramenées entre 0 et 1, puis la présence ou non d'un d'adversaire sur une cellule est indiqué par un second vecteur boolean.
+- Le système d'état **absolu** ne montre que les cellules existantes, et indique alors leur hauteur dans un premier vecteur dont les valeur sont ramenées entre 0 et 1, puis la présence ou non d'un joueur sur une cellule est indiqué par un second vecteur boolean. Pour indiquer la position du joueur : à revoir ! 
+
 ## To-do
 
 - Un réseau de neurone par actions
