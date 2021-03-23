@@ -1,5 +1,5 @@
-from kothrak.envs.game.Utils import NB_CELLS
-from kothrak.envs.game.MyApp import MyApp
+from kothrak.game.Utils import NB_CELLS
+from kothrak.game.MyApp import MyApp
 
 def transform_action(action):
     coord_actions = [(-1, 0), (-1, 1), (0, 1), (1, 0), (1, -1), (0, -1)]

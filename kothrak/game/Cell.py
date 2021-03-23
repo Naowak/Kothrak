@@ -1,11 +1,11 @@
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtWidgets import QLabel
 
-from kothrak.envs.game.Utils import PIXSIZE_STAGE_CELL, IMGCELL_PIXDIM, COEF
+from kothrak.game.Utils import PIXSIZE_STAGE_CELL, IMGCELL_PIXDIM, COEF
 
 class Cell:
 
-    PATH_IMG = "kothrak/envs/game/img/cell_{}.png"
+    PATH_IMG = "kothrak/game/img/cell_{}.png"
     X_MIN_LIM = 10 * COEF
     X_MAX_LIM = 450 * COEF
     Y_MIN_LIM = 0 * COEF

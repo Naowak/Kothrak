@@ -356,8 +356,8 @@ def launch_test():
     """Create an instance of trainer and launch the training to test the class
     """
     import sys
-    from kothrak.envs.KothrakEnv import KothrakEnv
-    from kothrak.envs.game.MyApp import style
+    from kothrak.KothrakEnv import KothrakEnv
+    from kothrak.game.MyApp import style
     from PyQt5.QtWidgets import QApplication, QWidget
 
     qapp = QApplication(sys.argv)

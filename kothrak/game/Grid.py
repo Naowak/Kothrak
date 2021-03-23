@@ -1,5 +1,5 @@
-from kothrak.envs.game.Utils import GRID_RAY, POS_CENTER, MV_DR, MV_R
-from kothrak.envs.game.Cell import Cell
+from kothrak.game.Utils import GRID_RAY, POS_CENTER, MV_DR, MV_R
+from kothrak.game.Cell import Cell
 
 
 DIR_COORDS = [(0, -1), (-1, 0), (-1, 1), (0, 1), (1, 0), (1, -1)]

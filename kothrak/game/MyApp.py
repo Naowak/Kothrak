@@ -6,11 +6,11 @@ import random
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel
 from PyQt5.QtCore import Qt
 
-from kothrak.envs.game.Utils import APP_PIXDIM, MESSAGE_PIXDIM, NB_PLAYERS, \
+from kothrak.game.Utils import APP_PIXDIM, MESSAGE_PIXDIM, NB_PLAYERS, \
     GRID_RAY
-from kothrak.envs.game.Grid import Grid
-from kothrak.envs.game.Player import Player
-from kothrak.envs.game.Cell import Cell
+from kothrak.game.Grid import Grid
+from kothrak.game.Player import Player
+from kothrak.game.Cell import Cell
 
 
 

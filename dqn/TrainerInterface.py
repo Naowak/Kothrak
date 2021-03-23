@@ -3,8 +3,8 @@ from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLineEdit, \
     QLabel, QFileDialog
 
-from kothrak.envs.KothrakEnv import KothrakEnv
-from kothrak.envs.game.Utils import APP_PIXDIM
+from kothrak.KothrakEnv import KothrakEnv
+from kothrak.game.Utils import APP_PIXDIM
 from dqn.Trainer import Trainer
 
 import random
