@@ -4,7 +4,7 @@ from dqn.Trainer import launch_test
 
 if __name__ == '__main__':
 
-    RUN = 'TRAIN'
+    RUN = 'TEST_TRAINER'
 
     if RUN == 'GAME':
         run_game()

@@ -44,7 +44,7 @@ class Player():
         
         # Definitive attributes
         self.num_inputs = num_observations
-        self.num_outputs = num_actions
+        self.num_actions = num_actions
         self.size_max_memory = 2000
 
         # Parameters (values can change)
@@ -115,8 +115,8 @@ class Player():
         loss = self._optimize_model()
 
         # Logs memory
-        self.game_rewards += [reward.item()]
-        self.game_losses += [loss]
+        self.rewards += [reward.item()]
+        self.losses += [loss]
 
         # Game over
         if done:
@@ -127,10 +127,10 @@ class Player():
             self.epsilon = max(self.min_epsilon, self.epsilon * self.decay)
 
             # Reward & Loss
-            game_reward = mean(self.game_rewards)
-            game_loss = mean(self.game_losses)
-            self.game_rewards = []
-            self.game_losses = []
+            game_reward = mean(self.rewards)
+            game_loss = mean(self.losses)
+            self.rewards = []
+            self.losses = []
             self.last_rewards += [game_reward]
             self.last_losses += [game_loss]
 

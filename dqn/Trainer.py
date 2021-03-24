@@ -60,6 +60,7 @@ class Trainer():
             # Move
             action = current_player.play(state)
             state, players_reward, done, _ = self.env.step(action.item())
+            state = torch.tensor(state, device=device).view(1, -1)
 
             # Update reward for all player
             for k, v in players_reward.items():
@@ -79,6 +80,8 @@ class Trainer():
             # Build (no rewards or done possible while building)
             action = current_player.play(state)
             next_state, _, _, _ = self.env.step(action.item())
+            next_state = torch.tensor(next_state, device=device).view(1, -1)
+
             
             # Wait time_to_sleep second so the user can view the state
             sleep(self.time_to_sleep)
