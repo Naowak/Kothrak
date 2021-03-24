@@ -361,11 +361,11 @@ class Player():
         the old folder, delete it.
         """
         dirname = f'./logs/{self.name}/'
-        filename = os.listir(dirname)[0]
-
-        # If no data in old dirname, delete directory
-        if os.stat(filename).st_size == 40:
-            shutil.rmtree(dirname)
+        if os.path.exists(dirname):
+            filename = os.listdir(dirname)[0]
+            # If no data in old dirname, delete directory
+            if os.stat(dirname + filename).st_size == 40:
+                shutil.rmtree(dirname)
 
         self.summary_writer = SummaryWriter(log_dir=f'./logs/{self.name}/')
 
