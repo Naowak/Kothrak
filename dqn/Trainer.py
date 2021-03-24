@@ -9,7 +9,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Trainer():
 
-    def __init__(self, env, nb_players=2, nb_games=50000, time_to_sleep=0):
+    def __init__(self, env, nb_players=2, nb_games=1000, time_to_sleep=0):
         """Initialize the Trainer.
         - env : KothrakEnv instance
         """ 
@@ -59,31 +59,23 @@ class Trainer():
 
             # Move
             action = current_player.play(state)
-            state, players_reward, done, _ = self.env.step(action.item())
-            state = torch.tensor(state, device=device).view(1, -1)
+            next_state, players_reward, done, _ = self.env.step(action.item())
+            next_state = torch.tensor(next_state, device=device).view(1, -1)
 
             # Update reward for all player
             for k, v in players_reward.items():
                 rewards[k] += v
-
-            # If game over, update all players and quit the loop
-            if done:
-                for i, player in enumerate(self.players):
-                    player.update(state, rewards[i], done)
-                sleep(self.time_to_sleep)
-                break
-            # If game is not over, update only current player
-            else: 
-                current_player.update(state, rewards[current_pid], done)
-                rewards[current_pid] = 0
-            
-            # Build (no rewards or done possible while building)
-            action = current_player.play(state)
-            next_state, _, _, _ = self.env.step(action.item())
-            next_state = torch.tensor(state, device=device).view(1, -1)
-            
+          
             # Wait time_to_sleep second so the user can view the state
             sleep(self.time_to_sleep)
+        
+
+        # End of the game, update all players 
+        for i, player in enumerate(self.players):
+            player.update(next_state, rewards[i], done)
+        
+        # Wait time_to_sleep second so the user can view the state
+        sleep(self.time_to_sleep)
 
 
     def _init_players(self):

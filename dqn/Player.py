@@ -21,8 +21,6 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward', 'done'))
 
-pid = 0
-
 
 class Player():
 
@@ -33,7 +31,7 @@ class Player():
     _DEFAULT_VALUES = {'name': datetime.now().strftime("%m%d%y-%H%M"), 
                         'update_frequency': 20,
                         'epsilon': 0.99, 
-                        'decay': 0.9998,
+                        'decay': 0.99,
                         'min_epsilon': 0.01, 
                         'lr': 1e-3, 
                         'gamma': 0.99,
@@ -45,9 +43,9 @@ class Player():
     def __init__(self, num_observations, num_actions):
         
         # Definitive attributes
-        self.num_inputs = num_observations
-        self.num_outputs = num_actions
-        self.size_max_memory = 2000
+        self.num_observations = num_observations
+        self.num_actions = num_actions
+        self.size_max_memory = 1000
 
         # Parameters (values can change)
         self.name = None
@@ -89,7 +87,7 @@ class Player():
         """
         # Random action
         if random.random() < self.epsilon:
-            action = random.randrange(self.num_outputs)
+            action = random.randrange(self.num_actions)
             action = torch.tensor([[action]], device=device, dtype=torch.long)
         
         # Best action 
@@ -130,7 +128,7 @@ class Player():
 
             # Reward & Loss
             game_reward = sum(self.rewards)
-            game_loss = sum(self.losses)
+            game_loss = mean(self.losses)
             self.rewards = []
             self.losses = []
             self.last_rewards += [game_reward]
@@ -172,6 +170,7 @@ class Player():
         flag_optimizer = False
         flag_neural_networks = False
         flag_summary_writer = False
+        old_name = None
 
         for param, value in parameters.items():
             
@@ -194,6 +193,7 @@ class Player():
                 elif param == 'name':
                     # if name is modified, path to the summary_writer change
                     flag_summary_writer = True
+                    old_name = self.name
 
             # Set value
             setattr(self, param, value)
@@ -202,14 +202,14 @@ class Player():
         if flag_neural_networks:
             self._create_neural_networks()
             # Print model
-            summary(self.policy_net, (1, self.num_inputs))
+            summary(self.policy_net, (1, self.num_observations))
 
         if flag_optimizer:
             self._create_optimizer()
 
         # Create SummaryWriter
         if flag_summary_writer:
-            self._reset_summary_writer()
+            self._reset_summary_writer(old_name)
 
 
 
@@ -324,9 +324,10 @@ class Player():
 
         # Compute Q(s_{t+1}) for all next_state
         next_q_values = torch.zeros(self.batch_size, device=device)
-        with torch.no_grad():
-            next_q_values[~done_batch] = self.target_net(
-                next_state_batch[~done_batch]).max(1)[0].detach()
+        if sum(~done_batch) != 0:
+            with torch.no_grad():
+                next_q_values[~done_batch] = self.target_net(
+                    next_state_batch[~done_batch]).max(1)[0].detach()
 
         # Compute expected Q-value
         expected_q_values = (next_q_values * self.gamma) + reward_batch
@@ -356,16 +357,20 @@ class Player():
         self.memory += [Transition(state, action, next_state, reward, done)]
 
 
-    def _reset_summary_writer(self):
+    def _reset_summary_writer(self, old_name):
         """Create a new folder at ./logs/name/. If no data were written in
         the old folder, delete it.
         """
-        dirname = f'./logs/{self.name}/'
-        if os.path.exists(dirname):
-            filename = os.listdir(dirname)[0]
-            # If no data in old dirname, delete directory
-            if os.stat(dirname + filename).st_size == 40:
-                shutil.rmtree(dirname)
+        if old_name is not None:
+            
+            dirname = f'./logs/{old_name}/'
+            
+            if os.path.exists(dirname):
+                filename = os.listdir(dirname)[0]
+
+                # If no data in old dirname, delete directory
+                if os.stat(dirname + filename).st_size == 40:
+                    shutil.rmtree(dirname)
 
         self.summary_writer = SummaryWriter(log_dir=f'./logs/{self.name}/')
 
@@ -381,12 +386,12 @@ class Player():
         """Create policy_net and target_net, and copy weights from policy_net
         to target_net.
         """
-        self.policy_net = DeepQNetwork(self.num_inputs,
+        self.policy_net = DeepQNetwork(self.num_observations,
                                         self.hidden_layers, 
-                                        self.num_outputs).to(device)
-        self.target_net = DeepQNetwork(self.num_inputs,
+                                        self.num_actions).to(device)
+        self.target_net = DeepQNetwork(self.num_observations,
                                         self.hidden_layers, 
-                                        self.num_outputs).to(device)
+                                        self.num_actions).to(device)
         self._update_target_net()
 
 

@@ -3,7 +3,9 @@ from kothrak.game.MyApp import MyApp
 
 def transform_action(action):
     coord_actions = [(-1, 0), (-1, 1), (0, 1), (1, 0), (1, -1), (0, -1)]
-    return coord_actions[action]
+    move = int(action / len(coord_actions))
+    build = int(action % len(coord_actions))
+    return coord_actions[move], coord_actions[build]
 
 
 class KothrakEnv():
@@ -17,7 +19,7 @@ class KothrakEnv():
         self.game = MyApp(qapp, window, state_mode=state_mode)
 
         # Initialise les actions et observations
-        self.num_actions = 6
+        self.num_actions = 6*6
         self.num_observations = 3*NB_CELLS+2
     
     def reset(self):
@@ -31,8 +33,9 @@ class KothrakEnv():
         and a list of informations (set to null for now).
         - action : An integer representing the action to make
         """
-        q, r = transform_action(action)
-        self.game.play(q, r)
+        (q_move, r_move), (q_build, r_build) = transform_action(action)
+        self.game.play(q_move, r_move)
+        self.game.play(q_build, r_build)
 
         obs = self._get_observation()
         players_reward = self.game.evaluate()

@@ -17,8 +17,8 @@ from kothrak.game.Cell import Cell
 class MyApp:
 
     REWARDS = {'init': {'current': 0, 'others': 0}, 
-               'win': {'current': 10, 'others': -10},
-               'invalid_attempt': {'current': -20, 'others': 0}}
+               'win': {'current': 100, 'others': -100},
+               'invalid_attempt': {'current': -100, 'others': 0}}
     
     def __init__(self, qapp, parent_window=None, state_mode='relative'):
         """Initialize the game.
@@ -117,6 +117,11 @@ class MyApp:
             print(f'Invalid {attempt}. Player {self.current_player.player_id} '
                 'got eliminated.')
 
+        
+        # Do nothing if game is over 
+        if self.is_game_over():
+            return
+        
         # Retrieve the corresponding cell
         q = self.current_player.cell.q + q
         r = self.current_player.cell.r + r 
@@ -126,47 +131,45 @@ class MyApp:
         if cell is None:
             invalid_attempt(self, 'cell')
 
-        # Make the move is the game is still playing
-        if not self.is_game_over():
+        # Make the play
+        if self.current_step == 'move':
 
-            if self.current_step == 'move':
+            if cell in self.grid.get_neighbors(self.current_player.cell) \
+                and self._get_player_on_cell(cell) is None \
+                    and cell.stage <= self.current_player.cell.stage + 1:
 
-                if cell in self.grid.get_neighbors(self.current_player.cell) \
-                    and self._get_player_on_cell(cell) is None \
-                        and cell.stage <= self.current_player.cell.stage + 1:
+                self.current_player.move(cell)
+                self.current_step = 'build'
 
-                    self.current_player.move(cell)
-                    self.current_step = 'build'
+                if self._player_on_top():
 
-                    if self._player_on_top():
+                    self.current_step = 'game_over'
+                    self._update_rewards('win')
+                    print('Player {} won the game.'.format(
+                        self.current_player.player_id))
 
-                        self.current_step = 'game_over'
-                        self._update_rewards('win')
-                        print('Player {} won the game.'.format(
-                            self.current_player.player_id))
+            else:
+                invalid_attempt(self, 'move')
 
-                else:
-                    invalid_attempt(self, 'move')
+        elif self.current_step == 'build':
 
-            elif self.current_step == 'build':
+            if cell in self.grid.get_neighbors(self.current_player.cell) \
+                and self._get_player_on_cell(cell) is None \
+                    and cell.stage < cell.MAX_STAGE:
 
-                if cell in self.grid.get_neighbors(self.current_player.cell) \
-                    and self._get_player_on_cell(cell) is None \
-                        and cell.stage < cell.MAX_STAGE:
+                cell.grew()
+                self._next_player()
+                self.current_step = 'move'
 
-                    cell.grew()
-                    self._next_player()
-                    self.current_step = 'move'
+            else:
+                invalid_attempt(self, 'build')
 
-                else:
-                    invalid_attempt(self, 'build')
+        # Display message to the screen
+        self._update_message()
 
-            # Display message to the screen
-            self._update_message()
-
-            # Refresh screen graphics
-            if self.qapp is not None:
-                self.qapp.processEvents()
+        # Refresh screen graphics
+        if self.qapp is not None:
+            self.qapp.processEvents()
 
 
 
