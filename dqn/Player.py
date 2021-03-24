@@ -21,6 +21,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward', 'done'))
 
+pid = 0
+
 
 class Player():
 
@@ -31,7 +33,7 @@ class Player():
     _DEFAULT_VALUES = {'name': datetime.now().strftime("%m%d%y-%H%M"), 
                         'update_frequency': 20,
                         'epsilon': 0.99, 
-                        'decay': 0.8,
+                        'decay': 0.9998,
                         'min_epsilon': 0.01, 
                         'lr': 1e-3, 
                         'gamma': 0.99,
@@ -87,7 +89,7 @@ class Player():
         """
         # Random action
         if random.random() < self.epsilon:
-            action = random.randrange(self.num_actions)
+            action = random.randrange(self.num_outputs)
             action = torch.tensor([[action]], device=device, dtype=torch.long)
         
         # Best action 
@@ -115,8 +117,8 @@ class Player():
         loss = self._optimize_model()
 
         # Logs memory
-        self.game_rewards += [reward.item()]
-        self.game_losses += [loss]
+        self.rewards += [reward.item()]
+        self.losses += [loss]
 
         # Game over
         if done:
@@ -127,10 +129,10 @@ class Player():
             self.epsilon = max(self.min_epsilon, self.epsilon * self.decay)
 
             # Reward & Loss
-            game_reward = mean(self.game_rewards)
-            game_loss = mean(self.game_losses)
-            self.game_rewards = []
-            self.game_losses = []
+            game_reward = sum(self.rewards)
+            game_loss = sum(self.losses)
+            self.rewards = []
+            self.losses = []
             self.last_rewards += [game_reward]
             self.last_losses += [game_loss]
 
@@ -149,10 +151,10 @@ class Player():
                 self._update_target_net()
 
                 # Display
-                print(f'Game played: {self.game_played}'
-                    f'Epsilon: {self.epsilon}'
-                    f'Mean reward: {mean(self.last_rewards)}'
-                    f'Mean loss: {mean(self.last_losses)}')
+                print(f'Game played: {self.game_played}, '
+                    f'Epsilon: {self.epsilon}, '
+                    f'Mean reward: {mean(self.last_rewards)}, '
+                    f'Mean loss: {mean(self.last_losses)} ')
 
                 # Reset after display
                 self.last_rewards = []
@@ -199,16 +201,16 @@ class Player():
         # Create torch instances
         if flag_neural_networks:
             self._create_neural_networks()
+            # Print model
+            summary(self.policy_net, (1, self.num_inputs))
 
         if flag_optimizer:
             self._create_optimizer()
 
         # Create SummaryWriter
         if flag_summary_writer:
-            self.summary_writer = SummaryWriter(log_dir=f'./logs/{self.name}/')
+            self._reset_summary_writer()
 
-        # Print model
-        summary(self.policy_net, (1, self.num_inputs))
 
 
     def get_parameters(self):
@@ -239,7 +241,7 @@ class Player():
 
         # Trainer pamameters
         params = {}
-        for p in self.DEFAULT_VALUES.keys():
+        for p in self._DEFAULT_VALUES.keys():
             params[p] = getattr(self, p)
 
         with open(f'{dirpath}parameters.pick', 'wb') as file:
@@ -354,6 +356,20 @@ class Player():
         self.memory += [Transition(state, action, next_state, reward, done)]
 
 
+    def _reset_summary_writer(self):
+        """Create a new folder at ./logs/name/. If no data were written in
+        the old folder, delete it.
+        """
+        dirname = f'./logs/{self.name}/'
+        filename = os.listir(dirname)[0]
+
+        # If no data in old dirname, delete directory
+        if os.stat(filename).st_size == 40:
+            shutil.rmtree(dirname)
+
+        self.summary_writer = SummaryWriter(log_dir=f'./logs/{self.name}/')
+
+
     def _update_target_net(self):
         """Copy the weights and biais from policy_net to target_net
         """
@@ -367,10 +383,10 @@ class Player():
         """
         self.policy_net = DeepQNetwork(self.num_inputs,
                                         self.hidden_layers, 
-                                        self.num_actions).to(device)
+                                        self.num_outputs).to(device)
         self.target_net = DeepQNetwork(self.num_inputs,
                                         self.hidden_layers, 
-                                        self.num_actions).to(device)
+                                        self.num_outputs).to(device)
         self._update_target_net()
 
 

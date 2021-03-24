@@ -9,7 +9,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Trainer():
 
-    def __init__(self, env, nb_players=2, nb_games=1000, time_to_sleep=0):
+    def __init__(self, env, nb_players=2, nb_games=50000, time_to_sleep=0):
         """Initialize the Trainer.
         - env : KothrakEnv instance
         """ 
@@ -60,6 +60,7 @@ class Trainer():
             # Move
             action = current_player.play(state)
             state, players_reward, done, _ = self.env.step(action.item())
+            state = torch.tensor(state, device=device).view(1, -1)
 
             # Update reward for all player
             for k, v in players_reward.items():
@@ -79,6 +80,7 @@ class Trainer():
             # Build (no rewards or done possible while building)
             action = current_player.play(state)
             next_state, _, _, _ = self.env.step(action.item())
+            next_state = torch.tensor(state, device=device).view(1, -1)
             
             # Wait time_to_sleep second so the user can view the state
             sleep(self.time_to_sleep)
@@ -108,7 +110,7 @@ def launch_test():
     window = QWidget()
     window.setWindowTitle('Kothrak training')
 
-    env = KothrakEnv(qapp, window)
+    env = KothrakEnv(qapp, window, state_mode='absolute')
     window.show()
 
     trainer = Trainer(env)

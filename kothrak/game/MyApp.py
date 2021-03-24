@@ -17,8 +17,8 @@ from kothrak.game.Cell import Cell
 class MyApp:
 
     REWARDS = {'init': {'current': 0, 'others': 0}, 
-               'win': {'current': 100, 'others': -100},
-               'invalid_attempt': {'current': -100, 'others': 20}}
+               'win': {'current': 10, 'others': -10},
+               'invalid_attempt': {'current': -20, 'others': 0}}
     
     def __init__(self, qapp, parent_window=None, state_mode='relative'):
         """Initialize the game.
@@ -33,7 +33,6 @@ class MyApp:
         self.window.setWindowTitle('MyApp')
         self.window.mouseReleaseEvent = lambda event: self._on_click(event)
         self.window.setObjectName('game_bg')
-        # self.window.keyReleaseEvent=lambda event:self.on_keyboard(event)
 
         # Initialisation du message
         self.message = QLabel(self.window)
@@ -131,26 +130,34 @@ class MyApp:
         if not self.is_game_over():
 
             if self.current_step == 'move':
+
                 if cell in self.grid.get_neighbors(self.current_player.cell) \
                     and self._get_player_on_cell(cell) is None \
                         and cell.stage <= self.current_player.cell.stage + 1:
+
                     self.current_player.move(cell)
                     self.current_step = 'build'
+
                     if self._player_on_top():
+
                         self.current_step = 'game_over'
                         self._update_rewards('win')
                         print('Player {} won the game.'.format(
                             self.current_player.player_id))
+
                 else:
                     invalid_attempt(self, 'move')
 
             elif self.current_step == 'build':
+
                 if cell in self.grid.get_neighbors(self.current_player.cell) \
                     and self._get_player_on_cell(cell) is None \
                         and cell.stage < cell.MAX_STAGE:
+
                     cell.grew()
                     self._next_player()
                     self.current_step = 'move'
+
                 else:
                     invalid_attempt(self, 'build')
 
@@ -184,11 +191,24 @@ class MyApp:
         state['cells_stage'] = cells_stage
 
         # Boolean if cell is taken
-        cells_taken = []
+        opponant_on_cells = []
         for c in cells:
             player = self._get_player_on_cell(c)
-            cells_taken += [1] if player else [0]                
-        state['cells_taken'] = cells_taken
+            if player is not None and player != self.current_player:
+                opponant_on_cells += [1]
+            else:
+                opponant_on_cells += [0]                
+        state['opponant_on_cells'] = opponant_on_cells
+
+        # Boolean if current_player is on cell
+        current_player_on_cells = []
+        for c in cells:
+            player = self._get_player_on_cell(c)
+            if player is not None and player == self.current_player:
+                current_player_on_cells += [1]
+            else:
+                current_player_on_cells += [0]                
+        state['current_player_on_cells'] = current_player_on_cells
 
         # Step
         if self.current_step == 'move':
@@ -230,7 +250,7 @@ class MyApp:
             if k == pid:
                 self.reward_dict[k] = self.REWARDS[reason]['current']
             else:
-                self.reward_dict[k] += self.REWARDS[reason]['others']
+                self.reward_dict[k] = self.REWARDS[reason]['others']
 
     def _update_message(self):
         """Update the message displayed on the screen.
