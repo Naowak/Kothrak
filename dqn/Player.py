@@ -31,7 +31,7 @@ class Player():
     _DEFAULT_VALUES = {'name': datetime.now().strftime("%m%d%y-%H%M"), 
                         'update_frequency': 20,
                         'epsilon': 0.99, 
-                        'decay': 0.99,
+                        'decay': 0.8,
                         'min_epsilon': 0.01, 
                         'lr': 1e-3, 
                         'gamma': 0.99,
