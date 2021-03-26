@@ -81,6 +81,9 @@ On peut observer que plus le réseau possède de sortie différentes, plus il me
 L'instauration d'un mode deux joueurs rend le jeu plus compliqué à comprendre pour nos agents. Ils mettent considérablement plus de temps à apprendre, et même au bout de 100.000 parties, ils n'ont pas correctement appris les coups interdits, là où ils étaient en mesure de le faire au bout de quelques centaines de parties en solo. Mais ils convergent petit à petit. 
 *Il est intéressant de noté qu'elles ne s'affrontent que très peu, se sont séparées sur la carte : elles évites généralement de se croiser. Peut être meurent-elles trop souvent lorsqu'elles sont proches d'un adversaire : trop de coups interdit.*
 
+Nous pouvons d'ailleurs les voir converger ici :
+<img src="assets/readme-img/oneDQN3e6-reward.png" width="350"/> <img src="assets/readme-img/oneDQN3e6-losspng" width="350"/>
+
 Cependant il me reste encore beaucoup de jeu à effectuer sur les récompenses, et d'autres paramètres.
 
 
