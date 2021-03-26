@@ -53,7 +53,7 @@ Cet exemple utilise un réseau de 4 couches relu de 120 neurones, et une output 
 
 ## Observations
 
-# Système d'état relatif ou système d'état absolu 
+### Système d'état relatif ou système d'état absolu 
 
 Deux systèmes d'états ont été implémenter pour ce projet : l'un dit **relatif**, l'autre dit **absolu**.
 - Le système d'état **relatif** centre toujours le joueur au milieu de son système d'état. Il offre comme information au joueur une "vision" du jeu à partir de sa position. Ainsi le joueur peut voir dans un cercle de rayon 2 autour de lui. Il peut donc voir les cellules en dehors de la map, indiquées de hauteur 0. Cependant, si le rayon de vision n'est pas deux fois supérieur au rayon du plateau de jeu, le joueur ne verra pas systématiquement toutes les cellules du plateau.
@@ -65,7 +65,7 @@ Nous pouvons observer que ces deux systèmes d'état permettent à une IA un jou
 Nous voyons aussi que plus un réseau possède d'entrée, plus il mets du temps à converger.
 
 
-# 6, 12 ou 36 actions
+### 6, 12 ou 36 actions
 
 Plusieurs systèmes d'output ont eux aussi été tenté :
 - L'un prédisant 6 actions (les 6 cellules voisines) : le réseau recevait alors en entrée un boolean lui indiquant s'il devait construire ou se déplacer. Il devait donc être appelé 2 fois par tours, et recevait 2 rewards (cependant, le reward d'une construction était toujours nul).
@@ -76,18 +76,19 @@ Plusieurs systèmes d'output ont eux aussi été tenté :
 On peut observer que plus le réseau possède de sortie différentes, plus il mets du temps à converger. 
 
 
-# Deux joueurs
+### Deux joueurs
 
 L'instauration d'un mode deux joueurs rend le jeu plus compliqué à comprendre pour nos agents. Ils mettent considérablement plus de temps à apprendre, et même au bout de 100.000 parties, ils n'ont pas correctement appris les coups interdits, là où ils étaient en mesure de le faire au bout de quelques centaines de parties en solo. Mais ils convergent petit à petit. 
 *Il est intéressant de noté qu'elles ne s'affrontent que très peu, se sont séparées sur la carte : elles évites généralement de se croiser. Peut être meurent-elles trop souvent lorsqu'elles sont proches d'un adversaire : trop de coups interdit.*
 
 Nous pouvons d'ailleurs les voir converger ici :
-<img src="assets/readme-img/oneDQN3e6-reward.png" width="350"/> <img src="assets/readme-img/oneDQN3e6-losspng" width="350"/>
+
+<img src="assets/readme-img/oneDQN3e6-reward.png" width="350"/> <img src="assets/readme-img/oneDQN3e6-loss.png" width="350"/>
 
 Cependant il me reste encore beaucoup de jeu à effectuer sur les récompenses, et d'autres paramètres.
 
 
-# Récompenses et punitions
+### Récompenses et punitions
 
 Pour inciter les agents à préféré perdre une partie à la loyale plutôt qu'à effectuer un coup interdit, j'ai tenté de leur infliger une punition bien plus grosse lorsqu'elles effectuaient un coup interdit. Mais ceci ne semble pas fonctionner correctement. 
 
