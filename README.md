@@ -51,6 +51,50 @@ Même si ces deux IA réussissent toutes deux à gagner 100% de leur partie, il 
 Dans cet exemple, le DQN fini par converger au bout de 40.000 parties.  
 Cet exemple utilise un réseau de 4 couches relu de 120 neurones, et une output linear de 6 neurones. L'entrée correspond à la vision des cases autour du joueur sur un rayon de 2 : leur hauteur (ramenée entre 0 et 1), et la présence d'un joueur (0 ou 1). Elle prends aussi deux boolean indiquant l'étape de jeu : *Move* ou *Build*.
 
+## Observations
+
+# Système d'état relatif ou système d'état absolu 
+
+Deux systèmes d'états ont été implémenter pour ce projet : l'un dit **relatif**, l'autre dit **absolu**.
+- Le système d'état **relatif** centre toujours le joueur au milieu de son système d'état. Il offre comme information au joueur une "vision" du jeu à partir de sa position. Ainsi le joueur peut voir dans un cercle de rayon 2 autour de lui. Il peut donc voir les cellules en dehors de la map, indiquées de hauteur 0. Cependant, si le rayon de vision n'est pas deux fois supérieur au rayon du plateau de jeu, le joueur ne verra pas systématiquement toutes les cellules du plateau.
+Dans ce système d'état, la hauteur des cellules est indiquée par un premier vecteur dont les valeur sont ramenées entre 0 et 1, puis la présence ou non d'un d'adversaire sur une cellule est indiqué par un second vecteur boolean. Ce système d'état comporte donc 2\*N valeurs, où N est le nombre de cellule.
+- Le système d'état **absolu** ne montre que les cellules existantes, et centre sa vision autour de la cellule central du plateau de jeu. Il indique alors leur hauteur dans un premier vecteur dont les valeurs sont ramenées entre 0 et 1, la présence ou non d'un joueur adverse sur une cellule est indiquée par un second vecteur possèdant un booléen par cellule, et la position du joueur est elle aussi indiquée par un vecteur contenant un booléen par cellule. Ce système d'état comporte donc 3\*N valeurs, où N est le nombre de cellule.
+
+Nous pouvons observer que ces deux systèmes d'état permettent à une IA un joueur de converger, mais nous pouvons constater quelques différences : le système d'état **absolu** converge en trouvant un endroit spécifique dans la map (un couple de deux cellules) où il arrive à atteindre le troisième niveau, et essai alors systématiquement de rejoindre cet endroit pour gagner la partie. Alors que le système d'état **relatif** est en mesure de trouver la victoire sur plusieurs couples de cellules différents, mais conservera la même relation adjaçante (le couple de cellule qu'il utilisera sera toujours agencer pareil : deux cellules en diagonales, ou deux cellules horizontales par exemple). Par ailleurs, le système **absolu** mets plus de temps à converger que le système **relatif**.
+
+Nous voyons aussi que plus un réseau possède d'entrée, plus il mets du temps à converger.
+
+
+# 6, 12 ou 36 actions
+
+Plusieurs systèmes d'output ont eux aussi été tenté :
+- L'un prédisant 6 actions (les 6 cellules voisines) : le réseau recevait alors en entrée un boolean lui indiquant s'il devait construire ou se déplacer. Il devait donc être appelé 2 fois par tours, et recevait 2 rewards (cependant, le reward d'une construction était toujours nul).
+- L'un prédisant 36 actions (toutes les combinaisons possibles entre mouvement et déplacement) : le réseau prédit les deux coups en même temps, en un seul passage forward, et reçoit donc un récompense à chaque combinaison (mouvement - déplacement) jouée.
+
+- Il faut encore testé un appelée Multi-Task et permettant de prédire à la fois un mouvement et un déplacement avec 12 sorties au total (6 de chaque). Le réseau doit alors optimiser deux fonctions de loss différentes combinées via une somme pondérée.
+
+On peut observer que plus le réseau possède de sortie différentes, plus il mets du temps à converger. 
+
+
+# Deux joueurs
+
+L'instauration d'un mode deux joueurs rend le jeu plus compliqué à comprendre pour nos agents. Ils mettent considérablement plus de temps à apprendre, et même au bout de 100.000 parties, ils n'ont pas correctement appris les coups interdits, là où ils étaient en mesure de le faire au bout de quelques centaines de parties en solo. Mais ils convergent petit à petit. 
+*Il est intéressant de noté qu'elles ne s'affrontent que très peu, se sont séparées sur la carte : elles évites généralement de se croiser. Peut être meurent-elles trop souvent lorsqu'elles sont proches d'un adversaire : trop de coups interdit.*
+
+Cependant il me reste encore beaucoup de jeu à effectuer sur les récompenses, et d'autres paramètres.
+
+
+# Récompenses et punitions
+
+Pour inciter les agents à préféré perdre une partie à la loyale plutôt qu'à effectuer un coup interdit, j'ai tenté de leur infliger une punition bien plus grosse lorsqu'elles effectuaient un coup interdit. Mais ceci ne semble pas fonctionner correctement. 
+
+
+
+
+
+
+
+
 ## To-do
 
 - Un réseau de neurone par actions
