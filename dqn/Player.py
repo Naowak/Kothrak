@@ -29,9 +29,9 @@ class Player():
                     'batch_size', 'hidden_layers']
 
     _DEFAULT_VALUES = {'name': datetime.now().strftime("%m%d%y-%H%M"), 
-                        'update_frequency': 20,
+                        'update_frequency': 50,
                         'epsilon': 0.99, 
-                        'decay': 0.8,
+                        'decay': 0.999,
                         'min_epsilon': 0.01, 
                         'lr': 1e-3, 
                         'gamma': 0.99,
@@ -45,7 +45,7 @@ class Player():
         # Definitive attributes
         self.num_observations = num_observations
         self.num_actions = num_actions
-        self.size_max_memory = 1000
+        self.size_max_memory = 10000
 
         # Parameters (values can change)
         self.name = None
@@ -105,6 +105,7 @@ class Player():
         and epsilon parameters at each update_frequency game played.
         """
         # Convert to tensor
+
         next_state = torch.tensor(next_state, device=device).view(1, -1)
         reward = torch.tensor([reward], device=device)
         done = torch.tensor([done], device=device)

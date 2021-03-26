@@ -20,7 +20,7 @@ class KothrakEnv():
 
         # Initialise les actions et observations
         self.num_actions = 6*6
-        self.num_observations = 3*NB_CELLS+2
+        self.num_observations = 3*NB_CELLS
     
     def reset(self):
         """Reset the environnement for a new game."""

@@ -18,7 +18,7 @@ class MyApp:
 
     REWARDS = {'init': {'current': 0, 'others': 0}, 
                'win': {'current': 100, 'others': -100},
-               'invalid_attempt': {'current': -100, 'others': 0}}
+               'invalid_attempt': {'current': -200, 'others': 0}}
     
     def __init__(self, qapp, parent_window=None, state_mode='relative'):
         """Initialize the game.
@@ -189,8 +189,8 @@ class MyApp:
                                         ray=GRID_RAY, with_none=True)
 
         # Hauteur de chaque cellule
-        cells_stage = [c.stage/Cell.MAX_STAGE if c is not None else 0 
-            for c in cells]
+        cells_stage = [(c.stage - 1)/(Cell.MAX_STAGE - 1) if c is not None 
+            else 0 for c in cells]
         state['cells_stage'] = cells_stage
 
         # Boolean if cell is taken
@@ -212,17 +212,6 @@ class MyApp:
             else:
                 current_player_on_cells += [0]                
         state['current_player_on_cells'] = current_player_on_cells
-
-        # Step
-        if self.current_step == 'move':
-            state['step'] = [1, 0]
-        elif self.current_step == 'build':
-            state['step'] = [0, 1]
-        elif self.current_step == 'game_over':
-            state['step'] = [0, 0]
-        else:
-            raise Exception(f'Error in state from MyApp: current step invalid:'
-                 f'{self.current_step}.')
 
         return state
     
