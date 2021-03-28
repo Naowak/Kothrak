@@ -17,8 +17,8 @@ from kothrak.game.Cell import Cell
 class MyApp:
 
     REWARDS = {'init': {'current': 0, 'others': 0}, 
-               'win': {'current': 100, 'others': -100},
-               'invalid_attempt': {'current': -200, 'others': 0}}
+               'win': {'current': 100, 'others': 10},
+               'invalid_attempt': {'current': -100, 'others': 0}}
     
     def __init__(self, qapp, parent_window=None, state_mode='relative'):
         """Initialize the game.

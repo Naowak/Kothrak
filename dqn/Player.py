@@ -31,12 +31,12 @@ class Player():
     _DEFAULT_VALUES = {'name': datetime.now().strftime("%m%d%y-%H%M"), 
                         'update_frequency': 50,
                         'epsilon': 0.99, 
-                        'decay': 0.999,
-                        'min_epsilon': 0.01, 
+                        'decay': 0.99985,
+                        'min_epsilon': 0,
                         'lr': 1e-3, 
                         'gamma': 0.99,
                         'batch_size': 32,
-                        'hidden_layers': [150],
+                        'hidden_layers': [50, 50, 43, 43],
                         'game_played': 0, 
                         'memory': []}
 

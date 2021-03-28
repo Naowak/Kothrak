@@ -9,7 +9,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Trainer():
 
-    def __init__(self, env, nb_players=2, nb_games=100000, time_to_sleep=0):
+    def __init__(self, env, nb_players=2, nb_games=200000, time_to_sleep=0):
         """Initialize the Trainer.
         - env : KothrakEnv instance
         """ 
