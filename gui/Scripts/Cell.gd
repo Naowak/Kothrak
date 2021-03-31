@@ -11,10 +11,14 @@ const RATIO = (DIST + SPACE_BETWEEN)/DIST
 const TRANS_RIGHT = Vector2(DIST*RATIO, 0)
 const TRANS_DOWNRIGHT = Vector2(DIST*RATIO/2, 3.0*CIRCLE_RAY*RATIO/2)
 
+# Game const
+const MAX_STAGE = 4 
+
 # cell attributes
 var q
 var r
 var color
+var stage
 #var character_on setget set_character
 
 
@@ -22,19 +26,30 @@ func _ready():
 	pass
 
 
-func init(_q, _r, _color):
+func init(_q, _r, _stage, _color):
 	q = _q
 	r = _r
+	stage = _stage
 	color = _color
 #	character_on = null
 	
 	translation.x = q * TRANS_RIGHT.x + r * TRANS_DOWNRIGHT.x
 	translation.z = r * TRANS_DOWNRIGHT.y
 	change_material(color)
+	
+	if _color == 'white':
+		# warning-ignore:return_value_discarded
+		var playground_node = get_tree().get_root().get_node('Playground')
+		connect("cell_clicked", playground_node, '_on_cell_clicked', [self])
 
 
 func change_material(material_key):
 	$Circle.set_surface_material(0, Utils.materials[material_key])
+	
+
+func grew():
+	stage = stage + 1
+	
 
 
 #func set_character(new_character):

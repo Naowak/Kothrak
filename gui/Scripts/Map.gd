@@ -20,6 +20,7 @@ func _ready():
 	generate_grid()
 	instance_map(grid)
 
+
 ## HANDLE GRID GENERATION ##
 func _generate_one_gridline(line_size, r):
 	var color = ''
@@ -51,10 +52,10 @@ func _add_instance_to_grid(instance, q, r):
 		grid[q] = {}
 	grid[q][r] = instance
 	
-func _instance_cell(cell_type, q, r, color):
+func _instance_cell(cell_type, q, r, stage, color):
 	var cell = cell_type.instance()
-	cell.init(q, r, color)
-	$Map.add_child(cell)
+	add_child(cell)	
+	cell.init(q, r, stage, color)
 	_add_instance_to_grid(cell, q, r)
 	if color == "white":
 		cells += [cell]
@@ -65,40 +66,26 @@ func instance_map(new_grid):
 		for r in grid[q].keys():
 			var color = grid[q][r]
 			if color == 'white':
-				_instance_cell(CellSize1, q, r, color)
+				_instance_cell(CellSize1, q, r, 1, color)
 			elif color == 'black':
 				var dist = distance_coord(q, r, 0, 0) - RAY_ARENA
 				var choices = {1: CellSize0, 2: CellSize1, 3:CellSize2}
-				_instance_cell(choices[dist], q, r, color)
-
-
-
-## HANDLE CAMERA ROTATION ##
-func _process(_delta):
-	var mouse_position = get_viewport().get_mouse_position()
-	if is_rotation_camera_ask(mouse_position):
-		rotate_camera(mouse_position)
-	last_mouse_position = mouse_position
-
-func rotate_camera(mouse_position):
-	if last_mouse_position != Vector2(-1, -1):
-		var center_screen = get_viewport().size/2
-		var vect_last = center_screen - last_mouse_position
-		var vect_current = center_screen - mouse_position
-		var angle = vect_current.angle_to(vect_last)
-		$Map.rotate_y(angle)
+				_instance_cell(choices[dist], q, r, dist-1, color)
+				
+func grew(cell):
+	var stage = cell.stage + 1
+	if stage >= 4:
+		return
 		
-func is_rotation_camera_ask(mouse_position):
-	if Input.is_mouse_button_pressed(BUTTON_RIGHT) and mouse_position != last_mouse_position:
-		return true
-	return false
-	
+	cell.queue_free()
+	var choices = {2: CellSize2, 3:CellSize3, 4:CellSize4}
+	_instance_cell(choices[stage], cell.q, cell.r, stage, 'white')
 	
 	
 ## USEFULL FUNCTIONS
 func distance_coord(q1, r1, q2, r2):
 	return (abs(q1 - q2) + abs(q1 + r1 - q2 - r2) + abs(r1 - r2)) / 2
 
-func clear():
-	for c in cells:
-		c.change_material('white')
+#func clear():
+#	for c in cells:
+#		c.change_material('white')
