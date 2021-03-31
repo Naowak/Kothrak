@@ -9,7 +9,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Trainer():
 
-    def __init__(self, env, nb_players=2, nb_games=200000, time_to_sleep=0):
+    def __init__(self, env, nb_players=2, nb_games=2000, time_to_sleep=0):
         """Initialize the Trainer.
         - env : KothrakEnv instance
         """ 
@@ -89,23 +89,10 @@ class Trainer():
             player.set_parameters(name=name)
             
 
-def launch_test():
-    """Create an instance of trainer and launch the training to test the class
-    """
-    import sys
-    from kothrak.KothrakEnv import KothrakEnv
-    from kothrak.game.MyApp import style
-    from PyQt5.QtWidgets import QApplication, QWidget
 
-    qapp = QApplication(sys.argv)
-    qapp.setStyleSheet(style)
-    window = QWidget()
-    window.setWindowTitle('Kothrak training')
+def launch_nogui():
+    from envs.KothrakEnv import KothrakEnv
 
-    env = KothrakEnv(qapp, window, state_mode='absolute')
-    window.show()
-
+    env = KothrakEnv()
     trainer = Trainer(env)
     trainer.run()
-
-    qapp.exec_()
