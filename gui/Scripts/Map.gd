@@ -1,32 +1,43 @@
 extends Spatial
 
+var Character = preload("res://Scenes/Character.tscn")
+
 var CellStage = {0: preload("res://Scenes/Cells/CellSize1.tscn"),
 				1: preload("res://Scenes/Cells/CellSize2.tscn"),
 				2: preload("res://Scenes/Cells/CellSize3.tscn"),
 				3: preload("res://Scenes/Cells/CellSize4.tscn"),
 				4: preload("res://Scenes/Cells/CellSize5.tscn")}
 
-const LENGTH_BORDER = 3
-const RAY_ARENA = 2
-const RAY = LENGTH_BORDER + RAY_ARENA
-
 var grid = {}
+var player = null
+var opponent = null
 
 
-# Create all playable cells corresponding to new_grid
+# Create all cells corresponding to new_grid
 func instance_map(new_grid):
+	# Playable cells
 	for q in new_grid.keys():
 		for r in new_grid[q].keys():
-			var stage = int(round(new_grid[q][r] * 3))
+			var stage = int(new_grid[q][r] * 3) + 1
 			_instance_cell(CellStage[stage], q, r, stage)
-
-
-# Create all non playable cells 
-func instance_border():
+	# Non playable cells
 	var stage = 0
-	for radius in range(RAY_ARENA+1, RAY+1):
+	for radius in range(Utils.RAY_ARENA+1, Utils.RAY+1):
 		_instance_circle_border(radius, stage)
 		stage += 1
+
+
+func instance_player(data, faction):
+	var coord = _retrieve_player_location(data)
+	if faction == 'player':
+		player = Character.instance()
+		player.init(coord[0], coord[1], 'blue')
+		add_child(player)
+	elif faction == 'opponent':
+		opponent = Character.instance()
+		opponent.init(coord[0], coord[1], 'red')
+		add_child(opponent)
+
 
 # Instance one circle around the playble cells
 func _instance_circle_border(radius, stage):
@@ -61,19 +72,21 @@ func _instance_cell(cell_type, q, r, stage, playable=true):
 		cell.init(q, r, stage, 'black')
 		
 
+# Retrieve player location from a dictionnary
+func _retrieve_player_location(data):
+	for q in data.keys():
+		for r in data[q].keys():
+			if data[q][r] == 1:
+				return [q, r]
 
 
-
-	
-				
-#func grew(cell):
+#func grow_up(cell):
 #	var stage = cell.stage + 1
-#	if stage >= 4:
+#	if stage >= Utils.MAX_STAGE:
 #		return
 #
 #	cell.queue_free()
-#	var choices = {2: CellSize2, 3:CellSize3, 4:CellSize4}
-#	_instance_cell(choices[stage], cell.q, cell.r, stage, 'white')
+#	_instance_cell(CellStage[stage+1], cell.q, cell.r, stage)
 	
 # Return the distance between two coordonates
 #func distance_coord(c1, c2):
@@ -82,15 +95,3 @@ func _instance_cell(cell_type, q, r, stage, playable=true):
 #	var q2 = c2[0]
 #	var r2 = c2[1]
 #	return (abs(q1 - q2) + abs(q1 + r1 - q2 - r2) + abs(r1 - r2)) / 2
-
-#func clear():
-#	for c in cells:
-#		c.change_material('white')
-
-#			var color = grid[q][r]
-#			if color == 'white':
-#				_instance_cell(CellSize1, q, r, 1, color)
-#			elif color == 'black':
-#				var dist = distance_coord(q, r, 0, 0) - RAY_ARENA
-#				var choices = {1: CellSize0, 2: CellSize1, 3:CellSize2}
-#				_instance_cell(choices[dist], q, r, dist-1, color)

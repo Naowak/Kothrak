@@ -1,8 +1,9 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=8 format=2]
 
 [ext_resource path="res://Scripts/Map.gd" type="Script" id=1]
 [ext_resource path="res://Scripts/Playground.gd" type="Script" id=2]
 [ext_resource path="res://Scripts/Camera.gd" type="Script" id=3]
+[ext_resource path="res://Scripts/HTTPRequest.gd" type="Script" id=4]
 
 [sub_resource type="CylinderShape" id=1]
 
@@ -38,3 +39,4 @@ light_energy = 0.5
 shadow_enabled = true
 
 [node name="HTTPRequest" type="HTTPRequest" parent="."]
+script = ExtResource( 4 )

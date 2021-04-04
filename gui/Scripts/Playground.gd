@@ -1,40 +1,41 @@
 extends Spatial
 
-func decode(data):
-	# transform keys to int
-	var new_data = null
-	if typeof(data) == TYPE_DICTIONARY:
-		new_data = {}
-		for key in data.keys():
-			if key.is_valid_integer():
-				new_data[int(key)] = decode(data[key])
-			else:
-				new_data[key] = decode(data[key])
-	elif typeof(data) == TYPE_ARRAY:
-		new_data = []
-		for value in new_data:
-			new_data += [decode(value)]
-	else:
-		new_data = data
-	return new_data
-	
+var gid = null
+
+
 func _ready():
-# warning-ignore:return_value_discarded
-	$HTTPRequest.connect("request_completed", self, "_on_request_completed")
-	$HTTPRequest.request("http://127.0.0.1:5000/new_game")
+	$HTTPRequest.new_game()
 
 
-## API events ##
-# warning-ignore:unused_argument
-# warning-ignore:unused_argument
-# warning-ignore:unused_argument
-func _on_request_completed(result, response_code, headers, body):
-	var data = decode(JSON.parse(body.get_string_from_utf8()).result)
+# Update the game with new data from server
+func _update(data):
+	# New game
+	if gid == null:
+		_new_game(data)
+	# Update current game
+	else:
+		pass
+
+
+
+# Create map and character instances, retrieve some informations
+func _new_game(data):
+	# Informations
+	gid = data['gid']
+	# Instance map
 	$Map.instance_map(data['state']['cells_stage'])
-	$Map.instance_border()
+	# Instance player
+	$Map.instance_player(data['state']['current_player'], 'player')
+	$Map.instance_player(data['state']['opponents'], 'opponent')
+
+
+
+				
+#
+#func find_move(data):
+#	# Find self move
+#	var newg = data['state']['current_player']
+#	var oldg = $Map.g
 	
-## Cell clicked events ##
-func _on_cell_clicked(cell):
-	$Map.grew(cell)
 
 
