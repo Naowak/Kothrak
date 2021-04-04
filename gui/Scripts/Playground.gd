@@ -1,32 +1,40 @@
 extends Spatial
 
-var last_mouse_position = Vector2(-1, -1)
-
-
+func decode(data):
+	# transform keys to int
+	var new_data = null
+	if typeof(data) == TYPE_DICTIONARY:
+		new_data = {}
+		for key in data.keys():
+			if key.is_valid_integer():
+				new_data[int(key)] = decode(data[key])
+			else:
+				new_data[key] = decode(data[key])
+	elif typeof(data) == TYPE_ARRAY:
+		new_data = []
+		for value in new_data:
+			new_data += [decode(value)]
+	else:
+		new_data = data
+	return new_data
+	
 func _ready():
-	pass
+# warning-ignore:return_value_discarded
+	$HTTPRequest.connect("request_completed", self, "_on_request_completed")
+	$HTTPRequest.request("http://127.0.0.1:5000/new_game")
 
 
-## HANDLE CELL CLICKED
+## API events ##
+# warning-ignore:unused_argument
+# warning-ignore:unused_argument
+# warning-ignore:unused_argument
+func _on_request_completed(result, response_code, headers, body):
+	var data = decode(JSON.parse(body.get_string_from_utf8()).result)
+	$Map.instance_map(data['state']['cells_stage'])
+	$Map.instance_border()
+	
+## Cell clicked events ##
 func _on_cell_clicked(cell):
 	$Map.grew(cell)
 
-## HANDLE CAMERA ROTATION ##
-func _process(_delta):
-	var mouse_position = get_viewport().get_mouse_position()
-	if is_rotation_camera_ask(mouse_position):
-		rotate_camera(mouse_position)
-	last_mouse_position = mouse_position
 
-func rotate_camera(mouse_position):
-	if last_mouse_position != Vector2(-1, -1):
-		var center_screen = get_viewport().size/2
-		var vect_last = center_screen - last_mouse_position
-		var vect_current = center_screen - mouse_position
-		var angle = vect_current.angle_to(vect_last)
-		$Map.rotate_y(angle)
-		
-func is_rotation_camera_ask(mouse_position):
-	if Input.is_mouse_button_pressed(BUTTON_RIGHT) and mouse_position != last_mouse_position:
-		return true
-	return false

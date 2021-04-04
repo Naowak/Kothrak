@@ -104,28 +104,37 @@ class Game:
                                         ray=GRID_RAY, with_none=True)
 
         # Height of each cell between 0 and 1
-        cells_stage = [(c.stage - 1)/(MAX_STAGE - 1) if c is not None 
-            else 0 for c in cells]
+        cells_stage = {}
+        for c in cells:
+            if c.q not in cells_stage.keys():
+                cells_stage[c.q] = {}
+            cells_stage[c.q][c.r] = (c.stage - 1)/(MAX_STAGE - 1)
         state['cells_stage'] = cells_stage
 
         # Boolean if cell is taken
-        opponents = []
+        opponents = {}
         for c in cells:
+            if c.q not in opponents.keys():
+                opponents[c.q] = {}
+
             player = self._get_player_on_cell(c)
             if player is not None and player != self.current_player:
-                opponents += [1]
+                opponents[c.q][c.r] = 1
             else:
-                opponents += [0]                
+                opponents[c.q][c.r] = 0                
         state['opponents'] = opponents
 
         # Boolean if current_player is on cell
-        current_player = []
+        current_player = {}
         for c in cells:
+            if c.q not in current_player.keys():
+                current_player[c.q] = {}
+
             player = self._get_player_on_cell(c)
             if player == self.current_player:
-                current_player += [1]
+                current_player[c.q][c.r] = 1
             else:
-                current_player += [0]                
+                current_player[c.q][c.r] = 0                
         state['current_player'] = current_player
 
         return state

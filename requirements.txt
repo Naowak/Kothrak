@@ -1,4 +1,4 @@
-PyQt5==5.15.4
 torch==1.8.0
 torchsummary==1.5.1
 tensorboard==2.4.1
+flask==1.1.2

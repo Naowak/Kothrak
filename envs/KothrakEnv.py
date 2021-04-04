@@ -22,18 +22,18 @@ class KothrakEnv():
         self.num_observations = 3*nb_cells
 
     
-    def reset(self):
+    def reset(self, state_vectorized=True):
         """Reset the environnement for a new game."""
         self.game.new_game()
         self.rewards = {pid: 0 for pid in range(NB_PLAYERS)}
         
-        state, infos = self._get_observation()
+        state, infos = self._get_observation(state_vectorized)
         self._update_rewards(infos)
         
         return state
 
 
-    def step(self, action):
+    def step(self, action, state_vectorized=True):
         """Make an action to the game and return observations, reward, done
         and a list of informations (set to null for now).
         - action : An integer representing the action to make
@@ -43,7 +43,7 @@ class KothrakEnv():
         self.game.play(action_move, action_build)
 
         # Get 
-        state, infos = self._get_observation()
+        state, infos = self._get_observation(state_vectorized)
         rewards = self._update_rewards(infos)
         done = self.game.is_game_over()
 
@@ -56,16 +56,20 @@ class KothrakEnv():
         pass
 
 
-    def _get_observation(self):
+    def vectorize_state(self, state_dict):
+
+        state = []
+        for dico in state_dict.values():
+            state += list(dico.values())
+        return state
+
+
+    def _get_observation(self, state_vectorized=True):
         """Retrieve state and informations from game and return vectorized state.
         """
-        state_dict, infos = self.game.observations()
-        
-        # Vectorize state
-        state = []
-        for v in state_dict.values():
-            state += v
-
+        state, infos = self.game.observations()
+        if state_vectorized:
+            state = self.vectorize_state(state)
         return state, infos
 
 

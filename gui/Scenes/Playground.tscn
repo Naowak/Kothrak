@@ -1,7 +1,8 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=7 format=2]
 
 [ext_resource path="res://Scripts/Map.gd" type="Script" id=1]
 [ext_resource path="res://Scripts/Playground.gd" type="Script" id=2]
+[ext_resource path="res://Scripts/Camera.gd" type="Script" id=3]
 
 [sub_resource type="CylinderShape" id=1]
 
@@ -16,6 +17,7 @@ script = ExtResource( 2 )
 [node name="Camera" type="Camera" parent="."]
 transform = Transform( 1, 0, 0, 0, 0.664539, 0.747253, 0, -0.747253, 0.664539, 0, 20, 20 )
 fov = 40.0
+script = ExtResource( 3 )
 
 [node name="Map" type="Spatial" parent="."]
 script = ExtResource( 1 )
@@ -34,3 +36,5 @@ material/0 = SubResource( 3 )
 transform = Transform( -0.614638, -0.543342, 0.571839, 0.125664, 0.648235, 0.750999, -0.778736, 0.533452, -0.330152, -40, 37.374, -30 )
 light_energy = 0.5
 shadow_enabled = true
+
+[node name="HTTPRequest" type="HTTPRequest" parent="."]
