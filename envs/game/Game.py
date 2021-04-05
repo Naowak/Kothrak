@@ -44,7 +44,11 @@ class Game:
         self._next_player()
 
         # Init infos
-        self._update_infos('playing')
+        settings = self._settings()
+        players_location = self._players_location()
+        self._update_infos('new_game', 
+                            **settings, 
+                            players_location=players_location)
         self.game_over = False
 
 
@@ -88,7 +92,8 @@ class Game:
         cell_build.stage += 1
 
         # Update infos
-        self._update_infos('playing')
+        self._update_infos('playing', move=rel_coord_move, 
+            build=rel_coord_build)
         
         # Prepare next turn
         self._next_player()
@@ -150,6 +155,23 @@ class Game:
         return self.game_over
 
 
+    def _settings(self):
+        """Return the settings of the game.
+        """
+        return {'MAX_STAGE': MAX_STAGE, 'RAY': GRID_RAY, 
+            'NB_PLAYERS': NB_PLAYERS}
+
+
+    def _players_location(self):
+        """Return the location for each player.
+        """
+        players_location = {}
+        for player in self.players:
+            location = [player.cell.q, player.cell.r]
+            players_location[player.id] = location
+        return players_location
+
+
     def _end_game(self, reason):
         """Update self.infos and set self.game_over to True.
         """
@@ -163,9 +185,12 @@ class Game:
         self.game_over = True
 
 
-    def _update_infos(self, status):
+    def _update_infos(self, status, **infos):
+        self.infos = {}
         self.infos['player_id'] = self.current_player.id
         self.infos['status'] = status
+        for k, v in infos.items():
+            self.infos[k] = v
 
 
     def _is_move_correct(self, cell, cell_from):

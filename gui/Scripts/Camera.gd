@@ -20,7 +20,7 @@ func rotate_camera(mouse_position):
 		var vect_last = center_screen - last_mouse_position
 		var vect_current = center_screen - mouse_position
 		var angle = vect_current.angle_to(vect_last)
-		get_parent().get_node('Map').rotate_y(angle)
+		get_parent().get_node('Playground').rotate_y(angle)
 		
 func is_rotation_camera_ask(mouse_position):
 	if Input.is_mouse_button_pressed(BUTTON_RIGHT) and mouse_position != last_mouse_position:

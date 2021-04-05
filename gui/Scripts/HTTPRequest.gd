@@ -14,7 +14,8 @@ func new_game():
 
 # Called when a request is completed : decode data and call _update from Playground
 func _on_request_completed(_result, _response_code, _headers, body):
-	var data = _decode(JSON.parse(body.get_string_from_utf8()).result)
+	var data = JSON.parse(body.get_string_from_utf8()).result
+	data = _decode(data)
 	get_parent()._update(data)
 
 
@@ -30,7 +31,7 @@ func _decode(data):
 				new_data[key] = _decode(data[key])
 	elif typeof(data) == TYPE_ARRAY:
 		new_data = []
-		for value in new_data:
+		for value in data:
 			new_data += [_decode(value)]
 	else:
 		new_data = data

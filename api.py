@@ -45,20 +45,20 @@ def new_game():
     env = KothrakEnv()
     gid = manager.add(env)
 
-    state = env.reset(state_vectorized=False)
-    data = {'gid': gid, 'state': state}
+    _, infos = env.reset()
+    data = {'gid': gid, **infos}
     print(data)
     return data
 
 
-@app.route('/play', methods=['GET'])
-def play():
+# @app.route('/play', methods=['GET'])
+# def play():
 
-    gid, action = retrieve_args(id=int, action=int)
+#     gid, action = retrieve_args(id=int, action=int)
 
-    state, rewards, done, _ = manager[gid].step(action, state_vectorized=False)
+#     state, rewards, done, _ = manager[gid].step(action, state_vectorized=False)
 
-    return {'state': state, 'rewards': rewards, 'done': done}
+#     return {'state': state, 'rewards': rewards, 'done': done}
 
 
 

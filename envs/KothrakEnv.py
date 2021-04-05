@@ -22,18 +22,18 @@ class KothrakEnv():
         self.num_observations = 3*nb_cells
 
     
-    def reset(self, state_vectorized=True):
+    def reset(self):
         """Reset the environnement for a new game."""
         self.game.new_game()
         self.rewards = {pid: 0 for pid in range(NB_PLAYERS)}
         
-        state, infos = self._get_observation(state_vectorized)
+        state, infos = self._get_observation()
         self._update_rewards(infos)
         
-        return state
+        return state, infos
 
 
-    def step(self, action, state_vectorized=True):
+    def step(self, action):
         """Make an action to the game and return observations, reward, done
         and a list of informations (set to null for now).
         - action : An integer representing the action to make
@@ -43,11 +43,11 @@ class KothrakEnv():
         self.game.play(action_move, action_build)
 
         # Get 
-        state, infos = self._get_observation(state_vectorized)
+        state, infos = self._get_observation()
         rewards = self._update_rewards(infos)
         done = self.game.is_game_over()
 
-        return state, rewards, done, {}
+        return state, rewards, done, infos
     
 
     def render(self, mode='human'):
@@ -56,20 +56,13 @@ class KothrakEnv():
         pass
 
 
-    def vectorize_state(self, state_dict):
-
+    def _get_observation(self):
+        """Retrieve state and informations from game and return vectorized state.
+        """
+        state_dict, infos = self.game.observations()
         state = []
         for dico in state_dict.values():
             state += list(dico.values())
-        return state
-
-
-    def _get_observation(self, state_vectorized=True):
-        """Retrieve state and informations from game and return vectorized state.
-        """
-        state, infos = self.game.observations()
-        if state_vectorized:
-            state = self.vectorize_state(state)
         return state, infos
 
 
@@ -77,7 +70,8 @@ class KothrakEnv():
         """Récompense et/ou puni les joueurs en fonction des informations
         de la game.
         """
-        reward_values = {'win': {'player': 100, 'others': 0},  # noqa: F841
+        reward_values = {'new_game': {'player': 0, 'others': 0},
+                        'win': {'player': 100, 'others': 0},  # noqa: F841
                         'eliminated': {'player': -100, 'others': 1},
                         'playing': {'player': 0, 'others': 0}}
 

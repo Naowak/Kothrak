@@ -28,7 +28,7 @@ func init(_q, _r, _stage, _color):
 	
 	if _color == 'white':
 		# warning-ignore:return_value_discarded
-		var playground_node = get_tree().get_root().get_node('Playground/Map')
+		var playground_node = get_tree().get_root().get_node('Main/Playground')
 		connect("cell_clicked", playground_node, 'grow_up', [self])
 
 
