@@ -1,6 +1,6 @@
-from flask import Flask, request  # render_template, jsonify
+from flask import Flask, request, jsonify
 
-from envs.KothrakEnv import KothrakEnv
+from envs.KothrakEnv import KothrakEnv, transform_actions_into_number
 
 
 class Manager():
@@ -28,10 +28,22 @@ def retrieve_args(**args):
     data = []
     for name, cast in args.items():
         if name in request.args:
-            data += [cast(request.args[name])]
+            if cast == 'cell':
+                if request.args[name] == 'Null':
+                    data += [None]
+                else:
+                    data += [[int(x) for x in request.args[name].split(',')]]
+            else:                
+                data += [cast(request.args[name])]
         else:
             raise Exception(f'No arg {name} in request.')
     return data
+
+
+def cors(data):
+    response = jsonify(data)
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 
 
@@ -44,21 +56,18 @@ manager = Manager()
 def new_game():
     env = KothrakEnv()
     gid = manager.add(env)
-
     _, infos = env.reset()
     data = {'gid': gid, **infos}
-    print(data)
-    return data
+    return cors(data)
 
 
-# @app.route('/play', methods=['GET'])
-# def play():
-
-#     gid, action = retrieve_args(id=int, action=int)
-
-#     state, rewards, done, _ = manager[gid].step(action, state_vectorized=False)
-
-#     return {'state': state, 'rewards': rewards, 'done': done}
+@app.route('/play', methods=['GET'])
+def play():
+    gid, move, build = retrieve_args(gid=int, move='cell', build='cell')
+    action = transform_actions_into_number(move, build)
+    _, _, done, infos = manager[gid].step(action)
+    data = {'gid': gid, **infos}
+    return cors(data)
 
 
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import random
 
-from envs.game.Grid import Grid, MAX_STAGE
+from envs.game.Grid import Grid, MAX_STAGE, DIR_COORDS
 
 class Player:
     def __init__(self, _id, _cell):
@@ -47,7 +47,7 @@ class Game:
         settings = self._settings()
         players_location = self._players_location()
         self._update_infos('new_game', 
-                            **settings, 
+                            settings=settings, 
                             players_location=players_location)
         self.game_over = False
 
@@ -91,12 +91,12 @@ class Game:
         # Make the build
         cell_build.stage += 1
 
+        # Prepare next turn
+        self._next_player()
+
         # Update infos
         self._update_infos('playing', move=rel_coord_move, 
             build=rel_coord_build)
-        
-        # Prepare next turn
-        self._next_player()
 
 
     def state(self): 
@@ -155,6 +155,44 @@ class Game:
         return self.game_over
 
 
+    def _get_possible_plays(self):
+        """Return combinaisons of all possibles moves and build.
+        """
+        plays = []
+        for move in DIR_COORDS:
+            for build in DIR_COORDS:
+
+                q_move = self.current_player.cell.q + move[0]
+                r_move = self.current_player.cell.r + move[1]
+                cell_move = self.grid.get_cell_from_coord(q_move, r_move)
+
+                # Move incorrect, next_move
+                if not self._is_move_correct(cell_move, 
+                                                self.current_player.cell):
+                    continue
+
+                # Play won, set build to None
+                if cell_move.stage == MAX_STAGE:
+                    c_move = [cell_move.q, cell_move.r]
+                    c_build = None
+                    plays += [{'move': c_move, 'build': c_build}]
+                    continue
+
+                # Correct move but player didn't win
+                q_build = cell_move.q + build[0]
+                r_build = cell_move.r + build[1]
+                cell_build = self.grid.get_cell_from_coord(q_build, r_build)
+
+                # Correct build, set move and build
+                if self._is_build_correct(cell_build, cell_move):
+                    c_move = [cell_move.q, cell_move.r]
+                    c_build = [cell_build.q, cell_build.r]
+                    plays += [{'move': c_move, 'build': c_build}]
+
+        return plays
+
+
+
     def _settings(self):
         """Return the settings of the game.
         """
@@ -186,9 +224,24 @@ class Game:
 
 
     def _update_infos(self, status, **infos):
+        """Update the informations of the turn. 
+        - status indicate in which state of the game we are
+        a. If status in new_game, player_location inficate the beginning position
+        for all players.
+        b. If the game isn't over (status win or eliminated), then player_id
+        indicates which player is about to play, and possible_plays indicate
+        which plays he can do.
+        c. Else player_id indicate who won or lose the game.
+        d. If status is in playing, move and build are available and indicates
+        the coord of the play.
+        """
         self.infos = {}
         self.infos['player_id'] = self.current_player.id
         self.infos['status'] = status
+
+        if status == 'new_game' or status == 'playing':
+            self.infos['possible_plays'] = self._get_possible_plays()
+        
         for k, v in infos.items():
             self.infos[k] = v
 

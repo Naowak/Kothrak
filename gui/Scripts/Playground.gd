@@ -36,6 +36,20 @@ func instance_map():
 			border_stage += 1
 
 
+# Replace cell instance by the next one (in height)
+func grow_up(cell):
+	var stage = cell.stage + 1
+	if stage > Utils.MAX_STAGE:
+		return
+	cell.queue_free()
+	_instance_cell(CellStage[stage], cell.q, cell.r, stage)
+	
+
+# Change player location
+func move(player_id, cell):
+	players[player_id].move(cell)
+
+
 # Instance one circle around the playble cells
 func _instance_circle(radius, stage, playable):
 	# Initialize directions
@@ -67,23 +81,9 @@ func _instance_cell(cell_type, q, r, stage, playable=true):
 	# Not a playable cell, but a border one
 	else:
 		cell.init(q, r, stage, 'black')
-		
-
-# Retrieve player location from a dictionnary
-func _retrieve_player_location(data):
-	for q in data.keys():
-		for r in data[q].keys():
-			if data[q][r] == 1:
-				return [q, r]
 
 
-func grow_up(cell):
-	var stage = cell.stage + 1
-	if stage >= Utils.MAX_STAGE:
-		return
 
-	cell.queue_free()
-	_instance_cell(CellStage[stage+1], cell.q, cell.r, stage)
 	
 # Return the distance between two coordonates
 #func distance_coord(c1, c2):

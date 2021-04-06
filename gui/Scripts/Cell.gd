@@ -28,8 +28,8 @@ func init(_q, _r, _stage, _color):
 	
 	if _color == 'white':
 		# warning-ignore:return_value_discarded
-		var playground_node = get_tree().get_root().get_node('Main/Playground')
-		connect("cell_clicked", playground_node, 'grow_up', [self])
+		var main_node = get_tree().get_root().get_node('Main')
+		connect("cell_clicked", main_node, '_play', [self])
 
 
 # Change the color of the cell, color must be a string in Utils.materials.keys()

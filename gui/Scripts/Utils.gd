@@ -9,7 +9,7 @@ const TRANS_RIGHT = Vector2(DIST*RATIO, 0)
 const TRANS_DOWNRIGHT = Vector2(DIST*RATIO/2, 3.0*CIRCLE_RAY*RATIO/2)
 
 # Game const
-var MAX_STAGE = 4 
+var MAX_STAGE = 4
 var RAY_ARENA = 2
 var NB_PLAYERS = 2
 

@@ -7,7 +7,6 @@ var color
 
 func _ready():
 	scale = Vector3(0.5, 0.5, 0.5)
-	translation.y = 1
 	_color_black_parts()
 
 
@@ -17,9 +16,22 @@ func init(_q, _r, _color):
 	r = _r
 	color = _color
 	
-	translation.x = q * Utils.TRANS_RIGHT.x + r * Utils.TRANS_DOWNRIGHT.x
-	translation.z = r * Utils.TRANS_DOWNRIGHT.y
+	_translate(q, r, 1)
 	_color_body(color)
+
+
+# Move the player to the cell coordinates
+func move(cell):
+	q = cell.q
+	r = cell.r
+	_translate(q, r, cell.stage)
+
+
+# Make the translation to the coordinates [q, r] and stage
+func _translate(_q, _r, stage):
+	translation.x = _q * Utils.TRANS_RIGHT.x + _r * Utils.TRANS_DOWNRIGHT.x
+	translation.y = 1 + (stage-1)/2
+	translation.z = _r * Utils.TRANS_DOWNRIGHT.y
 
 
 # Color the whole body (exept eyes and mouth) to color

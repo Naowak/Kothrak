@@ -10,6 +10,18 @@ func _ready():
 func new_game():
 	# warning-ignore:return_value_discarded	
 	request("http://127.0.0.1:5000/new_game")
+	
+
+# Request play to the server
+func play(gid, play):
+	var params = 'gid=' + str(gid)
+	params += '&move=' + str(play['move'][0]) + ',' + str(play['move'][1])
+	if play['build'] != null:
+		params += '&build=' + str(play['build'][0]) + ',' + str(play['build'][1])
+	else:
+		params += '&build=' + str(play['build'])
+	# warning-ignore:return_value_discarded
+	request("http://127.0.0.1:5000/play?" + params)
 
 
 # Called when a request is completed : decode data and call _update from Playground
