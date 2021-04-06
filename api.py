@@ -54,8 +54,9 @@ manager = Manager()
 
 @app.route('/new_game', methods=['GET'])
 def new_game():
-    mode, nb_players = retrieve_args(mode=str, nb_players=int)
-    env = KothrakEnv(nb_players)
+    mode, nb_players, grid_ray = retrieve_args(mode=str, 
+                                        nb_players=int, grid_ray=int)
+    env = KothrakEnv(nb_players, grid_ray)
     gid = manager.add(env)
 
     _, infos = env.reset()

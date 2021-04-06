@@ -1,4 +1,4 @@
-from envs.game.Game import Game, GRID_RAY
+from envs.game.Game import Game
 
 def transform_number_into_actions(action):
     coord_actions = [(-1, 0), (-1, 1), (0, 1), (1, 0), (1, -1), (0, -1)]
@@ -27,15 +27,16 @@ def transform_actions_into_number(move, build):
 
 class KothrakEnv():
     
-    def __init__(self, nb_players):
+    def __init__(self, nb_players, grid_ray):
         """Initialize the environnement.
         """
         # Init game and rewards
-        self.game = Game(nb_players)
+        self.game = Game(nb_players, grid_ray)
         self.rewards = {pid: 0 for pid in range(self.game.nb_players)}
 
         # Initialise les actions et observations
-        nb_cells = 3*GRID_RAY**2 + 3*GRID_RAY + 1  # (3n^2 + 3n + 1)
+        # (3n^2 + 3n + 1)
+        nb_cells = 3*self.game.grid_ray**2 + 3*self.game.grid_ray + 1  
         self.num_actions = 6*6
         self.num_observations = 3*nb_cells
 

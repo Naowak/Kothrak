@@ -12,7 +12,9 @@ func request_new_game(mode):
 	
 	if mode == 'PvP':
 		var nb_players = $"../Panel/Control_PvP/SpinBox_nbplayers".value
+		var grid_ray = $"../Panel/Control_PvP/SpinBox_gridray".value
 		params += '&nb_players=' + str(nb_players)
+		params += '&grid_ray=' + str(grid_ray)
 		
 	print(params)
 	# warning-ignore:return_value_discarded	

@@ -9,16 +9,14 @@ class Player:
         self.cell = _cell
 
 
-GRID_RAY = 2
-
-
 class Game:
   
-    def __init__(self, nb_players=2):
+    def __init__(self, nb_players=2, grid_ray=2):
         """Initialize the game.
         - a value between 'relative', 'absolute'
         """ 
         self.nb_players = nb_players
+        self.grid_ray = grid_ray
         # Initialisation des variables
         self.grid = None
         self.current_player = None
@@ -33,7 +31,7 @@ class Game:
         been launched.
         """
         # Initialisation des Cells
-        self.grid = Grid(self, ray=GRID_RAY)
+        self.grid = Grid(self, ray=self.grid_ray)
 
         # Instanciate the players
         cells = random.sample(self.grid.get_all_cells(), self.nb_players)
@@ -106,7 +104,7 @@ class Game:
         state = {}
         cell_from = self.grid.get_cell_from_coord(0, 0)
         cells = self.grid.get_neighbors(cell_from, 
-                                        ray=GRID_RAY, with_none=True)
+                                        ray=self.grid_ray, with_none=True)
 
         # Height of each cell between 0 and 1
         cells_stage = {}
@@ -196,7 +194,7 @@ class Game:
     def _settings(self):
         """Return the settings of the game.
         """
-        return {'MAX_STAGE': MAX_STAGE, 'RAY': GRID_RAY, 
+        return {'MAX_STAGE': MAX_STAGE, 'RAY': self.grid_ray, 
             'NB_PLAYERS': self.nb_players}
 
 

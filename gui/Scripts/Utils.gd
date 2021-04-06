@@ -25,7 +25,7 @@ var materials = {'white': "e6cab8",
 				'grey': 'c6beba'
 				}
 
-var players_colors = ['blue', 'red', 'green']
+var players_colors = ['blue', 'red', 'green', 'grey']
 
 
 func _ready():
