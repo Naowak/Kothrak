@@ -9,16 +9,16 @@ class Player:
         self.cell = _cell
 
 
-NB_PLAYERS = 2
 GRID_RAY = 2
 
 
 class Game:
   
-    def __init__(self):
+    def __init__(self, nb_players=2):
         """Initialize the game.
         - a value between 'relative', 'absolute'
         """ 
+        self.nb_players = nb_players
         # Initialisation des variables
         self.grid = None
         self.current_player = None
@@ -36,11 +36,11 @@ class Game:
         self.grid = Grid(self, ray=GRID_RAY)
 
         # Instanciate the players
-        cells = random.sample(self.grid.get_all_cells(), NB_PLAYERS)
+        cells = random.sample(self.grid.get_all_cells(), self.nb_players)
         self.players = [Player(i, cell) for i, cell in enumerate(cells)]
         
         # Lancement de la partie 
-        self.next_player_id = random.randrange(NB_PLAYERS)
+        self.next_player_id = random.randrange(self.nb_players)
         self._next_player()
 
         # Init infos
@@ -197,7 +197,7 @@ class Game:
         """Return the settings of the game.
         """
         return {'MAX_STAGE': MAX_STAGE, 'RAY': GRID_RAY, 
-            'NB_PLAYERS': NB_PLAYERS}
+            'NB_PLAYERS': self.nb_players}
 
 
     def _players_location(self):
@@ -264,7 +264,7 @@ class Game:
         """Change current_player to the next one.
         """
         self.current_player = self.players[self.next_player_id]
-        self.next_player_id = (self.next_player_id + 1) % NB_PLAYERS
+        self.next_player_id = (self.next_player_id + 1) % self.nb_players
 
 
     def _get_player_on_cell(self, cell):

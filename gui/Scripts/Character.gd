@@ -30,7 +30,7 @@ func move(cell):
 # Make the translation to the coordinates [q, r] and stage
 func _translate(_q, _r, stage):
 	translation.x = _q * Utils.TRANS_RIGHT.x + _r * Utils.TRANS_DOWNRIGHT.x
-	translation.y = 1 + (stage-1)/2
+	translation.y = 1 + float(stage-1)/2
 	translation.z = _r * Utils.TRANS_DOWNRIGHT.y
 
 

@@ -7,14 +7,20 @@ func _ready():
 
 
 # Request new game to the server
-func new_game(mode):
-	# warning-ignore:return_value_discarded
-	var params = 'mode=' + str(mode) 
+func request_new_game(mode):
+	var params = 'mode=' + str(mode)
+	
+	if mode == 'PvP':
+		var nb_players = $"../Panel/Control_PvP/SpinBox_nbplayers".value
+		params += '&nb_players=' + str(nb_players)
+		
+	print(params)
+	# warning-ignore:return_value_discarded	
 	request("http://127.0.0.1:5000/new_game?" + params)
 	
 
 # Request play to the server
-func play(gid, play):
+func request_play(gid, play):
 	var params = 'gid=' + str(gid)
 	params += '&move=' + str(play['move'][0]) + ',' + str(play['move'][1])
 	if play['build'] != null:
@@ -23,6 +29,11 @@ func play(gid, play):
 		params += '&build=' + str(play['build'])
 	# warning-ignore:return_value_discarded
 	request("http://127.0.0.1:5000/play?" + params)
+
+
+# Request the server to make the next play
+func request_watch(gid):
+	pass
 
 
 # Called when a request is completed : decode data and call _update from Playground

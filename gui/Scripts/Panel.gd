@@ -3,17 +3,17 @@ extends Panel
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	# warning-ignore:return_value_discarded
-	$Button_1v1.connect('pressed', self, '_on_control_change', ['1v1'])
+	$Button_PvP.connect('pressed', self, '_on_control_change', ['PvP'])
 	# warning-ignore:return_value_discarded
-	$Button_1vIA.connect('pressed', self, '_on_control_change', ['1vIA'])
+	$Button_PvIA.connect('pressed', self, '_on_control_change', ['PvIA'])
 	# warning-ignore:return_value_discarded
 	$Button_IAvIA.connect('pressed', self, '_on_control_change', ['IAvIA'])
 
 
 func _on_control_change(mode):
-	var buttons = {'1v1': $Button_1v1, '1vIA': $Button_1vIA, 
+	var buttons = {'PvP': $Button_PvP, 'PvIA': $Button_PvIA, 
 		'IAvIA': $Button_IAvIA}
-	var nodes_control = {'1v1': $Control_1v1, '1vIA': $Control_1vIA, 
+	var nodes_control = {'PvP': $Control_PvP, 'PvIA': $Control_PvIA, 
 		'IAvIA': $Control_IAvIA}
 	for name in nodes_control.keys():
 		nodes_control[name].visible = name == mode

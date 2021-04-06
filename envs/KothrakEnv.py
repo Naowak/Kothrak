@@ -1,4 +1,4 @@
-from envs.game.Game import Game, GRID_RAY, NB_PLAYERS
+from envs.game.Game import Game, GRID_RAY
 
 def transform_number_into_actions(action):
     coord_actions = [(-1, 0), (-1, 1), (0, 1), (1, 0), (1, -1), (0, -1)]
@@ -21,18 +21,18 @@ def transform_actions_into_number(move, build):
                 action_build = i
     else:
         action_build = 0
-        
+
     return action_move*len(coord_actions) + action_build
 
 
 class KothrakEnv():
     
-    def __init__(self):
+    def __init__(self, nb_players):
         """Initialize the environnement.
         """
         # Init game and rewards
-        self.game = Game()
-        self.rewards = {pid: 0 for pid in range(NB_PLAYERS)}
+        self.game = Game(nb_players)
+        self.rewards = {pid: 0 for pid in range(self.game.nb_players)}
 
         # Initialise les actions et observations
         nb_cells = 3*GRID_RAY**2 + 3*GRID_RAY + 1  # (3n^2 + 3n + 1)
@@ -43,7 +43,7 @@ class KothrakEnv():
     def reset(self):
         """Reset the environnement for a new game."""
         self.game.new_game()
-        self.rewards = {pid: 0 for pid in range(NB_PLAYERS)}
+        self.rewards = {pid: 0 for pid in range(self.game.nb_players)}
         
         state, infos = self._get_observation()
         self._update_rewards(infos)
@@ -98,7 +98,7 @@ class KothrakEnv():
         status = infos['status']
 
         # Set reward to all players
-        for pid in range(NB_PLAYERS):
+        for pid in range(self.game.nb_players):
             if pid == player_id:
                 self.rewards[pid] = reward_values[status]['player']
             else:

@@ -1,5 +1,8 @@
 extends Spatial
 
+var human_player_id = []
+var ia_player_id = []
+
 var gid = -1
 var player_id = -1
 var possible_plays = []
@@ -10,38 +13,26 @@ var data_to_send = null
 
 func _ready():
 	# warning-ignore:return_value_discarded
-	$Panel/Control_1v1/Button_newgame.connect('pressed', self, '_new_1v1')
+	$Panel/Control_PvP/Button_newgame.connect('pressed', $HTTPRequest, 'request_new_game', ['PvP'])
 	# warning-ignore:return_value_discarded
-	$Panel/Control_1vIA/Button_newgame.connect('pressed', self, '_new_1vIA')
+	$Panel/Control_PvIA/Button_newgame.connect('pressed', $HTTPRequest, 'request_new_game', ['PvIA'])
 
-
-func _new_1v1():
-	$HTTPRequest.new_game('1v1')
-	
-
-func _new_1vIA():
-	$HTTPRequest.new_game('1vIA')
-
-
-#func _new_IAvIA():
-#	$HTTPRequest.new_game('IAvIA')
-	
 
 # Update the game with new data from server
 func _update(data):
-	print(data)
 	# New game
 	if data['status'] == 'new_game':
-		_new_game(data)
+		_new_game_update(data)
 	# Update current game
 	elif data['status'] == 'playing':
-		_playing(data)
+		_playing_update(data)
+	# End of the current game
 	elif data['status'] == 'win' or data['status'] == 'eliminated':
 		print('End of server game')
 
 
 # Create map and character instances, retrieve some informations
-func _new_game(data):
+func _new_game_update(data):
 	# Informations & settings
 	gid = data['gid']
 	Utils.update_settings(data['settings'])
@@ -55,7 +46,7 @@ func _new_game(data):
 	step = 'move'
 
 # Update the game with informations received
-func _playing(data):
+func _playing_update(data):
 	player_id = data['player_id']
 	possible_plays = data['possible_plays']
 	step = 'move'
@@ -64,7 +55,7 @@ func _playing(data):
 # Verify if play is correct and play it. 
 # Send information to the server if turn is over.
 # Called by event cell_clicked
-func _play(cell):
+func _make_play(cell):
 	var valid = false
 	
 	if step == 'move':
@@ -87,7 +78,7 @@ func _play(cell):
 			
 			# If no build possible, the player reach the last stage, he won
 			if possible_plays[0]['build'] == null:
-				$HTTPRequest.play(gid, data_to_send)
+				$HTTPRequest.request_play(gid, data_to_send)
 				step = 'game_over'
 				print('Game Over !')
 	
@@ -101,7 +92,7 @@ func _play(cell):
 				data_to_send['build'] = _to_relative(play['build'])
 		if valid:
 			$Playground.grow_up(cell)
-			$HTTPRequest.play(gid, data_to_send)
+			$HTTPRequest.request_play(gid, data_to_send)
 			step = 'move'
 			
 

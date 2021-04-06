@@ -27,9 +27,10 @@ var materials = {'white': "e6cab8",
 
 var players_colors = ['blue', 'red', 'green']
 
+
 func _ready():
 	_init_materials()
-	
+
 
 # Replace all hex code in materials by their SpatialMaterial instance
 func _init_materials():

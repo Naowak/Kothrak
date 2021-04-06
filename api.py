@@ -54,9 +54,10 @@ manager = Manager()
 
 @app.route('/new_game', methods=['GET'])
 def new_game():
-    mode = retrieve_args(mode=str)
-    env = KothrakEnv()
+    mode, nb_players = retrieve_args(mode=str, nb_players=int)
+    env = KothrakEnv(nb_players)
     gid = manager.add(env)
+
     _, infos = env.reset()
     data = {'gid': gid, 'mode': mode, **infos}
     return cors(data)

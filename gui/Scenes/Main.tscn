@@ -4,7 +4,7 @@
 [ext_resource path="res://Scripts/Playground.gd" type="Script" id=2]
 [ext_resource path="res://Scripts/Main.gd" type="Script" id=3]
 [ext_resource path="res://Scripts/HTTPRequest.gd" type="Script" id=4]
-[ext_resource path="res://Scripts/Panel.gd" type="Script" id=5]
+[ext_resource path="res://Scripts/Panel.gd" type="Script" id=8]
 
 [sub_resource type="CylinderShape" id=1]
 
@@ -46,12 +46,12 @@ script = ExtResource( 4 )
 [node name="Panel" type="Panel" parent="."]
 anchor_right = 0.25
 anchor_bottom = 1.0
-script = ExtResource( 5 )
+script = ExtResource( 8 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="Button_1v1" type="Button" parent="Panel"]
+[node name="Button_PvP" type="Button" parent="Panel"]
 anchor_right = 0.33
 anchor_bottom = 0.1
 toggle_mode = true
@@ -61,7 +61,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="Button_1vIA" type="Button" parent="Panel"]
+[node name="Button_PvIA" type="Button" parent="Panel"]
 anchor_left = 0.33
 anchor_right = 0.67
 anchor_bottom = 0.1
@@ -78,7 +78,7 @@ anchor_bottom = 0.1
 toggle_mode = true
 text = "IA vs IA"
 
-[node name="Control_1v1" type="Control" parent="Panel"]
+[node name="Control_PvP" type="Control" parent="Panel"]
 anchor_top = 0.1
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -86,7 +86,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="Button_newgame" type="Button" parent="Panel/Control_1v1"]
+[node name="Button_newgame" type="Button" parent="Panel/Control_PvP"]
 anchor_left = 0.2
 anchor_top = 0.8
 anchor_right = 0.8
@@ -96,12 +96,37 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="Control_1vIA" type="Control" parent="Panel"]
+[node name="SpinBox_nbplayers" type="SpinBox" parent="Panel/Control_PvP"]
+anchor_left = 0.55
+anchor_top = 0.1
+anchor_right = 0.9
+anchor_bottom = 0.1
+margin_bottom = 24.0
+max_value = 10.0
+value = 2.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Label_nbplayers" type="Label" parent="Panel/Control_PvP"]
+anchor_left = 0.1
+anchor_top = 0.11
+anchor_right = 0.45
+anchor_bottom = 0.14
+text = "nb_players"
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Control_PvIA" type="Control" parent="Panel"]
+visible = false
 anchor_top = 0.1
 anchor_right = 1.0
 anchor_bottom = 1.0
 
-[node name="Button_newgame" type="Button" parent="Panel/Control_1vIA"]
+[node name="Button_newgame" type="Button" parent="Panel/Control_PvIA"]
+visible = false
 anchor_left = 0.2
 anchor_top = 0.8
 anchor_right = 0.8
