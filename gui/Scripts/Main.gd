@@ -9,9 +9,23 @@ var step = ''
 var data_to_send = null
 
 func _ready():
-	print('hello')
-	$HTTPRequest.new_game()
+	# warning-ignore:return_value_discarded
+	$Panel/Control_1v1/Button_newgame.connect('pressed', self, '_new_1v1')
+	# warning-ignore:return_value_discarded
+	$Panel/Control_1vIA/Button_newgame.connect('pressed', self, '_new_1vIA')
 
+
+func _new_1v1():
+	$HTTPRequest.new_game('1v1')
+	
+
+func _new_1vIA():
+	$HTTPRequest.new_game('1vIA')
+
+
+#func _new_IAvIA():
+#	$HTTPRequest.new_game('IAvIA')
+	
 
 # Update the game with new data from server
 func _update(data):

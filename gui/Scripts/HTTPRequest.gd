@@ -7,9 +7,10 @@ func _ready():
 
 
 # Request new game to the server
-func new_game():
-	# warning-ignore:return_value_discarded	
-	request("http://127.0.0.1:5000/new_game")
+func new_game(mode):
+	# warning-ignore:return_value_discarded
+	var params = 'mode=' + str(mode) 
+	request("http://127.0.0.1:5000/new_game?" + params)
 	
 
 # Request play to the server

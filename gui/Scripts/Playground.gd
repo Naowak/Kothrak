@@ -14,6 +14,10 @@ var players = []
 
 # Create all players and place them to their correct location
 func instance_players(players_location):
+	for player in players:
+		player.queue_free()
+	players = []
+		
 	for player_id in players_location.keys():
 		var coord = players_location[player_id]
 		var player = Character.instance()
@@ -24,6 +28,11 @@ func instance_players(players_location):
 
 # Create all cells
 func instance_map():
+	for q in grid.keys():
+		for r in grid[q].keys():
+			grid[q][r].queue_free()
+	grid = {}
+	
 	var border_stage = 0
 	_instance_cell(CellStage[1], 0, 0, 1)
 	for radius in range(Utils.RAY+1):
