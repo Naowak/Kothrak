@@ -24,6 +24,10 @@ config/icon="res://icon.icns"
 
 Utils="*res://Scripts/Utils.gd"
 
+[gui]
+
+theme/custom_font="res://Fonts/Ubuntu-font.tres"
+
 [rendering]
 
 quality/driver/driver_name="GLES2"

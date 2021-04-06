@@ -1,9 +1,10 @@
-[gd_scene load_steps=9 format=2]
+[gd_scene load_steps=10 format=2]
 
 [ext_resource path="res://Scripts/Camera.gd" type="Script" id=1]
 [ext_resource path="res://Scripts/Playground.gd" type="Script" id=2]
 [ext_resource path="res://Scripts/Main.gd" type="Script" id=3]
 [ext_resource path="res://Scripts/HTTPRequest.gd" type="Script" id=4]
+[ext_resource path="res://Scripts/Logs.gd" type="Script" id=5]
 [ext_resource path="res://Scripts/Panel.gd" type="Script" id=8]
 
 [sub_resource type="CylinderShape" id=1]
@@ -56,7 +57,7 @@ anchor_right = 0.33
 anchor_bottom = 0.1
 toggle_mode = true
 pressed = true
-text = "1 vs 1"
+text = "P vs P"
 __meta__ = {
 "_edit_use_anchors_": false
 }
@@ -66,7 +67,7 @@ anchor_left = 0.33
 anchor_right = 0.67
 anchor_bottom = 0.1
 toggle_mode = true
-text = "1 vs IA"
+text = "P vs IA"
 __meta__ = {
 "_edit_use_anchors_": false
 }
@@ -98,11 +99,11 @@ __meta__ = {
 
 [node name="SpinBox_nbplayers" type="SpinBox" parent="Panel/Control_PvP"]
 anchor_left = 0.55
-anchor_top = 0.1
+anchor_top = 0.62
 anchor_right = 0.9
-anchor_bottom = 0.1
+anchor_bottom = 0.62
 margin_bottom = 24.0
-max_value = 10.0
+max_value = 4.0
 value = 2.0
 __meta__ = {
 "_edit_use_anchors_": false
@@ -110,9 +111,11 @@ __meta__ = {
 
 [node name="Label_nbplayers" type="Label" parent="Panel/Control_PvP"]
 anchor_left = 0.1
-anchor_top = 0.11
+anchor_top = 0.62
 anchor_right = 0.45
-anchor_bottom = 0.14
+anchor_bottom = 0.62
+margin_right = 7.62939e-06
+margin_bottom = 24.0
 text = "nb_players"
 valign = 1
 __meta__ = {
@@ -121,11 +124,11 @@ __meta__ = {
 
 [node name="SpinBox_gridray" type="SpinBox" parent="Panel/Control_PvP"]
 anchor_left = 0.55
-anchor_top = 0.15
+anchor_top = 0.7
 anchor_right = 0.9
-anchor_bottom = 0.15
+anchor_bottom = 0.7
 margin_bottom = 24.0
-max_value = 5.0
+max_value = 4.0
 value = 2.0
 __meta__ = {
 "_edit_use_anchors_": false
@@ -133,11 +136,41 @@ __meta__ = {
 
 [node name="Label_gridray" type="Label" parent="Panel/Control_PvP"]
 anchor_left = 0.1
-anchor_top = 0.16
+anchor_top = 0.7
 anchor_right = 0.45
-anchor_bottom = 0.16
+anchor_bottom = 0.7
+margin_right = 7.62939e-06
+margin_bottom = 24.0
 text = "grid_ray"
 valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="LineSep" type="ColorRect" parent="Panel/Control_PvP"]
+anchor_left = 0.05
+anchor_top = 0.6
+anchor_right = 0.95
+anchor_bottom = 0.6
+margin_top = -24.0
+margin_right = 1.52588e-05
+margin_bottom = -23.0
+color = Color( 0.509804, 0.509804, 0.509804, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Logs" type="RichTextLabel" parent="Panel/Control_PvP"]
+anchor_left = 0.1
+anchor_top = 0.05
+anchor_right = 0.9
+anchor_bottom = 0.5
+bbcode_enabled = true
+bbcode_text = "[center]No game running[/center]
+"
+text = "No game running
+"
+script = ExtResource( 5 )
 __meta__ = {
 "_edit_use_anchors_": false
 }

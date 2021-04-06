@@ -29,6 +29,7 @@ func _update(data):
 	# End of the current game
 	elif data['status'] == 'win' or data['status'] == 'eliminated':
 		print('End of server game')
+		$Panel/Control_PvP/Logs.update_text(data['gid'], data['status'], player_id, null)
 
 
 # Create map and character instances, retrieve some informations
@@ -41,15 +42,14 @@ func _new_game_update(data):
 	# Instance player
 	$Playground.instance_players(data['players_location'])
 	# Turn infos
-	player_id = data['player_id']
-	possible_plays = data['possible_plays']
-	step = 'move'
+	_playing_update(data)
 
 # Update the game with informations received
 func _playing_update(data):
 	player_id = data['player_id']
 	possible_plays = data['possible_plays']
 	step = 'move'
+	$Panel/Control_PvP/Logs.update_text(gid, data['status'], player_id, step)
 	
 
 # Verify if play is correct and play it. 
