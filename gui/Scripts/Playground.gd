@@ -8,6 +8,7 @@ var CellStage = {0: preload("res://Scenes/Cells/CellSize1.tscn"),
 				3: preload("res://Scenes/Cells/CellSize4.tscn"),
 				4: preload("res://Scenes/Cells/CellSize5.tscn")}
 
+var cells_border = []
 var grid = {}
 var players = []
 
@@ -32,6 +33,9 @@ func instance_map():
 		for r in grid[q].keys():
 			grid[q][r].queue_free()
 	grid = {}
+	for cell in cells_border:
+		cell.queue_free()
+	cells_border = []
 	
 	var border_stage = 0
 	_instance_cell(CellStage[1], 0, 0, 1)
@@ -90,6 +94,7 @@ func _instance_cell(cell_type, q, r, stage, playable=true):
 	# Not a playable cell, but a border one
 	else:
 		cell.init(q, r, stage, 'black')
+		cells_border += [cell]
 
 
 

@@ -1,7 +1,6 @@
 extends Spatial
 
-var human_player_id = []
-var ia_player_id = []
+var players_kind = []
 
 var gid = -1
 var player_id = -1
@@ -26,36 +25,73 @@ func _update(data):
 	# Update current game
 	elif data['status'] == 'playing':
 		_playing_update(data)
-	# End of the current game
-	elif data['status'] == 'win' or data['status'] == 'eliminated':
-		print('End of server game')
-		$Panel/Control_PvP/Logs.update_text(data['gid'], data['status'], player_id, null)
+	# Player won
+	elif data['status'] == 'win':
+		_win_update(data)
+	# Player eliminated
+	elif data['status'] == 'eliminated':
+		step = 'game_over'
+		_update_logs(data['gid'], data['status'], player_id, step)
 
 
 # Create map and character instances, retrieve some informations
 func _new_game_update(data):
 	# Informations & settings
 	gid = data['gid']
-	Utils.update_settings(data['settings'])
+	Utils.update_server_settings(data['settings'])
 	# Instance map
 	$Playground.instance_map()
 	# Instance player
 	$Playground.instance_players(data['players_location'])
+	_init_players_kind()
 	# Turn infos
 	_playing_update(data)
 
 # Update the game with informations received
 func _playing_update(data):
+	# Retrieve informations from server
 	player_id = data['player_id']
 	possible_plays = data['possible_plays']
 	step = 'move'
-	$Panel/Control_PvP/Logs.update_text(gid, data['status'], player_id, step)
 	
+	# If not new_game and last player was IA, make the play
+	var prev_player_id = fposmod(player_id-1, Utils.NB_PLAYERS)
+	if data['status'] != 'new_game' and players_kind[prev_player_id] == 'IA':
+		# Make the move
+		var abs_move = _to_absolute(data['move'], prev_player_id)
+		$Playground.move(prev_player_id, $Playground.grid[abs_move[0]][abs_move[1]])
+		# Make the build
+		var abs_build = _to_absolute(data['build'], prev_player_id)
+		$Playground.grow_up($Playground.grid[abs_build[0]][abs_build[1]])
+	
+	# Update panel text
+	_update_logs(gid, data['status'], player_id, step)
+	
+	# If next player is IA, request server to play
+	if players_kind[player_id] == 'IA':
+#		yield(self, )
+		$HTTPRequest.request_watch(gid)
+		
 
+# Game over, current player won. 
+# Make the last move if player_id is IA and update_text.
+func _win_update(data):
+	if players_kind[player_id] == 'IA':
+		var abs_move = _to_absolute(data['move'], player_id)
+		$Playground.move(player_id, $Playground.grid[abs_move[0]][abs_move[1]])
+	step = 'game_over'
+	_update_logs(data['gid'], data['status'], player_id, step)
+	
+	
 # Verify if play is correct and play it. 
 # Send information to the server if turn is over.
 # Called by event cell_clicked
 func _make_play(cell):
+	
+	if players_kind[player_id] != 'Person':
+		print("Error: It's not to a Person to play.")
+		return
+	
 	var valid = false
 	
 	if step == 'move':
@@ -71,10 +107,11 @@ func _make_play(cell):
 				
 		# Make the move and send infos to server
 		if valid:
-			data_to_send['move'] = _to_relative([cell.q, cell.r])
+			data_to_send['move'] = _to_relative([cell.q, cell.r], player_id)
 			$Playground.move(player_id, cell)
 			possible_plays = play_remaining
 			step = 'build'
+			_update_logs(gid, 'playing', player_id, step)
 			
 			# If no build possible, the player reach the last stage, he won
 			if possible_plays[0]['build'] == null:
@@ -89,17 +126,48 @@ func _make_play(cell):
 			if coord[0] == cell.q and coord[1] == cell.r:
 				# cell present in possible plays				
 				valid = true
-				data_to_send['build'] = _to_relative(play['build'])
+				data_to_send['build'] = _to_relative(play['build'], player_id)
 		if valid:
 			$Playground.grow_up(cell)
 			$HTTPRequest.request_play(gid, data_to_send)
 			step = 'move'
+
+
+func _init_players_kind():
+	players_kind = []
+	if Utils.MODE == 'PvP':
+		for _i in range(Utils.NB_PLAYERS):
+			players_kind += ['Person']
 			
+	elif Utils.MODE == 'PvIA':
+		for _i in range(Utils.NB_PERSON):
+			players_kind += ['Person']
+		for _i in range(Utils.NB_IA):
+			players_kind += ['IA']
+		players_kind.shuffle()
+	
+	elif Utils.MODE == 'IAvIA':
+		pass
+	
+	print(players_kind)
+
+
+# Update logs corresponding to MODE
+func _update_logs(gid, status, player_id, step):
+	var path_node = 'Panel/Control_' + str(Utils.MODE) + '/Logs'
+	var node = get_node(path_node)
+	node.update_text(gid, status, player_id, step)
+
 
 # Remove the player coordinates to coord
-func _to_relative(coord):
-	return [coord[0] - $Playground.players[player_id].q, 
-		coord[1] - $Playground.players[player_id].r]
+func _to_relative(coord, pid):
+	return [coord[0] - $Playground.players[pid].q, 
+		coord[1] - $Playground.players[pid].r]
+
+# Add the player coordinates to coord
+func _to_absolute(coord, pid):
+	return [coord[0] + $Playground.players[pid].q,
+		coord[1] + $Playground.players[pid].r]
 
 
 

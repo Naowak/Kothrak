@@ -83,7 +83,7 @@ class Game:
 
         # Verify if current player won
         if self.current_player.cell.stage == MAX_STAGE:
-            self._end_game('win')
+            self._end_game('win', move=rel_coord_move)
             return
 
         # Make the build
@@ -208,12 +208,12 @@ class Game:
         return players_location
 
 
-    def _end_game(self, reason):
+    def _end_game(self, reason, move=None):
         """Update self.infos and set self.game_over to True.
         """
         if reason == 'win':
             print(f'{self.current_player.id} won the game.')
-            self._update_infos('win')
+            self._update_infos('win', move=move, build=None)
         else:
             print(f'{self.current_player.id} eliminated : {reason}')
             self._update_infos('eliminated')

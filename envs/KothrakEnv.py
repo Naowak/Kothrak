@@ -37,8 +37,8 @@ class KothrakEnv():
         # Initialise les actions et observations
         # (3n^2 + 3n + 1)
         nb_cells = 3*self.game.grid_ray**2 + 3*self.game.grid_ray + 1  
-        self.num_actions = 6*6
         self.num_observations = 3*nb_cells
+        self.num_actions = 6*6
 
     
     def reset(self):
@@ -82,7 +82,9 @@ class KothrakEnv():
         # Vectorize state
         state = []
         for dico in state_dict.values():
-            state += list(dico.values())
+            for q, values in dico.items():
+                for r in values:
+                    state += [dico[q][r]]
         return state, infos
 
 

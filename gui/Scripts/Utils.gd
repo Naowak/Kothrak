@@ -8,10 +8,15 @@ const RATIO = (DIST + SPACE_BETWEEN)/DIST
 const TRANS_RIGHT = Vector2(DIST*RATIO, 0)
 const TRANS_DOWNRIGHT = Vector2(DIST*RATIO/2, 3.0*CIRCLE_RAY*RATIO/2)
 
-# Game const
+# Server parameters
 var MAX_STAGE = 4
 var RAY_ARENA = 2
 var NB_PLAYERS = 2
+
+# Interface parameters
+var MODE = 'PvP'
+var NB_PERSON = 2
+var NB_IA = 0
 
 var LENGTH_BORDER = 3
 var RAY = RAY_ARENA + LENGTH_BORDER
@@ -41,7 +46,7 @@ func _init_materials():
 		materials[key] = mat
 
 # Replace settings values 
-func update_settings(settings):
+func update_server_settings(settings):
 	for name in settings.keys():
 		if name in 'MAX_STAGE':
 			MAX_STAGE = settings[name]
