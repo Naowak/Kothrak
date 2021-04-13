@@ -50,14 +50,14 @@ func request_play(gid, play):
 	else:
 		params += '&build=' + str(play['build'])
 	# warning-ignore:return_value_discarded
-	request("http://127.0.0.1:5000/play?" + params)
+	request("http://127.0.0.1:5000/human_play?" + params)
 
 
 # Request the server to make the next play
 func request_watch(gid):
 	var params = 'gid=' + str(gid)
 	# warning-ignore:return_value_discarded
-	request('http://127.0.0.1:5000/watch?' + params)
+	request('http://127.0.0.1:5000/agent_play?' + params)
 
 
 # Called when a request is completed : decode data and call _update from Playground
