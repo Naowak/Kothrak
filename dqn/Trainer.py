@@ -1,15 +1,9 @@
-from collections import namedtuple
 from time import sleep
-import random
 import torch
 
 from dqn.Agent import Agent, save_agent
 
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-GameHistory = namedtuple('GameHistory',
-                        ('init_state', 'first_agent', 'actions'))
 
 
 class Trainer():
@@ -43,51 +37,47 @@ class Trainer():
             save_agent(agent)
     
 
-    def replay(self):
-        return self.replay_size.pop(0)
+    def last_replay(self):
+        return self.replay.pop(0)
 
 
     def _run_one_game(self):
         """Play one game with all the agents and record it in self.replay.
         """
-        init_state, _ = self.env.reset()
-        init_state = torch.tensor(init_state, device=device).view(1, -1)
-        first_agent_id = random.randrange(self.nb_agents)
-        actions = []
-
-        state = None
-        action = None
-        next_state = init_state
-        rewards = [0 for _ in range(self.nb_agents)]
         done = False
-
-        current_id = first_agent_id - 1
-        agents_last_play = [None for _ in range(self.nb_agents)]
+        state = None
+        rewards = [0 for _ in range(self.nb_agents)]
+        next_state, infos = self.env.reset()
+        next_state = torch.tensor(next_state, device=device).view(1, -1)
+        
+        agents_plays = [None for _ in range(self.nb_agents)]
+        history = [infos]
+        turn = -1
 
         while not done:
 
             # Get current agent and update state
-            current_id = (current_id+1) % self.nb_agents
+            turn += 1
+            current_id = turn % self.nb_agents
             current_agent = self.agents[current_id]
             state = next_state
 
             # Update current agent if all agents have played and state
-            if None not in agents_last_play:
-                last_state, last_action = agents_last_play[current_id]
-                current_agent.update(last_state, last_action, next_state, 
-                                                rewards[current_id], done)
+            if turn >= self.nb_agents:
+                current_agent.update(*agents_plays[current_id], next_state, 
+                                            rewards[current_id], done)
                 rewards[current_id] = 0
 
             # Move
-            action = current_agent.play(state)
-            actions += [action]
-            agents_last_play[current_id] = (state, action)
+            action = current_agent.play(state, train=True)
+            agents_plays[current_id] = (state, action)
 
-            next_state, agents_reward, done, _ = self.env.step(action.item())
+            next_state, play_reward, done, infos = self.env.step(action.item())
             next_state = torch.tensor(next_state, device=device).view(1, -1)
+            history += [infos]
 
             # Update reward for all agent
-            for k, v in agents_reward.items():
+            for k, v in play_reward.items():
                 rewards[k] += v
           
             # Wait time_to_sleep second so the user can view the state
@@ -96,12 +86,11 @@ class Trainer():
 
         # End of the game, update all agents 
         for i, agent in enumerate(self.agents):
-            last_play = agents_last_play[i]
-            if last_play is not None:
-                agent.update(*last_play, next_state, rewards[i], done)
+            if turn >= i:
+                agent.update(*agents_plays[i], next_state, rewards[i], done)
 
         # Add game to replay
-        self._add_to_replay(init_state, first_agent_id, actions)
+        self._add_to_replay(history)
         
         # Wait time_to_sleep second so the user can view the state
         sleep(self.time_to_sleep)
@@ -118,7 +107,7 @@ class Trainer():
             agent.set_parameters(name=name)
 
 
-    def _add_to_replay(self, init_state, first_agent, actions):
+    def _add_to_replay(self, history):
         """Add a new GameHistory to the replay_buffer, remove the first ones if there
         is no more room in the buffer.
         - init_state : list of values describing the initialisation of the game
@@ -127,10 +116,8 @@ class Trainer():
         """
         if len(self.replay) >= self.replay_size:
             self.replay.pop(0)
-        self.replay += [GameHistory(init_state, first_agent, actions)]
+        self.replay += [history]
 
-
-            
 
 
 def launch_nogui():

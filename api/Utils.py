@@ -1,5 +1,6 @@
 from flask import request, jsonify
 import os
+from collections import namedtuple
 
 from dqn.Agent import load_agent
 
@@ -20,6 +21,9 @@ class Manager():
 
     def __getitem__(self, id_):
         return self.items[id_]
+
+
+TrainSession = namedtuple('TrainSession', ('trainer', 'thread'))
 
 
 def retrieve_args(**args):
@@ -50,7 +54,7 @@ def load_all_agents(saves_directory='saves/'):
     # Verify path
     if not os.path.exists(saves_directory):
         print(f'No directory {saves_directory}, no saves available.')
-        return
+        return {}
 
     if saves_directory[-1] != '/':
         saves_directory += '/'
