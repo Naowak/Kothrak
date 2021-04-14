@@ -28,7 +28,8 @@ class DeepQNetwork(nn.Module):
         """Make a forward pass and return the results (predictions).
         - x : input data
         """
-        layers = [getattr(self, k) for k in self.__dict__['_modules'] if 'fc' in k]
+        layers = [getattr(self, k) 
+                        for k in self.__dict__['_modules'] if 'fc' in k]
         
         for layer in layers[:-1]:
             x = F.relu(layer(x))

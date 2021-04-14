@@ -1,7 +1,7 @@
 from flask import request, jsonify
 import os
 
-from dqn.Agent import Agent
+from dqn.Agent import load_agent
 
 class Manager():
 
@@ -46,13 +46,20 @@ def cors(data):
     return response
 
 
-def load_agents(saves_directory='saves/'):
+def load_all_agents(saves_directory='saves/'):
     # Verify path
     if not os.path.exists(saves_directory):
         print(f'No directory {saves_directory}, no saves available.')
         return
 
+    if saves_directory[-1] != '/':
+        saves_directory += '/'
+
     # Load all agents
-    agents = []
+    agents = {}
     for filename in os.listdir(saves_directory):
-        agent = 
+        path = saves_directory + filename
+        agent = load_agent(path)
+        agents[agent.name] = agent
+
+    return agents
