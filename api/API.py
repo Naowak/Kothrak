@@ -1,9 +1,10 @@
 from flask import Flask
 import torch
 from threading import Thread
+from time import sleep
 
 from envs.KothrakEnv import KothrakEnv, transform_actions_into_number
-from api.Utils import Manager, TrainSession, retrieve_args, cors, \
+from api.Utils import Manager, Training, retrieve_args, cors, \
     load_all_agents
 from dqn.Trainer import Trainer
 
@@ -11,7 +12,7 @@ from dqn.Trainer import Trainer
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 api = Flask(__name__)
 games = Manager()
-train_sessions = Manager()
+trainings = Manager()
 agents = load_all_agents()
 
 
@@ -58,12 +59,13 @@ def human_play():
 
 @api.route('/train', methods=['GET'])
 def train():  # Il faudra la mettre dans un truc qui permet de parallèliser
-    env = KothrakEnv(2, 2)
+    nb_agents, grid_ray = retrieve_args(nb_agents=int, grid_ray=int)
+    env = KothrakEnv(nb_agents, grid_ray)
     trainer = Trainer(env)
 
     thread = Thread(target=trainer.run)
-    session = TrainSession(trainer=trainer, thread=thread)
-    tid = train_sessions.add(session)
+    session = Training(trainer=trainer, thread=thread)
+    tid = trainings.add(session)
 
     thread.start()  # THREAD AND TRAINERS NEEDS TO BE KILLED
 
@@ -74,7 +76,9 @@ def train():  # Il faudra la mettre dans un truc qui permet de parallèliser
 @api.route('/watch_training', methods=['GET'])
 def watch_training():
     [tid] = retrieve_args(tid=int)
-    game_history = train_sessions[tid].trainer.last_replay()
+    while len(trainings[tid].trainer.replay) == 0:
+        sleep(0.1)
+    game_history = trainings[tid].trainer.last_replay()
     data = {'tid': tid, 'status': 'watch', 'history': game_history}
     return cors(data)
 

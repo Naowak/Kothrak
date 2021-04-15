@@ -7,7 +7,7 @@ func _ready():
 
 
 # Request new game to the server
-func request_new_game(mode):
+func request_new_session(mode):
 	# Change mode 
 	Utils.MODE = mode
 	
@@ -19,30 +19,42 @@ func request_new_game(mode):
 		params += 'nb_players=' + str(nb_players)
 		params += '&grid_ray=' + str(grid_ray)
 		Utils.NB_PERSON = nb_players
-		Utils.NB_IA = 0
+		Utils.NB_AGENTS = 0
+		# warning-ignore:return_value_discarded	
+		request("http://127.0.0.1:5000/new_game?" + params)
 		
 	elif mode == 'PvIA':
 		var nb_person = $"../Panel/Control_PvIA/SpinBox_nbperson".value
 		var grid_ray = $"../Panel/Control_PvIA/SpinBox_gridray".value
-		var nb_ia = $"../Panel/Control_PvIA/SpinBox_nbIA".value
-		if nb_person + nb_ia > 4:
+		var nb_agents = $"../Panel/Control_PvIA/SpinBox_nbIA".value
+		if nb_person + nb_agents > 4:
 			print('Error: you ask for more than 4 players.')
 			return
-		params += 'nb_players=' + str(nb_person + nb_ia)
+		params += 'nb_players=' + str(nb_person + nb_agents)
 		params += '&grid_ray=' + str(grid_ray)
 		Utils.NB_PERSON = nb_person
-		Utils.NB_IA = nb_ia
+		Utils.NB_AGENTS = nb_agents
+		# warning-ignore:return_value_discarded	
+		request("http://127.0.0.1:5000/new_game?" + params)
 	
 	elif mode == 'IAvIA':
-		pass
-	
+		var nb_agents = $"../Panel/Control_IAvIA/SpinBox_nbagents".value
+		var grid_ray = $"../Panel/Control_PvIA/SpinBox_gridray".value
+		if nb_agents > 4:
+			print('Error: you ask for more than 4 players.')
+			return
+		params += 'nb_agents=' + str(nb_agents)
+		params += '&grid_ray=' + str(grid_ray)
+		Utils.NB_PERSON = 0
+		Utils.NB_AGENTS = nb_agents
+		# warning-ignore:return_value_discarded
+		request("http://127.0.0.1:5000/train?" + params)
+		
 	print(params)
-	# warning-ignore:return_value_discarded	
-	request("http://127.0.0.1:5000/new_game?" + params)
-	
+
 
 # Request play to the server
-func request_play(gid, play):
+func request_human_play(gid, play):
 	var params = 'gid=' + str(gid)
 	params += '&move=' + str(play['move'][0]) + ',' + str(play['move'][1])
 	if play['build'] != null:
@@ -54,10 +66,17 @@ func request_play(gid, play):
 
 
 # Request the server to make the next play
-func request_watch(gid):
+func request_agent_play(gid):
 	var params = 'gid=' + str(gid)
 	# warning-ignore:return_value_discarded
 	request('http://127.0.0.1:5000/agent_play?' + params)
+
+
+# Request the server to get the history of last game
+func request_watch_training(tid):
+	var params = 'tid=' + str(tid)
+	# warning-ignore:return_value_discarded
+	request('http://127.0.0.1:5000/watch_training?' + params)
 
 
 # Called when a request is completed : decode data and call _update from Playground

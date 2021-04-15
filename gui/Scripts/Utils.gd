@@ -16,7 +16,7 @@ var NB_PLAYERS = 2
 # Interface parameters
 var MODE = 'PvP'
 var NB_PERSON = 2
-var NB_IA = 0
+var NB_AGENTS = 0
 
 var LENGTH_BORDER = 3
 var RAY = RAY_ARENA + LENGTH_BORDER

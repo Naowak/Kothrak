@@ -18,4 +18,4 @@ if __name__ == '__main__':
     #     launch_nogui()
 
     if RUN == 'API':
-        api.run(debug=True)
+        api.run()

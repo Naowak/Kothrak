@@ -23,7 +23,7 @@ class Manager():
         return self.items[id_]
 
 
-TrainSession = namedtuple('TrainSession', ('trainer', 'thread'))
+Training = namedtuple('Training', ('trainer', 'thread'))
 
 
 def retrieve_args(**args):

@@ -7,18 +7,22 @@ var player_id = -1
 var possible_plays = []
 var step = ''
 
+var tid = -1
+
 # usefull for play
 var data_to_send = null
 
 func _ready():
 	# warning-ignore:return_value_discarded
-	$Panel/Control_PvP/Button_newgame.connect('pressed', $HTTPRequest, 'request_new_game', ['PvP'])
+	$Panel/Control_PvP/Button_newgame.connect('pressed', $HTTPRequest, 'request_new_session', ['PvP'])
 	# warning-ignore:return_value_discarded
-	$Panel/Control_PvIA/Button_newgame.connect('pressed', $HTTPRequest, 'request_new_game', ['PvIA'])
-
+	$Panel/Control_PvIA/Button_newgame.connect('pressed', $HTTPRequest, 'request_new_session', ['PvIA'])
+	# warning-ignore:return_value_discarded
+	$Panel/Control_IAvIA/Button_newtrain.connect('pressed', $HTTPRequest, 'request_new_session', ['IAvIA'])
 
 # Update the game with new data from server
 func _update(data):
+	print(data)
 	# New game
 	if data['status'] == 'new_game':
 		_new_game_update(data)
@@ -31,13 +35,27 @@ func _update(data):
 	# Player eliminated
 	elif data['status'] == 'eliminated':
 		step = 'game_over'
-		_update_logs(data['gid'], data['status'], player_id, step)
+		_update_logs(gid, data['status'], player_id, step)
+	
+	# Status received for trainings
+	# New training
+	elif data['status'] == 'start':
+		tid = data['tid']
+		$HTTPRequest.request_watch_training(tid)
+	# New game to watch
+	elif data['status'] == 'watch':
+		for infos in data['history']:
+			_update(infos)
+			yield(get_tree().create_timer(1.0), "timeout")
+		$HTTPRequest.request_watch_training(tid)
+	# ADD ELIF WHERE TRAIN IS OVER
 
 
 # Create map and character instances, retrieve some informations
 func _new_game_update(data):
 	# Informations & settings
-	gid = data['gid']
+	if Utils.MODE in ['PvP', 'PvIA']:
+		gid = data['gid']
 	Utils.update_server_settings(data['settings'])
 	# Instance map
 	$Playground.instance_map()
@@ -68,8 +86,7 @@ func _playing_update(data):
 	_update_logs(gid, data['status'], player_id, step)
 	
 	# If next player is IA, request server to play
-	if players_kind[player_id] == 'IA':
-#		yield(self, )
+	if Utils.MODE == 'PvIA' and players_kind[player_id] == 'IA':
 		$HTTPRequest.request_watch(gid)
 		
 
@@ -80,8 +97,9 @@ func _win_update(data):
 		var abs_move = _to_absolute(data['move'], player_id)
 		$Playground.move(player_id, $Playground.grid[abs_move[0]][abs_move[1]])
 	step = 'game_over'
-	_update_logs(data['gid'], data['status'], player_id, step)
+	_update_logs(gid, data['status'], player_id, step)
 	
+
 	
 # Verify if play is correct and play it. 
 # Send information to the server if turn is over.
@@ -115,7 +133,7 @@ func _make_play(cell):
 			
 			# If no build possible, the player reach the last stage, he won
 			if possible_plays[0]['build'] == null:
-				$HTTPRequest.request_play(gid, data_to_send)
+				$HTTPRequest.request_human_play(gid, data_to_send)
 				step = 'game_over'
 				print('Game Over !')
 	
@@ -129,7 +147,7 @@ func _make_play(cell):
 				data_to_send['build'] = _to_relative(play['build'], player_id)
 		if valid:
 			$Playground.grow_up(cell)
-			$HTTPRequest.request_play(gid, data_to_send)
+			$HTTPRequest.request_human_play(gid, data_to_send)
 			step = 'move'
 
 
@@ -142,21 +160,22 @@ func _init_players_kind():
 	elif Utils.MODE == 'PvIA':
 		for _i in range(Utils.NB_PERSON):
 			players_kind += ['Person']
-		for _i in range(Utils.NB_IA):
+		for _i in range(Utils.NB_AGENTS):
 			players_kind += ['IA']
 		players_kind.shuffle()
 	
 	elif Utils.MODE == 'IAvIA':
-		pass
+		for _i in range(Utils.NB_AGENTS):
+			players_kind += ['IA']
 	
 	print(players_kind)
 
 
 # Update logs corresponding to MODE
-func _update_logs(gid, status, player_id, step):
+func _update_logs(_gid, _status, _player_id, _step):
 	var path_node = 'Panel/Control_' + str(Utils.MODE) + '/Logs'
 	var node = get_node(path_node)
-	node.update_text(gid, status, player_id, step)
+	node.update_text(_gid, _status, _player_id, _step)
 
 
 # Remove the player coordinates to coord
