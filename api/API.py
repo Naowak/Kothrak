@@ -62,7 +62,7 @@ def human_play():
     gid, move, build = retrieve_args(gid=int, move='cell', build='cell')
     game = games[gid]
     if game is None:
-        return cors({'Error': f'Game {gid} does not exist.'})
+        return cors({'status': 'GameIDError'})
 
     action = transform_actions_into_number(move, build)
     _, _, done, infos = game.step(action)
@@ -100,7 +100,7 @@ def watch_training():
     [tid] = retrieve_args(tid=int)
     training = trainings[tid]
     if training is None:
-        return cors({'Error', f'Training {tid} does not exist.'})
+        return cors({'status': 'TrainingIDError'})
 
     while len(training.trainer.replay) == 0:
         sleep(0.1)
@@ -114,7 +114,6 @@ if __name__ == "__main__":
     api.run(debug=True)
 
     # On the godot part : 
-    # - not ask to replay if training is over
     # - make him play against an ai correctly by choosing an opponent in the list
     # then :
     # - pass to multi task (12 actions 2*6, sum of loss)

@@ -48,7 +48,9 @@ func _update(data):
 			_update(infos)
 			yield(get_tree().create_timer(1.0), "timeout")
 		$HTTPRequest.request_watch_training(tid)
-	# ADD ELIF WHERE TRAIN IS OVER
+	# Training over
+	elif data['status'] == 'TrainingIDError':
+		_update_logs(-1, data['status'], -1, 'Training Over')
 
 
 # Create map and character instances, retrieve some informations
