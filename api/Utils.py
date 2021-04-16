@@ -19,8 +19,10 @@ class Manager():
         self.ids += [id_]
 
     def __getitem__(self, id_):
-        return self.items[id_]
-
+        try: 
+            return self.items[id_]
+        except KeyError:
+            return None
 
 class Training():
     def __init__(self, trainer=None, thread=None):

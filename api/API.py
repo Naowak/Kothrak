@@ -20,7 +20,8 @@ agents = load_all_agents()
 def agents_infos():
     global agents
     new_agents = load_all_agents(agents)
-    data = {'names': list({**agents, **new_agents}.keys())}
+    agents.update(new_agents)
+    data = {'names': list(agents.keys())}
     return cors(data)
 
 
@@ -38,11 +39,15 @@ def new_game():
 @api.route('/agent_play', methods=['GET'])
 def agent_play():
     gid, agent_name = retrieve_args(gid=int, agent_name=str)
-    state, _ = games[gid]._get_observation()
+    game = games[gid]
+    if game is None:
+        return cors({'Error': f'Game {gid} does not exist.'})
+
+    state, _ = game._get_observation()
     state = torch.tensor(state, device=device).view(1, -1)
 
     action = agents[agent_name].play(state)
-    _, _, done, infos = games[gid].step(action)
+    _, _, done, infos = game.step(action)
 
     if done:
         games.remove(gid)
@@ -55,8 +60,12 @@ def agent_play():
 @api.route('/human_play', methods=['GET'])
 def human_play():
     gid, move, build = retrieve_args(gid=int, move='cell', build='cell')
+    game = games[gid]
+    if game is None:
+        return cors({'Error': f'Game {gid} does not exist.'})
+
     action = transform_actions_into_number(move, build)
-    _, _, done, infos = games[gid].step(action)
+    _, _, done, infos = game.step(action)
 
     if done:
         games.remove(gid)
@@ -73,11 +82,13 @@ def train():
     session.trainer = Trainer(env)
     tid = trainings.add(session)
 
-    def task(trainer, tid):
+    def task(trainer, tid, agents):
         trainer.run()
         trainings.remove(tid)
+        new_agents = load_all_agents()
+        agents.update(new_agents)
 
-    session.thread = Thread(target=task, args=(session.trainer, tid))
+    session.thread = Thread(target=task, args=(session.trainer, tid, agents))
     session.thread.start()
 
     data = {'tid': tid, 'status': 'start'}
@@ -87,9 +98,13 @@ def train():
 @api.route('/watch_training', methods=['GET'])
 def watch_training():
     [tid] = retrieve_args(tid=int)
-    while len(trainings[tid].trainer.replay) == 0:
+    training = trainings[tid]
+    if training is None:
+        return cors({'Error', f'Training {tid} does not exist.'})
+
+    while len(training.trainer.replay) == 0:
         sleep(0.1)
-    game_history = trainings[tid].trainer.last_replay()
+    game_history = training.trainer.last_replay()
     data = {'tid': tid, 'status': 'watch', 'history': game_history}
     return cors(data)
 
@@ -98,9 +113,6 @@ def watch_training():
 if __name__ == "__main__":
     api.run(debug=True)
 
-    # Error managing :
-    # Games and trainings disapear, it should return a message on the page instead
-    # of an error 500
     # On the godot part : 
     # - not ask to replay if training is over
     # - make him play against an ai correctly by choosing an opponent in the list
@@ -108,3 +120,4 @@ if __name__ == "__main__":
     # - pass to multi task (12 actions 2*6, sum of loss)
     # - a character loose if no play possible (empty list)
     # - blender work (color tower), create character
+
