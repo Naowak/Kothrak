@@ -19,12 +19,23 @@ func _ready():
 	$Panel/Control_PvIA/Button_newgame.connect('pressed', $HTTPRequest, 'request_new_session', ['PvIA'])
 	# warning-ignore:return_value_discarded
 	$Panel/Control_IAvIA/Button_newtrain.connect('pressed', $HTTPRequest, 'request_new_session', ['IAvIA'])
+	# warning-ignore:return_value_discarded
+	$Panel/Control_PvIA/ButtonReloadAgents.connect('pressed', $HTTPRequest, 'request_agents_infos', [])
 
 # Update the game with new data from server
 func _update(data):
-	print(data)
+#	print(data)
+
+	if not 'status' in data.keys():
+		print('No return from server.')
+		return
+	
+	# For informations update with server
+	if data['status'] == 'agents_infos':
+		$Panel._update_agents_infos(data['names'])
+	
 	# New game
-	if data['status'] == 'new_game':
+	elif data['status'] == 'new_game':
 		_new_game_update(data)
 	# Update current game
 	elif data['status'] == 'playing':

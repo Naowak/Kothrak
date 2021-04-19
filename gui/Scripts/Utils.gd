@@ -12,6 +12,7 @@ const TRANS_DOWNRIGHT = Vector2(DIST*RATIO/2, 3.0*CIRCLE_RAY*RATIO/2)
 var MAX_STAGE = 4
 var RAY_ARENA = 2
 var NB_PLAYERS = 2
+var AGENTS_NAME = []
 
 # Interface parameters
 var MODE = 'PvP'

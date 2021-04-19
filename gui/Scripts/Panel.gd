@@ -19,3 +19,9 @@ func _on_control_change(mode):
 		nodes_control[name].visible = name == mode
 		buttons[name].pressed = name == mode
 	
+
+func _update_agents_infos(names):
+	Utils.AGENTS_NAME = names
+	$Control_PvIA/OptionButton.clear()
+	for name in names:
+		$Control_PvIA/OptionButton.add_item(name)

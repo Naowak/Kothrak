@@ -6,6 +6,11 @@ func _ready():
 	connect("request_completed", self, "_on_request_completed")
 
 
+# Request agents infos to server
+func request_agents_infos():
+	# warning-ignore:return_value_discarded
+	request('http://127.0.0.1:5000/agents_infos')
+
 # Request new game to the server
 func request_new_session(mode):
 	# Change mode 
@@ -81,7 +86,12 @@ func request_watch_training(tid):
 
 # Called when a request is completed : decode data and call _update from Playground
 func _on_request_completed(_result, _response_code, _headers, body):
-	var data = JSON.parse(body.get_string_from_utf8()).result
+	var msg = body.get_string_from_utf8()
+	var data = null
+	if len(msg) > 0:
+		data = JSON.parse(msg).result
+	else:
+		data = {}
 	data = _decode(data)
 	get_parent()._update(data)
 
