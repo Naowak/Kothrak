@@ -19,6 +19,7 @@ var TIME_TO_SLEEP = 0.5
 var MODE = 'PvP'
 var NB_PERSON = 2
 var NB_AGENTS = 0
+var PLAYER_NAMES = []
 
 var LENGTH_BORDER = 3
 var RAY = RAY_ARENA + LENGTH_BORDER

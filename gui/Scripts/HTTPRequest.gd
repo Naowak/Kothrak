@@ -25,6 +25,9 @@ func request_new_session(mode):
 		params += '&grid_ray=' + str(grid_ray)
 		Utils.NB_PERSON = nb_players
 		Utils.NB_AGENTS = 0
+		Utils.PLAYER_NAMES = []
+		for i in range(nb_players):
+			Utils.PLAYER_NAMES.append('Player_' + str(i))
 		# warning-ignore:return_value_discarded	
 		request("http://127.0.0.1:5000/new_game?" + params)
 		
@@ -39,6 +42,11 @@ func request_new_session(mode):
 		params += '&grid_ray=' + str(grid_ray)
 		Utils.NB_PERSON = nb_person
 		Utils.NB_AGENTS = nb_agents
+		Utils.PLAYER_NAMES = []
+		for i in range(nb_person):
+			Utils.PLAYER_NAMES.append('Person_' + str(i))
+		for i in range(nb_agents):
+			Utils.PLAYER_NAMES.append('Agent_' + str(i))
 		# warning-ignore:return_value_discarded	
 		request("http://127.0.0.1:5000/new_game?" + params)
 	
@@ -57,6 +65,9 @@ func request_new_session(mode):
 		params += '&agent_names=' + names
 		Utils.NB_PERSON = 0
 		Utils.NB_AGENTS = nb_agents
+		Utils.PLAYER_NAMES = []
+		for n in names.split(','):
+			Utils.PLAYER_NAMES.append(n.strip_edges())
 		# warning-ignore:return_value_discarded
 		request("http://127.0.0.1:5000/train?" + params)
 		

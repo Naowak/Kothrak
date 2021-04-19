@@ -12,17 +12,17 @@ func update_text(gid, status, player_id, step):
 		for i in range(Utils.NB_PLAYERS):
 			var color = Utils.players_colors[i]
 			if i == player_id:
-				text += '[color=' + color + ']Player ' + str(i) + ' *[/color]\n'
+				text += '[color=' + color + ']' + Utils.PLAYER_NAMES[i] + ' *[/color]\n'
 			else:
-				text += '[color=' + color + ']Player ' + str(i) + '[/color]\n'
+				text += '[color=' + color + ']' + Utils.PLAYER_NAMES[i] + '[/color]\n'
 	
 	elif status == 'win':
 		var color = Utils.players_colors[player_id]
-		text += '[color='+color+']Player '+str(player_id)+' won[/color]'
+		text += '[color='+color+']'+Utils.PLAYER_NAMES[player_id]+' won[/color]'
 	
 	elif status == 'eliminated':
 		var color = Utils.players_colors[player_id]
-		text += '[color='+color+']Player '+str(player_id)+' is eliminated[/color]'
+		text += '[color='+color+']'+Utils.PLAYER_NAMES[player_id]+' is eliminated[/color]'
 		
 	bbcode_text = text
 			
