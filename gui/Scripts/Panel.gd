@@ -22,6 +22,6 @@ func _on_control_change(mode):
 
 func _update_agents_infos(names):
 	Utils.AGENTS_NAME = names
-	$Control_PvIA/OptionButton.clear()
+	$Control_PvIA/OptionButtonAgent.clear()
 	for name in names:
-		$Control_PvIA/OptionButton.add_item(name)
+		$Control_PvIA/OptionButtonAgent.add_item(name)

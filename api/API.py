@@ -114,7 +114,6 @@ if __name__ == "__main__":
     api.run(debug=True)
 
     # On the godot part : 
-    # - probleme: update agents multiple times + client ask it to early (nt time to load)
     # - make him play against an ai correctly by choosing an opponent in the list
     # then :
     # - pass to multi task (12 actions 2*6, sum of loss)

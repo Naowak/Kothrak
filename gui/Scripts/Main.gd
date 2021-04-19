@@ -100,7 +100,8 @@ func _playing_update(data):
 	
 	# If next player is IA, request server to play
 	if Utils.MODE == 'PvIA' and players_kind[player_id] == 'IA':
-		$HTTPRequest.request_watch(gid)
+		var agent_name = $Panel/Control_PvIA/OptionButtonAgent.text
+		$HTTPRequest.request_agent_play(gid, agent_name)
 		
 
 # Game over, current player won. 

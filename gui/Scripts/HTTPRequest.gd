@@ -71,8 +71,9 @@ func request_human_play(gid, play):
 
 
 # Request the server to make the next play
-func request_agent_play(gid):
+func request_agent_play(gid, agent_name):
 	var params = 'gid=' + str(gid)
+	params += '&agent_name=' + str(agent_name)
 	# warning-ignore:return_value_discarded
 	request('http://127.0.0.1:5000/agent_play?' + params)
 
@@ -90,7 +91,7 @@ func _on_request_completed(_result, _response_code, _headers, body):
 	var data = null
 	if len(msg) > 0:
 		data = JSON.parse(msg).result
-	else:
+	if data == null:
 		data = {}
 	data = _decode(data)
 	get_parent()._update(data)
