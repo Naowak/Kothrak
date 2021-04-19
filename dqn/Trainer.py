@@ -8,8 +8,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Trainer():
 
-    def __init__(self, env, nb_agents=2, nb_games=2000, time_to_sleep=0,
-            replay_size=20):
+    def __init__(self, env, agent_names=None, nb_agents=2, nb_games=2000, 
+            time_to_sleep=0, replay_size=20):
         """Initialize the Trainer.
         - env : KothrakEnv instance
         """ 
@@ -22,7 +22,7 @@ class Trainer():
 
         # agents
         self.agents = None
-        self._init_agents()
+        self._init_agents(agent_names)
 
 
     def run(self):
@@ -96,15 +96,21 @@ class Trainer():
         sleep(self.time_to_sleep)
 
 
-    def _init_agents(self):
+    def _init_agents(self, agent_names):
         """Create agents and give them names.
         """
-        self.agents = [Agent(self.env.num_observations, self.env.num_actions) 
-            for _ in range(self.nb_agents)]
+        if agent_names is None:
+            self.agents = [Agent(self.env.num_observations, 
+                self.env.num_actions) for _ in range(self.nb_agents)]
 
-        for i, agent in enumerate(self.agents):
-            name = agent.name + f'--{i}'
-            agent.set_parameters(name=name)
+            for i, agent in enumerate(self.agents):
+                name = agent.name + f'--{i}'
+                agent.set_parameters(name=name)
+
+        else:
+            self.agents = [Agent(self.env.num_observations, 
+                self.env.num_actions, name=agent_names[i]) 
+                for i in range(self.nb_agents)]
 
 
     def _add_to_replay(self, history):

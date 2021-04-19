@@ -1,5 +1,7 @@
 extends Panel
 
+var training_agents = []
+
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	# warning-ignore:return_value_discarded

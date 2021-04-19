@@ -182,9 +182,7 @@ func _init_players_kind():
 		for _i in range(Utils.NB_AGENTS):
 			players_kind += ['IA']
 	
-	print(players_kind)
-
-
+	
 # Update logs corresponding to MODE
 func _update_logs(_gid, _status, _player_id, _step):
 	var path_node = 'Panel/Control_' + str(Utils.MODE) + '/Logs'

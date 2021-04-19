@@ -349,9 +349,13 @@ __meta__ = {
 
 [node name="SpinBox_nbagents" type="SpinBox" parent="Panel/Control_IAvIA"]
 anchor_left = 0.5
-anchor_top = 0.5
+anchor_top = 0.58
 anchor_right = 0.85
-anchor_bottom = 0.55
+anchor_bottom = 0.63
+margin_left = -1.10803
+margin_top = -1.10803
+margin_right = -1.10803
+margin_bottom = 1.89194
 min_value = 1.0
 max_value = 4.0
 value = 2.0
@@ -361,9 +365,9 @@ __meta__ = {
 
 [node name="Label_nbagents" type="Label" parent="Panel/Control_IAvIA"]
 anchor_left = 0.05
-anchor_top = 0.5
+anchor_top = 0.58
 anchor_right = 0.45
-anchor_bottom = 0.55
+anchor_bottom = 0.63
 margin_left = 0.2
 margin_right = -0.199997
 text = "NB Agents"
@@ -374,9 +378,9 @@ __meta__ = {
 
 [node name="SpinBox_gridray" type="SpinBox" parent="Panel/Control_IAvIA"]
 anchor_left = 0.5
-anchor_top = 0.58
+anchor_top = 0.5
 anchor_right = 0.85
-anchor_bottom = 0.63
+anchor_bottom = 0.55
 min_value = 1.0
 max_value = 4.0
 value = 2.0
@@ -386,9 +390,9 @@ __meta__ = {
 
 [node name="Label_gridray" type="Label" parent="Panel/Control_IAvIA"]
 anchor_left = 0.05
-anchor_top = 0.58
+anchor_top = 0.5
 anchor_right = 0.45
-anchor_bottom = 0.63
+anchor_bottom = 0.55
 margin_right = 7.62939e-06
 text = "Grid Ray"
 valign = 1
@@ -419,6 +423,29 @@ bbcode_text = "[center]No game running[/center]
 text = "No game running
 "
 script = ExtResource( 5 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Label" type="Label" parent="Panel/Control_IAvIA"]
+anchor_left = 0.05
+anchor_top = 0.66
+anchor_right = 0.95
+anchor_bottom = 0.71
+text = "Agent Names"
+align = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="LineEditAgentNames" type="LineEdit" parent="Panel/Control_IAvIA"]
+anchor_left = 0.05
+anchor_top = 0.72
+anchor_right = 0.95
+anchor_bottom = 0.77
+margin_bottom = 3.0
+placeholder_text = "Name1, Name2, ..."
+placeholder_alpha = 0.3
 __meta__ = {
 "_edit_use_anchors_": false
 }

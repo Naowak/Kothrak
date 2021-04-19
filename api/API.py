@@ -76,17 +76,17 @@ def human_play():
 
 @api.route('/train', methods=['GET'])
 def train():
-    nb_agents, grid_ray = retrieve_args(nb_agents=int, grid_ray=int)
+    nb_agents, grid_ray, agent_names = retrieve_args(nb_agents=int, 
+                                            grid_ray=int, agent_names=str)
+    agent_names = agent_names.split(',')
     env = KothrakEnv(nb_agents, grid_ray)
     session = Training()
-    session.trainer = Trainer(env)
+    session.trainer = Trainer(env, agent_names)
     tid = trainings.add(session)
 
     def task(trainer, tid, agents):
         trainer.run()
         trainings.remove(tid)
-        new_agents = load_all_agents()
-        agents.update(new_agents)
 
     session.thread = Thread(target=task, args=(session.trainer, tid, agents))
     session.thread.start()

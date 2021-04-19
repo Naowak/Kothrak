@@ -44,19 +44,22 @@ func request_new_session(mode):
 	
 	elif mode == 'IAvIA':
 		var nb_agents = $"../Panel/Control_IAvIA/SpinBox_nbagents".value
-		var grid_ray = $"../Panel/Control_PvIA/SpinBox_gridray".value
+		var grid_ray = $"../Panel/Control_IAvIA/SpinBox_gridray".value
+		var names = $'../Panel/Control_IAvIA/LineEditAgentNames'.text.replace(' ', '')
 		if nb_agents > 4:
 			print('Error: you ask for more than 4 players.')
 			return
+		if len(names.split(',')) != nb_agents:
+			print(nb_agents, 'agents were ask but only', len(names.split(',')), 'names are given.')
+			return
 		params += 'nb_agents=' + str(nb_agents)
 		params += '&grid_ray=' + str(grid_ray)
+		params += '&agent_names=' + names
 		Utils.NB_PERSON = 0
 		Utils.NB_AGENTS = nb_agents
 		# warning-ignore:return_value_discarded
 		request("http://127.0.0.1:5000/train?" + params)
 		
-	print(params)
-
 
 # Request play to the server
 func request_human_play(gid, play):
