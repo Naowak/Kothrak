@@ -50,6 +50,11 @@ class Trainer():
         next_state, infos = self.env.reset()
         next_state = torch.tensor(next_state, device=device).view(1, -1)
         
+        # Make the same ai for the same player
+        first_id = (self.env.game.next_player_id-1) % self.nb_agents
+        order = list(range(first_id, self.nb_agents)) + list(range(first_id))
+        agents = [self.agents[i] for i in order]
+
         agents_plays = [None for _ in range(self.nb_agents)]
         history = [infos]
         turn = -1
@@ -59,7 +64,7 @@ class Trainer():
             # Get current agent and update state
             turn += 1
             current_id = turn % self.nb_agents
-            current_agent = self.agents[current_id]
+            current_agent = agents[current_id]
             state = next_state
 
             # Update current agent if all agents have played and state
@@ -85,7 +90,7 @@ class Trainer():
         
 
         # End of the game, update all agents 
-        for i, agent in enumerate(self.agents):
+        for i, agent in enumerate(agents):
             if turn >= i:
                 agent.update(*agents_plays[i], next_state, rewards[i], done)
 

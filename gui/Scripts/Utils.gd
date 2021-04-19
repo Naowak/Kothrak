@@ -15,6 +15,7 @@ var NB_PLAYERS = 2
 var AGENTS_NAME = []
 
 # Interface parameters
+var TIME_TO_SLEEP = 0.5
 var MODE = 'PvP'
 var NB_PERSON = 2
 var NB_AGENTS = 0

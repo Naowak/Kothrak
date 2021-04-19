@@ -57,7 +57,7 @@ func _update(data):
 	elif data['status'] == 'watch':
 		for infos in data['history']:
 			_update(infos)
-			yield(get_tree().create_timer(1.0), "timeout")
+			yield(get_tree().create_timer(Utils.TIME_TO_SLEEP), "timeout")
 		$HTTPRequest.request_watch_training(tid)
 	# Training over
 	elif data['status'] == 'TrainingIDError':

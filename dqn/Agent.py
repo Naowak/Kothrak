@@ -146,7 +146,8 @@ class Agent():
                 self._update_target_net()
 
                 # Display
-                print(f'Game played: {self._game_played}, '
+                print(f'{self.name}: ',
+                    f'Game played: {self._game_played}, '
                     f'Epsilon: {self.epsilon}, '
                     f'Mean reward: {mean(self._last_rewards)}, '
                     f'Mean loss: {mean(self._last_losses)} ')

@@ -212,10 +212,10 @@ class Game:
         """Update self.infos and set self.game_over to True.
         """
         if reason == 'win':
-            print(f'{self.current_player.id} won the game.')
+            # print(f'{self.current_player.id} won the game.')
             self._update_infos('win', move=move, build=None)
         else:
-            print(f'{self.current_player.id} eliminated : {reason}')
+            # print(f'{self.current_player.id} eliminated : {reason}')
             self._update_infos('eliminated')
 
         self.game_over = True
