@@ -81,7 +81,7 @@ def train():
     agent_names = agent_names.split(',')
     env = KothrakEnv(nb_agents, grid_ray)
     session = Training()
-    session.trainer = Trainer(env, agent_names)
+    session.trainer = Trainer(env, agent_names, nb_agents)
     tid = trainings.add(session)
 
     def task(trainer, tid, agents):
@@ -113,10 +113,6 @@ def watch_training():
 if __name__ == "__main__":
     api.run(debug=True)
 
-    # On the godot part : 
-    # - make him play against an ai correctly by choosing an opponent in the list
-    # then :
     # - pass to multi task (12 actions 2*6, sum of loss)
     # - a character loose if no play possible (empty list)
     # - blender work (color tower), create character
-

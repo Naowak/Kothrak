@@ -58,7 +58,7 @@ func request_new_session(mode):
 			print('Error: you ask for more than 4 players.')
 			return
 		if len(names.split(',')) != nb_agents:
-			print(nb_agents, 'agents were ask but only', len(names.split(',')), 'names are given.')
+			print(nb_agents, ' agents were ask but only ', len(names.split(',')), ' names are given.')
 			return
 		params += 'nb_agents=' + str(nb_agents)
 		params += '&grid_ray=' + str(grid_ray)
