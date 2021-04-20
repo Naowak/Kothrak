@@ -25,15 +25,15 @@ var LENGTH_BORDER = 3
 var RAY = RAY_ARENA + LENGTH_BORDER
 
 # Materials dict
-var materials = {'white': "e6cab8", 
+var color_code = {'white': "e6cab8", 
 				'black': '352f2b',
 				'blue': '2876df',
 				'red': 'df4828',
 				'green': '79cc2b',
 				'grey': 'c6beba'
-				}
-
-var players_colors = ['blue', 'red', 'green', 'grey']
+}
+var materials = {}
+var players_colors = ['red', 'blue', 'green', 'grey']
 
 
 func _ready():
@@ -42,8 +42,8 @@ func _ready():
 
 # Replace all hex code in materials by their SpatialMaterial instance
 func _init_materials():
-	for key in materials.keys():
-		var color = materials[key]
+	for key in color_code.keys():
+		var color = color_code[key]
 		var mat = SpatialMaterial.new()
 		mat.albedo_color = Color(color)
 		materials[key] = mat
