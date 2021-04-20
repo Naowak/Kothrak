@@ -8,7 +8,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Trainer():
 
-    def __init__(self, env, agent_names=None, nb_agents=2, nb_games=2000, 
+    def __init__(self, env, agent_names=None, nb_agents=2, nb_games=200000, 
             time_to_sleep=0, replay_size=20):
         """Initialize the Trainer.
         - env : KothrakEnv instance
@@ -52,23 +52,25 @@ class Trainer():
         
         # Make the same ai for the same player
         first_id = (self.env.game.next_player_id-1) % self.nb_agents
-        order = list(range(first_id, self.nb_agents)) + list(range(first_id))
-        agents = [self.agents[i] for i in order]
+        # order = list(range(first_id, self.nb_agents)) + list(range(first_id))
+        # agents = [self.agents[i] for i in order]
 
         agents_plays = [None for _ in range(self.nb_agents)]
         history = [infos]
         turn = -1
+        current_id = first_id - 1
 
         while not done:
 
             # Get current agent and update state
             turn += 1
-            current_id = turn % self.nb_agents
-            current_agent = agents[current_id]
+            # current_id = turn % self.nb_agents
+            current_id = (current_id + 1) % self.nb_agents
+            current_agent = self.agents[current_id]
             state = next_state
 
             # Update current agent if all agents have played and state
-            if turn >= self.nb_agents:
+            if agents_plays[current_id] is not None:
                 current_agent.update(*agents_plays[current_id], next_state, 
                                             rewards[current_id], done)
                 rewards[current_id] = 0
@@ -89,9 +91,9 @@ class Trainer():
             sleep(self.time_to_sleep)
         
 
-        # End of the game, update all agents 
-        for i, agent in enumerate(agents):
-            if turn >= i:
+        # End of the game, update all agents who played
+        for i, agent in enumerate(self.agents):
+            if agents_plays[i] is not None:
                 agent.update(*agents_plays[i], next_state, rewards[i], done)
 
         # Add game to replay

@@ -47,6 +47,7 @@ func request_new_session(mode):
 			Utils.PLAYER_NAMES.append('Person_' + str(i))
 		for i in range(nb_agents):
 			Utils.PLAYER_NAMES.append('Agent_' + str(i))
+		Utils.PLAYER_NAMES.shuffle()
 		# warning-ignore:return_value_discarded	
 		request("http://127.0.0.1:5000/new_game?" + params)
 	

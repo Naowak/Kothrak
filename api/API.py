@@ -116,3 +116,4 @@ if __name__ == "__main__":
     # - pass to multi task (12 actions 2*6, sum of loss)
     # - a character loose if no play possible (empty list)
     # - blender work (color tower), create character
+    # - code rewiew : comments

@@ -85,9 +85,9 @@ func _playing_update(data):
 	possible_plays = data['possible_plays']
 	step = 'move'
 	
-	# If not new_game and last player was IA, make the play
+	# If not new_game and last player was Agent, make the play
 	var prev_player_id = fposmod(player_id-1, Utils.NB_PLAYERS)
-	if data['status'] != 'new_game' and players_kind[prev_player_id] == 'IA':
+	if data['status'] != 'new_game' and players_kind[prev_player_id] == 'Agent':
 		# Make the move
 		var abs_move = _to_absolute(data['move'], prev_player_id)
 		$Playground.move(prev_player_id, $Playground.grid[abs_move[0]][abs_move[1]])
@@ -98,16 +98,16 @@ func _playing_update(data):
 	# Update panel text
 	_update_logs(gid, data['status'], player_id, step)
 	
-	# If next player is IA, request server to play
-	if Utils.MODE == 'PvIA' and players_kind[player_id] == 'IA':
+	# If next player is Agent, request server to play
+	if Utils.MODE == 'PvIA' and players_kind[player_id] == 'Agent':
 		var agent_name = $Panel/Control_PvIA/OptionButtonAgent.text
 		$HTTPRequest.request_agent_play(gid, agent_name)
 		
 
 # Game over, current player won. 
-# Make the last move if player_id is IA and update_text.
+# Make the last move if player_id is Agent and update_text.
 func _win_update(data):
-	if players_kind[player_id] == 'IA':
+	if players_kind[player_id] == 'Agent':
 		var abs_move = _to_absolute(data['move'], player_id)
 		$Playground.move(player_id, $Playground.grid[abs_move[0]][abs_move[1]])
 	step = 'game_over'
@@ -172,15 +172,15 @@ func _init_players_kind():
 			players_kind += ['Person']
 			
 	elif Utils.MODE == 'PvIA':
-		for _i in range(Utils.NB_PERSON):
-			players_kind += ['Person']
-		for _i in range(Utils.NB_AGENTS):
-			players_kind += ['IA']
-		players_kind.shuffle()
+		for name in Utils.PLAYER_NAMES:
+			if name[0] == 'P': # player
+				players_kind += ['Person']
+			elif name[0] == 'A':
+				players_kind += ['Agent']
 	
 	elif Utils.MODE == 'IAvIA':
 		for _i in range(Utils.NB_AGENTS):
-			players_kind += ['IA']
+			players_kind += ['Agent']
 	
 	
 # Update logs corresponding to MODE
