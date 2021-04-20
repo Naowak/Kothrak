@@ -69,6 +69,14 @@ class Game:
             self._end_game('invalid move')
             return
 
+        # Make the move
+        self.current_player.cell = cell_move
+
+        # Verify if current player won
+        if self.current_player.cell.stage == MAX_STAGE:
+            self._end_game('win', move=rel_coord_move)
+            return
+        
         # Retrieve build cell
         q_build = cell_move.q + rel_coord_build[0]
         r_build = cell_move.r + rel_coord_build[1]
@@ -76,14 +84,6 @@ class Game:
 
         if not self._is_build_correct(cell_build, cell_move):
             self._end_game('invalid build')
-            return
-
-        # Make the move
-        self.current_player.cell = cell_move
-
-        # Verify if current player won
-        if self.current_player.cell.stage == MAX_STAGE:
-            self._end_game('win', move=rel_coord_move)
             return
 
         # Make the build
@@ -172,8 +172,7 @@ class Game:
                 # Play won, set build to None
                 if cell_move.stage == MAX_STAGE:
                     c_move = [cell_move.q, cell_move.r]
-                    c_build = None
-                    plays += [{'move': c_move, 'build': c_build}]
+                    plays += [{'move': c_move, 'build': None}]
                     continue
 
                 # Correct move but player didn't win

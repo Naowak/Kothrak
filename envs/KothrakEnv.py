@@ -1,28 +1,27 @@
 from envs.game.Game import Game
+from envs.game.Grid import DIR_COORDS
 
 def transform_number_into_actions(action):
-    coord_actions = [(-1, 0), (-1, 1), (0, 1), (1, 0), (1, -1), (0, -1)]
-    move = int(action / len(coord_actions))
-    build = int(action % len(coord_actions))
-    return coord_actions[move], coord_actions[build]
+    move = int(action / len(DIR_COORDS))
+    build = int(action % len(DIR_COORDS))
+    return DIR_COORDS[move], DIR_COORDS[build]
 
 def transform_actions_into_number(move, build):
-    coord_actions = [(-1, 0), (-1, 1), (0, 1), (1, 0), (1, -1), (0, -1)]
     action_move = -1
     action_build = -1
 
-    for i, coord in enumerate(coord_actions):
+    for i, coord in enumerate(DIR_COORDS):
         if coord[0] == move[0] and coord[1] == move[1]:
             action_move = i
 
     if build is not None:
-        for i, coord in enumerate(coord_actions):
+        for i, coord in enumerate(DIR_COORDS):
             if coord[0] == build[0] and coord[1] == build[1]:
                 action_build = i
     else:
         action_build = 0
 
-    return action_move*len(coord_actions) + action_build
+    return action_move*len(DIR_COORDS) + action_build
 
 
 class KothrakEnv():
@@ -74,6 +73,37 @@ class KothrakEnv():
         """
         pass
 
+    
+    def get_mask_play(self, infos):
+        """Return the mask for all the 36 actions in function of possible
+        plays"""
+
+        loc = [self.game.current_player.cell.q, 
+                                        self.game.current_player.cell.r]
+        plays = []
+        for play in infos['possible_plays']:
+            # Possible plays are in absolute location, 
+            # transform them to relative
+            rel_move = [play['move'][0] - loc[0], play['move'][1] - loc[1]]
+            if play['build'] is None:
+                rel_build = None 
+            else:
+                rel_build = [play['build'][0] - play['move'][0], 
+                                    play['build'][1] - play['move'][1]]
+
+            plays += [[rel_move, rel_build]]
+        
+        actions = [transform_actions_into_number(*p) for p in plays]
+
+        mask = [1 if n in actions else 0 for n in range(36)]
+        print('\n')
+        print('coord', loc)
+        print('pp', infos['possible_plays'])
+        print('plays', plays)
+        print('actions', actions)
+        print(mask)
+        return mask
+
 
     def _get_observation(self):
         """Retrieve state and informations from game and return vectorized state.
@@ -108,3 +138,5 @@ class KothrakEnv():
                 self.rewards[pid] = reward_values[status]['others']
 
         return self.rewards
+
+

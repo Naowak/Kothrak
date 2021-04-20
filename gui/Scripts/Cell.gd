@@ -30,7 +30,8 @@ func init(_q, _r, _stage, _color):
 		# warning-ignore:return_value_discarded
 		var main_node = get_tree().get_root().get_node('Main')
 		connect("cell_clicked", main_node, '_make_play', [self])
-
+	
+	
 
 # Change the color of the cell, color must be a string in Utils.materials.keys()
 func _change_color(color_name):

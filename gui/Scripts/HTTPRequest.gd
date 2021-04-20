@@ -109,6 +109,7 @@ func _on_request_completed(_result, _response_code, _headers, body):
 	if data == null:
 		data = {}
 	data = _decode(data)
+	print(data)
 	get_parent()._update(data)
 
 

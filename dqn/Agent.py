@@ -78,21 +78,34 @@ class Agent():
         summary(self._policy_net, (1, self.num_observations))
 
 
-    def play(self, state, train=False):
+    def play(self, state, mask, train=False): 
         """If train is true, choose randomly in function of epsilon between a 
         random action or the action having the best q_value.
         If train is false, return the action with the best q-value.
         - state : list of values describing the game
         - train : boolean
         """
+        if 1 not in mask:
+            print('Nope', mask)
+            # No action possible, make an action to get eliminated
+            return torch.tensor([[0]])
+
         if train and random.random() < self.epsilon:
             # Random action
-            action = random.randrange(self.num_actions)
+            action = random.choice([i for i, v in enumerate(mask) if v])
             action = torch.tensor([[action]], device=device, dtype=torch.long)         
         else:
             # Best action
             with torch.no_grad():
-                action = self._policy_net(state).max(1)[1].view(1, 1)
+                mask = [v == 1 for v in mask]
+                mask = torch.tensor(mask, device=device)
+                infs = torch.full((1, 36), float('-inf'), device=device)
+                preds = self._policy_net(state)
+                preds = torch.where(mask, preds, infs)
+                action = preds.max(1)[1].view(1, 1)
+                print(mask)
+                print(preds)
+                print(action)
         return action
 
 

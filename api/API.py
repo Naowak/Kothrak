@@ -43,10 +43,11 @@ def agent_play():
     if game is None:
         return cors({'Error': f'Game {gid} does not exist.'})
 
-    state, _ = game._get_observation()
+    state, infos = game._get_observation()
     state = torch.tensor(state, device=device).view(1, -1)
 
-    action = agents[agent_name].play(state)
+    mask = game.get_mask_play(infos)
+    action = agents[agent_name].play(state, mask)
     _, _, done, infos = game.step(action)
 
     if done:
